@@ -1,6 +1,5 @@
 import numpy as np
 from matplotlib import pyplot as plt
-import os 
 from collections import deque
 
 
@@ -66,98 +65,108 @@ def floodfill(start: np.ndarray, occupancy_map: np.ndarray) -> np.ndarray[np.flo
     return occupancy_map
 
 
-def init_occupancy_map(ox: np.ndarray, oy: np.ndarray, xy_resolution: float=0.02, EXTEND_AREA: float=1.0):
-    """
-    Initializes an occupancy map based on the given obstacle coordinates and resolution.
+class OccupancyMap:
+    
+    EXTEND_AREA = 1.0
+    
+    def __init__(self, offset: np.ndarray, ox: np.ndarray, oy: np.ndarray, xy_resolution: float=0.1):
+        """
+        Initializes an occupancy map based on the given obstacle coordinates and resolution.
 
-    Args:
-        ox (np.ndarray): Array of x-coordinates of obstacles.
-        oy (np.ndarray): Array of y-coordinates of obstacles.
-        xy_resolution (float, optional): Resolution of the occupancy map. Defaults to 0.02.
-        EXTEND_AREA (float, optional): Area to extend around the obstacles. Defaults to 1.0.
+        Args:
+            ox (np.ndarray): Array of x-coordinates of obstacles.
+            oy (np.ndarray): Array of y-coordinates of obstacles.
+            xy_resolution (float, optional): Resolution of the occupancy map. Defaults to 0.02.
+            EXTEND_AREA (float, optional): Area to extend around the obstacles. Defaults to 1.0.
 
-    Returns:
-        tuple: A tuple containing the following elements:
-            - occupancy_map (np.ndarray): The initialized occupancy map.
-            - min_x (float): Minimum x-coordinate of the map.
-            - max_x (float): Maximum x-coordinate of the map.
-            - min_y (float): Minimum y-coordinate of the map.
-            - max_y (float): Maximum y-coordinate of the map.
-            - x_w (int): Width of the occupancy map in cells.
-            - y_w (int): Height of the occupancy map in cells.
-            - center_x (int): X-coordinate of the center of the map.
-            - center_y (int): Y-coordinate of the center of the map.
-    """
-    
-    min_x = round(min(ox) - EXTEND_AREA / 2.0)
-    min_y = round(min(oy) - EXTEND_AREA / 2.0)
-    max_x = round(max(ox) + EXTEND_AREA / 2.0)
-    max_y = round(max(oy) + EXTEND_AREA / 2.0)
-    
-    x_w = int(round((max_x - min_x) / xy_resolution))
-    y_w = int(round((max_y - min_y) / xy_resolution))
-    
-    occupancy_map = np.ones((x_w + 1, y_w + 1)) * 0.5
-    
-    center_x = int(round(-min_x / xy_resolution))  # center x coordinate of the grid map
-    center_y = int(round(-min_y / xy_resolution))  # center y coordinate of the grid map
-    
-    return occupancy_map, min_x, max_x, min_y, max_y, x_w, y_w, center_x, center_y
+        Returns:
+            tuple: A tuple containing the following elements:
+                - occupancy_map (np.ndarray): The initialized occupancy map.
+                - min_x (float): Minimum x-coordinate of the map.
+                - max_x (float): Maximum x-coordinate of the map.
+                - min_y (float): Minimum y-coordinate of the map.
+                - max_y (float): Maximum y-coordinate of the map.
+                - x_w (int): Width of the occupancy map in cells.
+                - y_w (int): Height of the occupancy map in cells.
+                - center_x (int): X-coordinate of the center of the map.
+                - center_y (int): Y-coordinate of the center of the map.
+        """
+        self.offset = offset
+        self.ox = ox
+        self.oy = oy
+        self.min = np.array([round(min(ox) - self.EXTEND_AREA / 2.0), round(min(oy) - self.EXTEND_AREA / 2.0)])
+        self.max = np.array([round(max(ox) + self.EXTEND_AREA / 2.0), round(max(oy) + self.EXTEND_AREA / 2.0)])
+        self.shape = np.array([int(round((self.max[0] - self.min[0]) / xy_resolution)),
+                         int(round((self.max[1] - self.min[1]) / xy_resolution))])  
+        self.occupancy_map = np.ones(self.shape+1) / 2  
+        self.center = np.array([int(round(-self.min[0] / xy_resolution)), 
+                                int(round(-self.min[1] / xy_resolution))])
+        self.xy_resolution = xy_resolution 
 
 
-def gen_occupancy_map(ox: np.ndarray, oy: np.ndarray, xy_resolution: float=0.02, EXTEND_AREA: float=1.0, fuzz: bool=False):
-    """
-    Generates an occupancy map based on the given obstacle coordinates.
+    def generate(self, fuzz: bool = False):
+        """
+        Generates an occupancy map based on the given obstacle coordinates.
 
-    Parameters:
-    - ox (list): List of x-coordinates of the obstacles.
-    - oy (list): List of y-coordinates of the obstacles.
-    - xy_resolution (float): Resolution of the occupancy map in the x and y directions. Default is 0.02.
-    - EXTEND_AREA (float): Extension factor for the occupied area. Default is 1.0.
-    - fuzz (bool): Whether to apply a fuzzy filter to the occupancy map. Default is False.
-    
-    Returns:
-    - occupancy_map (numpy.ndarray): Occupancy map representing the environment, where 0.0 represents free area and 1.0 represents occupied area.
-    """
-    
-    occupancy_map, min_x, max_x, min_y, max_y, x_w, y_w, center_x, center_y = \
-        init_occupancy_map(ox, oy, xy_resolution, EXTEND_AREA)
-    prev_ix, prev_iy = center_x - 1, center_y
-    
-    # Find the bounding box of the occupied area
-    for (x, y) in zip(ox, oy):
-        # x, y coordinates of the the occupied area
-        ix = int(round((x - min_x) / xy_resolution))
-        iy = int(round((y - min_y) / xy_resolution))
+        Parameters:
+        - fuzz (bool): Whether to apply a fuzzy filter to the occupancy map. Default is False.
         
-        free_area = bresenham(np.array([prev_ix, prev_iy]), np.array([ix, iy]))
-
-        for fa in free_area:
-            occupancy_map[int(fa[0])][int(fa[1])] = 0  # free area 0.0
+        Returns:
+        - occupancy_map (numpy.ndarray): Occupancy map representing the environment, where 0.0 represents free area and 1.0 represents occupied area.
+        """
         
-        prev_ix = ix
-        prev_iy = iy
+        prev_ix, prev_iy = self.center[0] - 1, self.center[1]
     
-    # Flood Fill
-    occupancy_map = floodfill(np.array([center_x, center_y]), occupancy_map)
-    
-    # Draw on Obstacles
-    for (x, y) in zip(ox, oy):
-            ix = int(round((x - min_x) / xy_resolution))
-            iy = int(round((y - min_y) / xy_resolution))
-            occupancy_map[ix][iy] = 1.0  # occupied area 1.0
-            occupancy_map[ix + 1][iy] = 1.0  # extend the occupied area
-            occupancy_map[ix][iy + 1] = 1.0  # extend the occupied area
-            occupancy_map[ix + 1][iy + 1] = 1.0  # extend the occupied area
-    
-    # Apply Fuzzy Filter
-    occupancy_map = man_fuzz(occupancy_map) if fuzz else occupancy_map
-    
-    return occupancy_map, np.array([center_x, center_y]), xy_resolution
+        # Find the bounding box of the occupied area
+        for (x, y) in zip(ox, oy):
+            # x, y coordinates of the the occupied area
+            ix = int(round((x - self.min[0]) / self.xy_resolution))
+            iy = int(round((y - self.min[1]) / self.xy_resolution))
+            
+            free_area = bresenham(np.array([prev_ix, prev_iy]), np.array([ix, iy]))
+
+            for fa in free_area:
+                self.occupancy_map[int(fa[0])][int(fa[1])] = 0  # free area 0.0
+            
+            prev_ix = ix
+            prev_iy = iy
+        
+        # Flood Fill
+        self.occupancy_map = floodfill(np.array([self.center[0], self.center[1]]), self.occupancy_map)
+        
+        # Draw on Obstacles
+        for (x, y) in zip(ox, oy):
+                ix = int(round((x - self.min[0]) / self.xy_resolution))
+                iy = int(round((y - self.min[1]) / self.xy_resolution))
+                self.occupancy_map[ix][iy] = 1.0  # occupied area 1.0
+                self.occupancy_map[ix + 1][iy] = 1.0  # extend the occupied area
+                self.occupancy_map[ix][iy + 1] = 1.0  # extend the occupied area
+                self.occupancy_map[ix + 1][iy + 1] = 1.0  # extend the occupied area
+        
+        # Apply Fuzzy Filter
+        self.occupancy_map = man_fuzz(self.occupancy_map) if fuzz else self.occupancy_map
+
+        return self
 
 
-def merge_occupancy_maps(occupancy_maps: list[np.ndarray], centers: list[np.ndarray], offset: list[np.ndarray], xy_resolution: list[float], output_resolution: list[float] = [300, 300]) -> np.ndarray:
-    pass
+    def merge(self, other: "OccupancyMap", output_resolution: float = 0.1):
+        # TODO: Implement merge method
+        pass
+    
+    
+    def show(self):
+        """
+        Display the occupancy map using matplotlib.
+        """
+        plt.figure(1, figsize=(4, 4))
+        plt.imshow(self.occupancy_map, cmap="PiYG_r")
+        plt.clim(0, 1)
+        plt.gca().set_xticks(np.arange(-.5, self.shape[1], 1), minor=True)
+        plt.gca().set_yticks(np.arange(-.5, self.shape[0], 1), minor=True)
+        plt.grid(True, which="minor", color="w", linewidth=0.6, alpha=0.5)
+        plt.colorbar()
+        plt.show()
+        
 
 # ! Simulation Methods
 
@@ -270,32 +279,12 @@ def lidarCircleScan(start: np.ndarray, bounds: np.ndarray, res: int = 1):
 # ! TEST CODE
 
 region = np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]])
-region2 = np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0], [-2, 4]])
 
-scan = lidarCircleScan(np.array([0, 0]), region, res=1)
-ox = scan[:,1] * np.sin(scan[:,0])
-oy = scan[:,1] * np.cos(scan[:,0])
+scan_center = np.array([0, 0])
+scan = lidarCircleScan(scan_center, region, res=1)
+ox = scan[:,1] * np.cos(scan[:,0])
+oy = scan[:,1] * np.sin(scan[:,0])
 
-xyresolution = 0.1
-occupancy_map, center, res = gen_occupancy_map(ox, oy, xy_resolution=xyresolution)
-print(center, res)
-xy_res = np.array(occupancy_map).shape
-
-plt.figure(1, figsize=(10, 4))
-plt.subplot(122)
-plt.imshow(occupancy_map, cmap="PiYG_r")
-# cmap = "binary" "PiYG_r" "PiYG_r" "bone" "bone_r" "RdYlGn_r"
-plt.clim(-0.4, 1.4)
-plt.gca().set_xticks(np.arange(-.5, xy_res[1], 1), minor=True)
-plt.gca().set_yticks(np.arange(-.5, xy_res[0], 1), minor=True)
-plt.grid(True, which="minor", color="w", linewidth=0.6, alpha=0.5)
-plt.colorbar()
-plt.subplot(121)
-plt.plot([oy, np.zeros(np.size(oy))], [ox, np.zeros(np.size(oy))], "ro-")
-plt.axis("equal")
-plt.plot(0.0, 0.0, "ob")
-plt.gca().set_aspect("equal", "box")
-bottom, top = plt.ylim()  # return the current y-lim
-plt.ylim((top, bottom))  # rescale y axis, to match the grid orientation
-plt.grid(True)
-plt.show()
+map = OccupancyMap(scan_center, ox, oy)
+map.generate()
+map.show()
