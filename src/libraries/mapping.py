@@ -357,4 +357,5 @@ m4.generate()
 # 5
 print("merging")
 m5 = map.merge(map2).merge(m3).merge(m4)
+m5.generate()
 m5.show()
