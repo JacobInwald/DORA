@@ -71,7 +71,7 @@ class OccupancyMap:
     
     EXTEND_AREA = 1.0     
     
-    def __init__(self, offset: np.ndarray, pointclouds: list[np.ndarray], xy_resolution: float=0.05):
+    def __init__(self, offset: np.ndarray, pointclouds: list[np.ndarray], origins: list[np.ndarray]=None, xy_resolution: float=0.05):
             """
             Initializes an occupancy map based on the given obstacle coordinates and resolution.
 
@@ -95,8 +95,17 @@ class OccupancyMap:
             self.maxs = np.array([[max(c[:,0]) + self.EXTEND_AREA * 0.5,
                                    max(c[:,1]) + self.EXTEND_AREA * 0.5] 
                                   for c in pointclouds])
+            self.min = np.array([min(self.mins[:,0]), min(self.mins[:,1])])
+            self.max = np.array([max(self.maxs[:,0]), max(self.maxs[:,1])])
             # Gets a point in the center of each point cloud
             self.centers = np.array([np.round((max - min) / (2*xy_resolution)).astype(int) for min, max in zip(self.mins, self.maxs)])
+            
+            self.origins = origins if origins else [self.offset]
+            
+            if len(self.origins) != len(self.pointclouds):
+                raise ValueError("The number of origins must match the number of pointclouds.")
+            
+
             # Calculate the shape of the occupancy map
             self.shape = np.round(np.array([((self.maxs[:,0].max() - self.mins[:,0].min())),
                           ((self.maxs[:,1].max() - self.mins[:,1].min()))]) / xy_resolution).astype(int)
@@ -104,7 +113,7 @@ class OccupancyMap:
             self.occupancy_map = np.ones(self.shape) * 0.5
 
 
-    def generate(self, fuzz: bool = False):
+    def generate(self, floodfill: bool = False, fuzz: bool = False) -> "OccupancyMap":
             """
             Generates an occupancy map based on the given obstacle coordinates.
 
@@ -114,50 +123,64 @@ class OccupancyMap:
             Returns:
             - occupancy_map (numpy.ndarray): Occupancy map representing the environment, where 0.0 represents free area and 1.0 represents occupied area.
             """
-        
-            # Find the bounding box of the occupied area
-            for min, center, cloud in zip(self.mins, self.centers, self.pointclouds):
-                prev = cloud[-1]
-                prev = np.round(((prev - min) / self.xy_resolution), 0).astype(int)
-                cloud_map = np.ones(self.shape)
-                
-                for p in cloud:
-                    # x, y coordinates of the the occupied area
-                    i = np.round(((p - min) / self.xy_resolution), 0).astype(int)
-                    line = bresenham(prev, i)
+            if floodfill:
+                for origin, cloud in zip(self.origin, self.pointclouds):
+                    prev = cloud[-1]
+                    prev = np.round(((prev - self.min) / self.xy_resolution), 0).astype(int)
+                    cloud_map = np.ones(self.shape)
+                    
+                    for p in cloud:
+                        # x, y coordinates of the the occupied area
+                        i = np.round(((p - self.min) / self.xy_resolution), 0).astype(int)
+                        line = bresenham(prev, i)
 
-                    for p_l in line:
+                        for p_l in line:
+                            try:
+                                cloud_map[int(p_l[0])][int(p_l[1])] = 0  # free area 0.0
+                            except IndexError:
+                                pass
+                        
+                        prev = i
+                        
+                    # Flood Fill
+                    cloud_map = floodfill(self.translate(origin, True), cloud_map)
+                    self.occupancy_map = np.multiply(self.occupancy_map, cloud_map)
+            else:
+                for origin, cloud in zip(self.origins, self.pointclouds):
+                    o = self.translate(origin, True)    # Normalise the origin
+                    for p in cloud:
+                        # x, y coordinates of the the occupied area
+                        i = np.round(((p - self.min) / self.xy_resolution), 0).astype(int)
+                        line = bresenham(o, i)
+
+                        for p_l in line:
+                            try:
+                                self.occupancy_map[int(p_l[0])][int(p_l[1])] = 0  # free area 0.0
+                            except IndexError:
+                                pass
+                        
+                        prev = i
+                        
+            # Draw on Obstacles
+            for cloud in self.pointclouds:
+                    for (x, y) in cloud:
+                        ix = int(round((x - self.min[0]) / self.xy_resolution))
+                        iy = int(round((y - self.min[1]) / self.xy_resolution))
                         try:
-                            cloud_map[int(p_l[0])][int(p_l[1])] = 0  # free area 0.0
+                            self.occupancy_map[ix][iy] = 1.0  # occupied area 1.0
+                            self.occupancy_map[ix + 1][iy] = 1.0  # extend the occupied area
+                            self.occupancy_map[ix][iy + 1] = 1.0  # extend the occupied area
+                            self.occupancy_map[ix + 1][iy + 1] = 1.0  # extend the occupied area
                         except IndexError:
                             pass
-                    
-                    prev = i
-                    
-                # Flood Fill
-                cloud_map = floodfill(center, cloud_map)
-                self.occupancy_map = np.multiply(self.occupancy_map, cloud_map)
-
-            # Draw on Obstacles
-            for min, cloud in zip(self.mins, self.pointclouds):
-                for (x, y) in cloud:
-                    ix = int(round((x - min[0]) / self.xy_resolution))
-                    iy = int(round((y - min[1]) / self.xy_resolution))
-                    try:
-                        self.occupancy_map[ix][iy] = 1.0  # occupied area 1.0
-                        self.occupancy_map[ix + 1][iy] = 1.0  # extend the occupied area
-                        self.occupancy_map[ix][iy + 1] = 1.0  # extend the occupied area
-                        self.occupancy_map[ix + 1][iy + 1] = 1.0  # extend the occupied area
-                    except IndexError:
-                        pass
-            
+                
             # Apply Fuzzy Filter
             self.occupancy_map = man_fuzz(self.occupancy_map) if fuzz else self.occupancy_map
 
             return self
 
 
-    def merge(self, other: "OccupancyMap"):
+    def merge(self, other: "OccupancyMap") -> "OccupancyMap":
             """
             Merges the current OccupancyMap with another OccupancyMap.
 
@@ -168,9 +191,12 @@ class OccupancyMap:
                 OccupancyMap: The merged OccupancyMap.
             """
             
+            # Merge the origins
+            new_origins = self.origins
+            new_origins.extend(other.origins)
+            
             # Convert to normal list to allow appending
             new_pointcloud = self.pointclouds
-
             f = lambda p: any([p in c for c in new_pointcloud])
             
             # Normalise the other pointclouds
@@ -178,36 +204,56 @@ class OccupancyMap:
                 c = cloud + other.offset - self.offset
                 filter_arr = [not f(p) for p in c]
                 new_pointcloud.append(c[filter_arr])
-
-            
+        
             # rerolls the offset so it doesn't get rolled twice
-            return OccupancyMap(np.roll(self.offset,1), new_pointcloud)
+            return OccupancyMap(np.roll(self.offset,1), new_pointcloud, new_origins)
     
     
-    def sample_coord(self, coord: np.ndarray) -> np.ndarray:
+    def sample_coord(self, coord: np.ndarray, yx=False) -> np.ndarray:
             """
             Sample the occupancy map at a given coordinate.
 
             Params:
                 coord (np.ndarray): The coordinate to sample.
-
+                yx (bool, optional): If True, the coordinate is treated as (y, x) instead of (x, y). Defaults to False.
+                
             Returns:
                 np.ndarray: The sampled value, nan if the coordinate is out of bounds.
             """
-            coord = np.round((((np.roll(coord,1)) - self.offset) - self.mins[0]) / self.xy_resolution , 0).astype(int)
+            if yx:
+                coord = np.round(((coord - self.offset) - self.mins[0]) / self.xy_resolution , 0).astype(int)
+            else:
+                coord = np.round((((np.roll(coord,1)) - self.offset) - self.mins[0]) / self.xy_resolution , 0).astype(int)
             try:
                 return self.occupancy_map[coord[0], coord[1]]
             except IndexError:
                 return np.array(np.nan, np.nan)
     
     
-    def normalise(self):
+    def translate(self, coord: np.ndarray, yx=False) -> np.ndarray:
+        """
+        Translates a coordinate to a grid index.
+
+        Params:
+            coord (float): The coordinate value to be translated.
+            yx (bool, optional): If True, the coordinate is treated as (y, x) instead of (x, y). Defaults to False.
+
+        Returns:
+            int: The grid index corresponding to the translated coordinate.
+        """
+        if yx:
+            return np.round(((coord - self.offset) - self.min) / self.xy_resolution , 0).astype(int)
+        else:
+            return np.round(((coord - self.offset) - self.min) / self.xy_resolution , 0).astype(int)
+    
+    
+    def normalise(self) -> None:
         for c in self.pointclouds:
             c += self.offset
         self.offset = np.array([0, 0])
             
     
-    def show(self, raycast: bool=False, region: np.ndarray=None):
+    def show(self, raycast: bool=False, region: np.ndarray=None) -> None:
         """
         Display the occupancy map using matplotlib.
         """
@@ -279,7 +325,7 @@ def pointIntersect(p1: np.ndarray, d1: np.ndarray, p2: np.ndarray, d2: np.ndarra
     return p
 
 
-def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray]) -> float:
+def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], noise=True, max_dist=np.inf) -> float:
     """
     Calculates the minimum distance from a starting point to a boundary region
     along a given angle using LiDAR.
@@ -315,11 +361,12 @@ def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray]) ->
             
             # Update minimum distance
             min_dist = np.linalg.norm(p - start)
-    
-    return min_dist if min_dist != np.inf else np.nan
+            
+    noise = np.random.normal(0, 0.01) if noise else 0
+    return min_dist + noise if min_dist < max_dist else np.nan
 
 
-def lidarCircleScan(start: np.ndarray, bounds: np.ndarray[np.ndarray], res: int = 1):
+def lidarCircleScan(start: np.ndarray, bounds: np.ndarray[np.ndarray], res: int = 1, noise=True, max_dist=np.inf):
     """
     Perform a circular lidar scan around a given start point within the specified bounds.
 
@@ -337,7 +384,7 @@ def lidarCircleScan(start: np.ndarray, bounds: np.ndarray[np.ndarray], res: int 
     
     # Get lidar scan results for each angle
     for angle in angles:
-        p = np.array([angle, lidarRay(start, angle, bounds)])
+        p = np.array([angle, lidarRay(start, angle, bounds, noise, max_dist)])
         if not np.isnan(p).any():   
             scan.append(p)
             
@@ -352,53 +399,54 @@ def test_1():
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
     res = 5
+    max_dist = 10
     # 1
     scan_center = np.array([2, 3.5])
-    scan = lidarCircleScan(scan_center, region, res=res)
+    scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
     ox = scan[:,1] * np.cos(scan[:,0])
     oy = scan[:,1] * np.sin(scan[:,0])
     cloud = [np.array([ox, oy]).T]
     m = OccupancyMap(scan_center, cloud)
-    m.generate()
+    m.generate(fuzz=True)
     m.show()
     m.show(raycast=True)
 
     # 2
     scan_center = np.array([3.6, 2.4])
-    scan = lidarCircleScan(scan_center, region, res=res)
+    scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
     ox = scan[:,1] * np.cos(scan[:,0])
     oy = scan[:,1] * np.sin(scan[:,0])
     cloud = [np.array([ox, oy]).T]
     m2 = OccupancyMap(scan_center, cloud)
-    m2.generate()
+    m2.generate(fuzz=True)
     m2.show()
     m2.show(raycast=True)
     
     # 3
     scan_center = np.array([0, 0])
-    scan = lidarCircleScan(scan_center, region, res=res)
+    scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
     ox = scan[:,1] * np.cos(scan[:,0])
     oy = scan[:,1] * np.sin(scan[:,0])
     cloud = [np.array([ox, oy]).T]
     m3 = OccupancyMap(scan_center, cloud)
-    m3.generate()
+    m3.generate(fuzz=True)
     m3.show()
     m3.show(raycast=True)
     
     # 4
     scan_center = np.array([-1, 3.5])
-    scan = lidarCircleScan(scan_center, region, res=res)
+    scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
     ox = scan[:,1] * np.cos(scan[:,0])
     oy = scan[:,1] * np.sin(scan[:,0])
     cloud = [np.array([ox, oy]).T]
     m4 = OccupancyMap(scan_center, cloud)
-    m4.generate()
+    m4.generate(fuzz=True)
     m4.show()
     m4.show(raycast=True)
      
     # 5
     m5 = m4.merge(m3).merge(m2).merge(m)
-    m5.generate()
+    m5.generate(fuzz=True)
     m5.show(raycast=False, region=region[0])
 
 def test_2(points):
@@ -446,11 +494,10 @@ def test_2(points):
     m5.generate()
     print([m5.sample_coord(np.array(point)) for point in points])
     
-    
 def test_norm():
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
-    res = 5
+    res = 1
     # 1
     scan_center = np.array([2, 3.5])
     scan = lidarCircleScan(scan_center, region, res=res)
@@ -494,3 +541,4 @@ def test_norm():
     m5.show()
     m5.show(raycast=True)
     
+test_1()
