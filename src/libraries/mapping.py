@@ -281,7 +281,7 @@ class OccupancyMap:
         plt.show()
         
 
-# ! Simulation Methods
+# ! Simulation Methods NOT USED IN PRODUCT
 
 def isBetween(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> bool:
     """
@@ -399,7 +399,7 @@ def test_1():
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
     res = 5
-    max_dist = 10
+    max_dist = 1
     # 1
     scan_center = np.array([2, 3.5])
     scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
@@ -447,7 +447,7 @@ def test_1():
     # 5
     m5 = m4.merge(m3).merge(m2).merge(m)
     m5.generate(fuzz=True)
-    m5.show(raycast=False, region=region[0])
+    m5.show(raycast=False)
 
 def test_2(points):
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
@@ -541,4 +541,3 @@ def test_norm():
     m5.show()
     m5.show(raycast=True)
     
-test_1()

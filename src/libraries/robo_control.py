@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class DORA:
+class Controller:
  
     def __init__(self, pos: np.ndarray, rot: float) -> None:
         self.pos: np.ndarray = np.zeros(2)
@@ -25,7 +25,7 @@ class DORA:
     
     # Sensors
     
-    def getLiDAR(self) -> (float, float):
+    def scan(self) -> (float, float):
         """
         Retrieves the LiDAR data in polar coordinates.
         """
