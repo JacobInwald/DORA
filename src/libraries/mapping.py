@@ -201,6 +201,12 @@ class OccupancyMap:
                 return np.array(np.nan, np.nan)
     
     
+    def normalise(self):
+        for c in self.pointclouds:
+            c += self.offset
+        self.offset = np.array([0, 0])
+            
+    
     def show(self, raycast: bool=False, region: np.ndarray=None):
         """
         Display the occupancy map using matplotlib.
@@ -440,4 +446,51 @@ def test_2(points):
     m5.generate()
     print([m5.sample_coord(np.array(point)) for point in points])
     
+    
+def test_norm():
+    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
+                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
+    res = 5
+    # 1
+    scan_center = np.array([2, 3.5])
+    scan = lidarCircleScan(scan_center, region, res=res)
+    ox = scan[:,1] * np.cos(scan[:,0])
+    oy = scan[:,1] * np.sin(scan[:,0])
+    cloud = [np.array([ox, oy]).T]
+    m = OccupancyMap(scan_center, cloud)
+    m.generate()
+
+    # 2
+    scan_center = np.array([3.6, 2.4])
+    scan = lidarCircleScan(scan_center, region, res=res)
+    ox = scan[:,1] * np.cos(scan[:,0])
+    oy = scan[:,1] * np.sin(scan[:,0])
+    cloud = [np.array([ox, oy]).T]
+    m2 = OccupancyMap(scan_center, cloud)
+    m2.generate()
+    
+    # 3
+    scan_center = np.array([0, 0])
+    scan = lidarCircleScan(scan_center, region, res=res)
+    ox = scan[:,1] * np.cos(scan[:,0])
+    oy = scan[:,1] * np.sin(scan[:,0])
+    cloud = [np.array([ox, oy]).T]
+    m3 = OccupancyMap(scan_center, cloud)
+    m3.generate()
+    
+    # 4
+    scan_center = np.array([-1, 3.5])
+    scan = lidarCircleScan(scan_center, region, res=res)
+    ox = scan[:,1] * np.cos(scan[:,0])
+    oy = scan[:,1] * np.sin(scan[:,0])
+    cloud = [np.array([ox, oy]).T]
+    m4 = OccupancyMap(scan_center, cloud)
+    m4.generate()
+     
+    # 5
+    m5 = m4.merge(m3).merge(m2).merge(m)
+    m5.generate()
+    m5.normalise()
+    m5.show()
+    m5.show(raycast=True)
     
