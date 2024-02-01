@@ -18,7 +18,7 @@ if __name__ == '__main__':
                 cv2.imshow('frame', frame)
 
                 if cv2.waitKey(5) & 0xFF == ord('c'):
-                    cv2.imwrite(save_dir + f'{os.path.basename(filename)}_{counter}.jpg', frame)
+                    cv2.imwrite(save_dir + f'{filename[:-4]}_{counter}.jpg', frame)
 
             if cv2.waitKey(5) & 0xFF == ord('q'):
                 break
