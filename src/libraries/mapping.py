@@ -180,7 +180,7 @@ class OccupancyMap:
             return self
 
 
-    def merge(self, other: "OccupancyMap") -> "OccupancyMap":
+    def merge(self, others: "OccupancyMap") -> "OccupancyMap":
             """
             Merges the current OccupancyMap with another OccupancyMap.
 
@@ -190,23 +190,27 @@ class OccupancyMap:
             Returns:
                 OccupancyMap: The merged OccupancyMap.
             """
+            if isinstance(others, OccupancyMap):
+                others = [others]
             
-            # Merge the origins
-            new_origins = self.origins
-            new_origins.extend(other.origins)
+            for other in others:
+                # Merge the origins
+                new_origins = self.origins
+                new_origins.extend(other.origins)
+                
+                # Convert to normal list to allow appending
+                new_pointcloud = self.pointclouds
+                f = lambda p: any([p in c for c in new_pointcloud])
+                
+                # Normalise the other pointclouds
+                for cloud in other.pointclouds:
+                    c = cloud + other.offset - self.offset
+                    filter_arr = [not f(p) for p in c]
+                    new_pointcloud.append(c[filter_arr])
             
-            # Convert to normal list to allow appending
-            new_pointcloud = self.pointclouds
-            f = lambda p: any([p in c for c in new_pointcloud])
-            
-            # Normalise the other pointclouds
-            for cloud in other.pointclouds:
-                c = cloud + other.offset - self.offset
-                filter_arr = [not f(p) for p in c]
-                new_pointcloud.append(c[filter_arr])
-        
             # rerolls the offset so it doesn't get rolled twice
-            return OccupancyMap(np.roll(self.offset,1), new_pointcloud, new_origins)
+            self.__init__(np.roll(self.offset,1), new_pointcloud, new_origins)
+            return self
     
     
     def sample_coord(self, coord: np.ndarray, yx=False) -> np.ndarray:
@@ -442,7 +446,7 @@ def test_1():
     m4.show(raycast=True)
      
     # 5
-    m5 = m4.merge(m3).merge(m2).merge(m)
+    m5 = m4.merge([m, m2, m3])
     m5.generate(fuzz=True)
     m5.show(raycast=False)
 
@@ -538,3 +542,4 @@ def test_norm():
     m5.show()
     m5.show(raycast=True)
     
+test_1()
