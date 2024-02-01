@@ -6,8 +6,3 @@ data
 ToyDetector-2
 
 venv/
-img/
-vid/
-
-*.jpg
-*.mp4
