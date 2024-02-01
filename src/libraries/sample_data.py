@@ -1,8 +1,9 @@
 import cv2
 import os
 
-vid_dir = '../../vid'
-save_dir = '../../img'
+
+vid_dir = 'vid/'
+save_dir = 'img/'
 
 if __name__ == '__main__':
     for filename in os.listdir(vid_dir):
