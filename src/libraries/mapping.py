@@ -220,11 +220,8 @@ class OccupancyMap:
             Returns:
                 np.ndarray: The sampled value, nan if the coordinate is out of bounds.
             """
-            if yx:
-                coord = np.round(((coord - self.offset) - self.mins[0]) / self.xy_resolution , 0).astype(int)
-            else:
-                coord = np.round((((np.roll(coord,1)) - self.offset) - self.mins[0]) / self.xy_resolution , 0).astype(int)
             try:
+                coord = self.translate(coord, yx)
                 return self.occupancy_map[coord[0], coord[1]]
             except IndexError:
                 return np.array(np.nan, np.nan)
