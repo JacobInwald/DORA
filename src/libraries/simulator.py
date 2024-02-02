@@ -94,7 +94,7 @@ def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], no
 
     Returns:
         float: The minimum distance from the starting point to the boundary region.
-        nb: return nan if there is no intersection
+        nb: return inf if there is no intersection
     """
     
     dir_lidar = np.round(np.array([np.sin(angle), np.cos(angle)]), 3)
@@ -120,7 +120,7 @@ def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], no
             min_dist = np.linalg.norm(p - start)
             
     noise = np.random.normal(0, 0.01) if noise else 0
-    return min_dist + noise if min_dist < max_dist else np.nan
+    return min_dist + noise if min_dist < max_dist else np.inf
 
 
 # ! Controller Simulation
@@ -187,14 +187,10 @@ class Controller:
             np.ndarray: An array containing the lidar scan results.
         """
         # Init
-        scan = []
         angles = [np.deg2rad(i) for i in np.arange(0, 360, self.scan_res)]
         
         # Get lidar scan results for each angle
-        for angle in angles:
-            p = np.array([angle, lidarRay(self.pos, angle, self.map, self.noise, self.max_scan_dist)])
-            if not np.isnan(p).any():   
-                scan.append(p)
+        scan = [np.array([a, lidarRay(self.pos, a, self.map, self.noise, self.max_scan_dist)]) for a in angles]
                 
         return np.array(scan)
 

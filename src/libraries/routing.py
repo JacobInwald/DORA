@@ -5,13 +5,6 @@ import simulator as simulate
 
 # ! Library Methods
 
-def LiDARtoCartesian(scan) -> np.ndarray:
-    if len(scan) == 0:
-        return []
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    return np.array([ox, oy]).T
-
 
 def man_fuzz(grid: np.ndarray) -> np.ndarray:
     """
@@ -311,22 +304,30 @@ class OccupancyMap:
             plt.grid(True)
         plt.show()
 
-# empty map means no obstacles
+    
+    # ! Static Methods
+    def LiDARtoCloud(scan) -> np.ndarray:
+        # TODO: Change how pointclouds are handled.
+        scan = np.array([p for p in scan if np.isfinite(p).all()])
+        if len(scan) == 0:
+            return []
+        ox = scan[:,1] * np.cos(scan[:,0])
+        oy = scan[:,1] * np.sin(scan[:,0])
+        return np.array([ox, oy]).T
 
 
+# TODO: Add support for empty reads, i.e. an empty read means the robot has no obstacles in all directions
 
 # ! TEST CODE
 
 def test_1():
-    # ! TEST CODE
-
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
     res = 1
-    max_dist = 2
+    max_dist = 10
     controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
 
-    cloud = LiDARtoCartesian(controller.getLiDARScan())
+    cloud = OccupancyMap.LiDARtoCloud(controller.getLiDARScan())
     m = OccupancyMap(controller.pos, [cloud])
     m.generate()
     m.show()
@@ -335,12 +336,10 @@ def test_1():
         for angle in range(0, 360, 10):
             controller.forward(dist)
             controller.turn(angle, deg=True)
-            # controller.show()
-            cloud = LiDARtoCartesian(controller.getLiDARScan())
+            cloud = OccupancyMap.LiDARtoCloud(controller.getLiDARScan())
             m.merge(OccupancyMap(controller.pos, [cloud]))
-            # m.generate()
-            # m.show()
     m.generate()
     m.show(raycast=True)
     m.show()
+
 test_1()
