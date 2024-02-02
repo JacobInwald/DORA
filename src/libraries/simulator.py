@@ -1,5 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import shutil
+import glob
+from natsort import natsorted
+from PIL import Image
 
 # ! Library Methods
 
@@ -123,6 +127,19 @@ def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], no
     return min_dist + noise if min_dist < max_dist else np.inf
 
 
+def folderToGIF(dir: str):
+    # filepaths
+    fp_in = f"{dir}/*.png"
+    fp_out = f"{dir.split('/')[-1]}.gif"
+
+    frames = natsorted([file for file in glob.glob(fp_in)])
+    frames = [Image.open(frame) for frame in frames]
+    shutil.rmtree(dir)
+    frame_one = frames[0]
+    frame_one.save(fp_out, format="GIF", append_images=frames,
+               save_all=True, duration=100, loop=0)
+
+
 # ! Controller Simulation
 
 class Controller:
@@ -196,7 +213,7 @@ class Controller:
         return np.array(scan)
 
 
-    def show(self):
+    def show(self, save:bool = False, path:str = ""):
         plt.figure(1, figsize=(4, 4))
         for region in self.map:
             r = np.append(region, [region[0]], axis=0)
@@ -207,4 +224,8 @@ class Controller:
         plt.gca().set_aspect("equal", "box")
         bottom, top = plt.ylim()  # return the current y-lim
         plt.ylim((top, bottom))  # rescale y axis, to match the grid orientation
-        plt.show()
+        if save:
+            plt.savefig(path)
+            plt.close()
+        else:
+            plt.show()

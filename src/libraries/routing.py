@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from collections import deque
 import simulator as simulate
+import os, shutil
 
 # ! Library Methods
 
@@ -375,7 +376,7 @@ class OccupancyMap:
         self.offset = np.array([0, 0])
             
     
-    def show(self, raycast: bool=False, region: np.ndarray=None) -> None:
+    def show(self, raycast: bool=False, region: np.ndarray=None, save: bool = False, path: str = '') -> None:
         """
         Display the occupancy map using matplotlib.
 
@@ -407,34 +408,48 @@ class OccupancyMap:
             bottom, top = plt.ylim()  # return the current y-lim
             plt.ylim((top, bottom))  # rescale y axis, to match the grid orientation
             plt.grid(True)
-        plt.show()
+        if save:
+            plt.savefig(path)
+            plt.close()
+        else:
+            plt.show()
 
 
 # ! TEST CODE
 
 def test_1():
+    if os.path.exists("move"):
+        shutil.rmtree("move")
+    os.makedirs("move")
+    
+    if os.path.exists("map"):
+        shutil.rmtree("map")
+    os.makedirs("map")
+    
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
     res = 5
     max_dist = 1
     controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
-
+    
     cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
     m = OccupancyMap(controller.pos, [cloud])
-    
-    for dist in np.arange(1, 5, 1):
-
-        for angle in range(0, 360, 10):
+    index = 1
+    for dist in [0.5*i for i in range(1, 5)]:
+        for angle in [30 for x in range(360//30)]:
             controller.turn(angle, deg=True)
             if not controller.forward(dist):
                 continue
             cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
             m.merge(OccupancyMap(controller.pos, [cloud]))
-            # m.generate()
-            # m.show()
-            # controller.show()
+            m.generate()
+            m.show(save=True, path=f"map/{index}.png")
+            controller.show(save=True, path=f"move/{index}.png")
+            index+=1
 
     m.generate()
     m.show()
 
-test_1()
+# test_1()
+# simulate.folderToGIF("map")
+# simulate.folderToGIF("move")
