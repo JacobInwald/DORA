@@ -157,9 +157,10 @@ class Controller:
 
         if not np.isnan(lineIntersectPolygon(self.pos, move_dir, self.map)).all():
             print("Collision detected, cannot move forward.")
-            return
+            return False
         
         self.pos += move_dir
+        return True
 
     
     def turn(self, angle: float, deg: bool = False):
