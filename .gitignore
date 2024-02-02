@@ -4,3 +4,10 @@ runs
 yolov8n.pt
 data
 ToyDetector-2
+
+venv/
+img/
+vid/
+
+*.jpg
+*.mp4
