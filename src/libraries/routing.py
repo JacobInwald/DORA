@@ -1,11 +1,31 @@
 import numpy as np
 from matplotlib import pyplot as plt
 from collections import deque
-
+import simulator as simulate
 
 # ! Library Methods
 
+def LiDARtoCartesian(scan) -> np.ndarray:
+    if len(scan) == 0:
+        return []
+    ox = scan[:,1] * np.cos(scan[:,0])
+    oy = scan[:,1] * np.sin(scan[:,0])
+    return np.array([ox, oy]).T
+
+
 def man_fuzz(grid: np.ndarray) -> np.ndarray:
+    """
+    Applies the Manhattan Fuzz algorithm to the given grid.
+
+    The Manhattan Fuzz algorithm calculates the mean value of each cell in the grid
+    by considering its neighboring cells in the Manhattan distance.
+
+    Params:
+        grid (np.ndarray): The input grid.
+
+    Returns:
+        np.ndarray: The grid with the Manhattan Fuzz algorithm applied.
+    """
     for i in range(grid.shape[0]):
         for j in range(grid.shape[1]):
             if grid[i, j] == 1:
@@ -21,7 +41,7 @@ def bresenham(start: np.ndarray, end: np.ndarray, res: float=1) -> np.ndarray[np
     """
     Generate a Bresenham line between two points in a grid.
 
-    Args:
+    Params:
         start (np.ndarray): The starting point of the line.
         end (np.ndarray): The ending point of the line.
         res (float, optional): The resolution of the grid. Defaults to 1.
@@ -87,33 +107,36 @@ class OccupancyMap:
             # explanatory
             self.offset = np.roll(offset,1)
             self.xy_resolution = xy_resolution 
-            self.pointclouds = pointclouds
-            # Gets the minimum and maximum x and y coordinates of the obstacles
-            self.mins = np.array([[min(c[:,0]) - self.EXTEND_AREA * 0.5,
-                                   min(c[:,1]) - self.EXTEND_AREA * 0.5] 
-                                  for c in pointclouds])
-            self.maxs = np.array([[max(c[:,0]) + self.EXTEND_AREA * 0.5,
-                                   max(c[:,1]) + self.EXTEND_AREA * 0.5] 
-                                  for c in pointclouds])
-            self.min = np.array([min(self.mins[:,0]), min(self.mins[:,1])])
-            self.max = np.array([max(self.maxs[:,0]), max(self.maxs[:,1])])
-            # Gets a point in the center of each point cloud
-            self.centers = np.array([np.round((max - min) / (2*xy_resolution)).astype(int) for min, max in zip(self.mins, self.maxs)])
-            
+            self.pointclouds = pointclouds if len(pointclouds) > 0 else [pointclouds]
             self.origins = origins if origins else [self.offset]
-            
             if len(self.origins) != len(self.pointclouds):
                 raise ValueError("The number of origins must match the number of pointclouds.")
             
+            # Gets the minimum and maximum x and y coordinates of the obstacles
+            try:
+                mins = np.array([[min(c[:,0]) - self.EXTEND_AREA * 0.5,
+                                    min(c[:,1]) - self.EXTEND_AREA * 0.5] 
+                                    for c in self.pointclouds])
+                maxs = np.array([[max(c[:,0]) + self.EXTEND_AREA * 0.5,
+                                   max(c[:,1]) + self.EXTEND_AREA * 0.5] 
+                                  for c in self.pointclouds])
+            except Exception:
+                mins = np.array([[0,0]])
+                maxs = np.array([[0,0]])
 
+            self.min = np.array([min(mins[:,0]), min(mins[:,1])])
+            self.max = np.array([max(maxs[:,0]), max(maxs[:,1])])
+            
+            # Gets a point in the center of each point cloud
+            self.centers = np.array([np.round((max - min) / (2*xy_resolution)).astype(int) for min, max in zip(mins, maxs)])
+            
             # Calculate the shape of the occupancy map
-            self.shape = np.round(np.array([((self.maxs[:,0].max() - self.mins[:,0].min())),
-                          ((self.maxs[:,1].max() - self.mins[:,1].min()))]) / xy_resolution).astype(int)
+            self.shape = np.round((self.max - self.min) / xy_resolution, 3).astype(int)
             # Generate the occupancy map with probability 0.5 in each cell
             self.occupancy_map = np.ones(self.shape) * 0.5
 
 
-    def generate(self, floodfill: bool = False, fuzz: bool = False) -> "OccupancyMap":
+    def generate(self, floodfill: bool = False, fuzz: bool = True) -> "OccupancyMap":
             """
             Generates an occupancy map based on the given obstacle coordinates.
 
@@ -194,19 +217,26 @@ class OccupancyMap:
                 others = [others]
             
             for other in others:
-                # Merge the origins
+
                 new_origins = self.origins
-                new_origins.extend(other.origins)
-                
-                # Convert to normal list to allow appending
                 new_pointcloud = self.pointclouds
-                f = lambda p: any([p in c for c in new_pointcloud])
+
+                f = lambda p: any((np.abs(c - p) < 0.001).any() for c in new_pointcloud)
                 
                 # Normalise the other pointclouds
-                for cloud in other.pointclouds:
-                    c = cloud + other.offset - self.offset
+                for origin, cloud in zip(other.origins, other.pointclouds):
+
+                    c = cloud + other.offset - self.offset if cloud != [] else []
                     filter_arr = [not f(p) for p in c]
-                    new_pointcloud.append(c[filter_arr])
+                    c = c[filter_arr]
+                    
+                    if len(c) <= 2:
+                        continue
+                    
+                    new_pointcloud.append(c)
+                    new_origins.append(origin)
+            
+            # Maybe try merging pointclouds with similar origins (some tolerance)
             
             # rerolls the offset so it doesn't get rolled twice
             self.__init__(np.roll(self.offset,1), new_pointcloud, new_origins)
@@ -280,116 +310,9 @@ class OccupancyMap:
             plt.ylim((top, bottom))  # rescale y axis, to match the grid orientation
             plt.grid(True)
         plt.show()
-        
 
-# ! Simulation Methods NOT USED IN PRODUCT
+# empty map means no obstacles
 
-def isBetween(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> bool:
-    """
-    Check if point c lies between points a and b.
-
-    Params:
-    a (numpy.ndarray): The first point.
-    b (numpy.ndarray): The second point.
-    c (numpy.ndarray): The point to check.
-
-    Returns:
-    bool: True if c lies between a and b, False otherwise.
-    """
-    return np.linalg.norm(a - c) + np.linalg.norm(b - c) - np.linalg.norm(a - b) < 0.00001
-
-
-def pointIntersect(p1: np.ndarray, d1: np.ndarray, p2: np.ndarray, d2: np.ndarray) -> np.ndarray:
-    """
-    Calculate the intersection point between two lines defined by a point and a direction vector.
-
-    Params:
-    p1 (numpy.ndarray): The starting point of the first line.
-    d1 (numpy.ndarray): The direction vector of the first line.
-    p2 (numpy.ndarray): The starting point of the second line.
-    d2 (numpy.ndarray): The direction vector of the second line.
-
-    Returns:
-    numpy.ndarray: The intersection point of the two lines.
-    nb: this return nan if the lines are parallel
-    """
-    if d2[0] == 0:
-        t = (p2[0] - p1[0]) / d1[0]
-    else:
-        t = ((p2[1] - p1[1]) + (d2[1]/d2[0])*(p1[0] - p2[0])) / (d1[1] - (d2[1]*d1[0]) / d2[0])
-        
-    p = p1 + t * d1
-    
-    if any(np.isnan(p)) or any(np.isinf(p)):
-        return np.array([np.nan, np.nan])
-
-    return p
-
-
-def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], noise=True, max_dist=np.inf) -> float:
-    """
-    Calculates the minimum distance from a starting point to a boundary region
-    along a given angle using LiDAR.
-
-    Params:
-        start (np.ndarray): The starting point coordinates.
-        angle (float): The angle in radians.
-        bounds (np.ndarray): The boundary region coordinates.
-
-    Returns:
-        float: The minimum distance from the starting point to the boundary region.
-        nb: return nan if there is no intersection
-    """
-    
-    dir_lidar = np.round(np.array([np.sin(angle), np.cos(angle)]), 3)
-    min_dist = np.inf
-
-    for bound in bounds:
-        for i in range(len(bound)):
-            # Get a bounding line of the boundary region
-            p1 = bound[i]
-            dir = np.round(bound[i+1] - p1 if i < len(bound) - 1 else bound[0] - p1, 3)
-            
-            #  Get intersection point between the LiDAR ray and the bounding line
-            p = pointIntersect(start, dir_lidar, p1, dir)
-            
-            # Checks if the intersection point is valid (pointing right way, not nan, not too far away,...)
-            if np.isnan(p).any() or  \
-                not isBetween(p1, p1+dir, p) or \
-                np.dot(dir_lidar, p - start) < 0 or \
-                np.linalg.norm(p - start) >= min_dist:
-                continue
-            
-            # Update minimum distance
-            min_dist = np.linalg.norm(p - start)
-            
-    noise = np.random.normal(0, 0.01) if noise else 0
-    return min_dist + noise if min_dist < max_dist else np.nan
-
-
-def lidarCircleScan(start: np.ndarray, bounds: np.ndarray[np.ndarray], res: int = 1, noise=True, max_dist=np.inf):
-    """
-    Perform a circular lidar scan around a given start point within the specified bounds.
-
-    Params:
-        start (np.ndarray): The starting point of the lidar scan.
-        bounds (np.ndarray): The bounds within which the lidar scan is performed.
-        res (int, optional): The resolution of the lidar scan in degrees. Defaults to 1.
-
-    Returns:
-        np.ndarray: An array containing the lidar scan results.
-    """
-    # Init
-    scan = []
-    angles = [np.deg2rad(i) for i in np.arange(0, 360, res)]
-    
-    # Get lidar scan results for each angle
-    for angle in angles:
-        p = np.array([angle, lidarRay(start, angle, bounds, noise, max_dist)])
-        if not np.isnan(p).any():   
-            scan.append(p)
-            
-    return np.array(scan)
 
 
 # ! TEST CODE
@@ -399,147 +322,25 @@ def test_1():
 
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
-    res = 5
-    max_dist = 1
-    # 1
-    scan_center = np.array([2, 3.5])
-    scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m = OccupancyMap(scan_center, cloud)
-    m.generate(fuzz=True)
-    m.show()
-    m.show(raycast=True)
-
-    # 2
-    scan_center = np.array([3.6, 2.4])
-    scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m2 = OccupancyMap(scan_center, cloud)
-    m2.generate(fuzz=True)
-    m2.show()
-    m2.show(raycast=True)
-    
-    # 3
-    scan_center = np.array([0, 0])
-    scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m3 = OccupancyMap(scan_center, cloud)
-    m3.generate(fuzz=True)
-    m3.show()
-    m3.show(raycast=True)
-    
-    # 4
-    scan_center = np.array([-1, 3.5])
-    scan = lidarCircleScan(scan_center, region, res=res, max_dist=max_dist)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m4 = OccupancyMap(scan_center, cloud)
-    m4.generate(fuzz=True)
-    m4.show()
-    m4.show(raycast=True)
-     
-    # 5
-    m5 = m4.merge([m, m2, m3])
-    m5.generate(fuzz=True)
-    m5.show(raycast=False)
-
-def test_2(points):
-    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
-                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
-    res = 5
-    # 1
-    scan_center = np.array([2, 3.5])
-    scan = lidarCircleScan(scan_center, region, res=res)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m = OccupancyMap(scan_center, cloud)
-    m.generate()
-
-    # 2
-    scan_center = np.array([3.6, 2.4])
-    scan = lidarCircleScan(scan_center, region, res=res)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m2 = OccupancyMap(scan_center, cloud)
-    m2.generate()
-    
-    # 3
-    scan_center = np.array([0, 0])
-    scan = lidarCircleScan(scan_center, region, res=res)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m3 = OccupancyMap(scan_center, cloud)
-    m3.generate()
-    
-    # 4
-    scan_center = np.array([-1, 3.5])
-    scan = lidarCircleScan(scan_center, region, res=res)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m4 = OccupancyMap(scan_center, cloud)
-    m4.generate()
-     
-    # 5
-    m5 = m4.merge(m3).merge(m2).merge(m)
-    m5.generate()
-    print([m5.sample_coord(np.array(point)) for point in points])
-    
-def test_norm():
-    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
-                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
     res = 1
-    # 1
-    scan_center = np.array([2, 3.5])
-    scan = lidarCircleScan(scan_center, region, res=res)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m = OccupancyMap(scan_center, cloud)
-    m.generate()
+    max_dist = 2
+    controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
 
-    # 2
-    scan_center = np.array([3.6, 2.4])
-    scan = lidarCircleScan(scan_center, region, res=res)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m2 = OccupancyMap(scan_center, cloud)
-    m2.generate()
+    cloud = LiDARtoCartesian(controller.getLiDARScan())
+    m = OccupancyMap(controller.pos, [cloud])
+    m.generate()
+    m.show()
     
-    # 3
-    scan_center = np.array([0, 0])
-    scan = lidarCircleScan(scan_center, region, res=res)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m3 = OccupancyMap(scan_center, cloud)
-    m3.generate()
-    
-    # 4
-    scan_center = np.array([-1, 3.5])
-    scan = lidarCircleScan(scan_center, region, res=res)
-    ox = scan[:,1] * np.cos(scan[:,0])
-    oy = scan[:,1] * np.sin(scan[:,0])
-    cloud = [np.array([ox, oy]).T]
-    m4 = OccupancyMap(scan_center, cloud)
-    m4.generate()
-     
-    # 5
-    m5 = m4.merge(m3).merge(m2).merge(m)
-    m5.generate()
-    m5.normalise()
-    m5.show()
-    m5.show(raycast=True)
-    
+    for dist in np.arange(1, 5, 1):
+        for angle in range(0, 360, 10):
+            controller.forward(dist)
+            controller.turn(angle, deg=True)
+            # controller.show()
+            cloud = LiDARtoCartesian(controller.getLiDARScan())
+            m.merge(OccupancyMap(controller.pos, [cloud]))
+            # m.generate()
+            # m.show()
+    m.generate()
+    m.show(raycast=True)
+    m.show()
 test_1()
