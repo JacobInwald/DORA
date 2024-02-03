@@ -44,4 +44,4 @@ def train_model(dataset, model="yolov8", epochs=100, batch_size=16, img_size=416
 if __name__ == '__main__':
     dataset = load_dataset()
     model = train_model(dataset)
-    model.save("yolov8.pt")
+    model.save("weights/yolov8.pt")
