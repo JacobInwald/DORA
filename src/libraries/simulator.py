@@ -127,7 +127,14 @@ def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], no
     return min_dist + noise if min_dist < max_dist else np.inf
 
 
-def folderToGIF(dir: str):
+def folderToGIF(dir: str, frame_length: int = 100):
+    """
+    Converts a folder of PNG images into a GIF animation.
+
+    Args:
+        dir (str): The directory path containing the PNG images.
+        frame_length (int, optional): The duration of each frame in milliseconds. Defaults to 100.
+    """
     # filepaths
     fp_in = f"{dir}/*.png"
     fp_out = f"{dir.split('/')[-1]}.gif"
@@ -137,14 +144,14 @@ def folderToGIF(dir: str):
     shutil.rmtree(dir)
     frame_one = frames[0]
     frame_one.save(fp_out, format="GIF", append_images=frames,
-               save_all=True, duration=100, loop=0)
+               save_all=True, duration=frame_length, loop=0)
 
 
 # ! Controller Simulation
 
 class Controller:
     
-    def __init__(self, pos: np.ndarray, rot: float, map: list[np.ndarray], scan_res: float = 1, noise: bool = True, max_scan_dist: float = 2):
+    def __init__(self, pos: np.ndarray, rot: float, map: list[np.ndarray], scan_res: float = 1, noise: bool = True, max_scan_dist: float = 2, move_dist: float = 0.1):
         """
         Initialize the controller.
 
@@ -161,6 +168,7 @@ class Controller:
         self.scan_res = scan_res
         self.noise = noise
         self.max_scan_dist = max_scan_dist
+        self.move_dist = move_dist
         
 
     def forward(self, dist: float):
@@ -172,7 +180,15 @@ class Controller:
         """
         move_dir = np.array([np.cos(self.rot), np.sin(self.rot)]) * dist
 
-        if not np.isnan(lineIntersectPolygon(self.pos, move_dir, self.map)).all():
+        if len(lineIntersectPolygon(self.pos, move_dir, self.map)) > 0:
+            plt.figure(1, figsize=(4, 4))
+            plt.plot([self.pos[0], self.pos[0] + move_dir[0]],
+                     [self.pos[1], self.pos[1] + move_dir[1]],
+                     "ro-")
+            for region in self.map:
+                r = np.append(region, [region[0]], axis=0)
+                plt.plot(r[:,0], r[:,1], "bo-")
+            plt.show()
             print("Collision detected, cannot move forward.")
             return False
         
@@ -189,7 +205,7 @@ class Controller:
         """
         if deg:
             angle = np.deg2rad(angle)
-        self.rot += angle % (2 * np.pi)
+        self.rot = (self.rot + angle) % (2 * np.pi)
 
     
     def getLiDARScan(self):
