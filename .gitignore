@@ -5,10 +5,8 @@ yolov8n.pt
 data
 ToyDetector-2
 .idea/
-
 venv/
-data/img/
-data/vid/
+data/
 
 *.jpg
 *.mp4
