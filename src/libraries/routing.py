@@ -7,6 +7,7 @@ from queue import PriorityQueue
 
 
 # ! Library Methods
+
 def route(controller: "simulate.Controller", end: np.ndarray, map: "OccupancyMap") -> np.ndarray:
     """
     This function calculates the route from the current position to the given end point on the map.
@@ -71,7 +72,7 @@ def route(controller: "simulate.Controller", end: np.ndarray, map: "OccupancyMap
     return []
 
 
-def nextMappingPoint(map: "OccupancyMap", scanDist: float = 0.5):
+def nextMappingPoint(map: "OccupancyMap", scanDist: float = 0.5) -> np.ndarray:
     """
     Finds the next mapping point in the occupancy map.
 
@@ -97,7 +98,7 @@ def nextMappingPoint(map: "OccupancyMap", scanDist: float = 0.5):
     return clouds[-1].origin
     
 
-def toPoint(controller: "simulate.Controller", end: np.ndarray):
+def toPoint(controller: "simulate.Controller", end: np.ndarray) -> None:
     """
     Move the robot to the given end point on the map.
     
@@ -129,9 +130,7 @@ def manFuzz(grid: np.ndarray) -> np.ndarray:
             if grid[i, j] == 1:
                 continue
             try:
-                neighbours = [grid[i+x, j+y] for x in range(-1,2) for y in range(-1,2)]
-                mean = np.mean([n for n in neighbours])
-                grid[i, j] = mean #if mean < grid[i, j] else grid[i, j]
+                grid[i, j] = np.mean([grid[i+x, j+y] for x in range(-1,2) for y in range(-1,2)])
             except IndexError:
                 pass
     return grid
@@ -158,33 +157,6 @@ def bresenham(start: np.ndarray, end: np.ndarray, res: float=1) -> np.ndarray[np
         result[i] = (start + (i / length) * direction).round(int(-np.log10(res)) if res < 1 else 0) // res
     
     return result
-
-
-def floodfill(start: np.ndarray, occupancy_map: np.ndarray) -> np.ndarray[np.float64]:
-    """
-    Perform flood fill algorithm on an occupancy grid starting from a given point.
-
-    Parameters:
-    start (np.ndarray): The starting point for the flood fill algorithm.
-    occupancy_grid (np.ndarray): The occupancy grid on which the flood fill algorithm is performed.
-
-    Returns:
-    np.ndarray[np.float64]: The result of the flood fill algorithm.
-    """
-    grid = np.copy(occupancy_map)
-    q = deque()
-    q.append(start)
-    while q:
-        current = q.pop()
-        grid[current[0], current[1]] = 0
-        for (i, j) in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-                try:
-                    if grid[current[0] + i, current[1] + j] != 0:
-                        q.append(np.array([current[0] + i, current[1] + j]))
-                except IndexError:
-                    pass
-
-    return grid
 
 
 class PointCloud:
@@ -215,22 +187,25 @@ class PointCloud:
         """
         Initializes the minimum and maximum values of the point cloud.
         """
-        if len(self.objectCloud) > 0 and len(self.emptyCloud) == 0:
-            self.min = np.array([self.objectCloud[:,0].min(), self.objectCloud[:,1].min()])
-            self.max = np.array([self.objectCloud[:,0].max(), self.objectCloud[:,1].max()])
-        elif len(self.objectCloud) == 0 and len(self.emptyCloud) > 0:
-            self.min = np.array([self.emptyCloud[:,0].min(), self.emptyCloud[:,1].min()])
-            self.max = np.array([self.emptyCloud[:,0].max(), self.emptyCloud[:,1].max()])
-        elif len(self.objectCloud) > 0 and len(self.emptyCloud) > 0:
+        emin = np.array([np.inf, np.inf])
+        emax = np.array([-np.inf, -np.inf])
+        omin = np.array([np.inf, np.inf])
+        omax = np.array([-np.inf, -np.inf])
+        
+        if len(self.objectCloud) > 0:
             omin = np.array([self.objectCloud[:,0].min(), self.objectCloud[:,1].min()])
             omax = np.array([self.objectCloud[:,0].max(), self.objectCloud[:,1].max()])
+        if len(self.emptyCloud) > 0:
             emin = np.array([self.emptyCloud[:,0].min(), self.emptyCloud[:,1].min()])
             emax = np.array([self.emptyCloud[:,0].max(), self.emptyCloud[:,1].max()])
-            self.min = np.array([min(omin[0], emin[0]), min(omin[1], emin[1])])
-            self.max = np.array([max(omax[0], emax[0]), max(omax[1], emax[1])])
-        else:
-            self.min = np.array([0.0,0.0])
-            self.max = np.array([0.0,0.0])
+        
+        self.min = np.array([min(omin[0], emin[0]), min(omin[1], emin[1])])
+        self.max = np.array([max(omax[0], emax[0]), max(omax[1], emax[1])])
+        
+        if np.isinf(self.min).any() or np.isinf(self.max).any():
+            self.min = np.array([0, 0])
+            self.max = np.array([0, 0])
+        
         self.min -= 0.5
         self.max += 0.5
         self.center = np.round((self.max - self.min) / 2, 3)
@@ -239,9 +214,11 @@ class PointCloud:
     def initClouds(self, lidar) -> np.ndarray:
         """
         Initializes the object cloud and empty cloud based on the lidar data.
+        TODO: use x, y not y, x
         """
         oScan = np.array([p for p in lidar if np.isfinite(p).all()])
         eScan = np.array([p for p in lidar if not np.isfinite(p).all()])
+        
         try: 
             ox = oScan[:,1] * np.cos(oScan[:,0])
             oy = oScan[:,1] * np.sin(oScan[:,0])
@@ -287,7 +264,6 @@ class PointCloud:
                 if f(p, cloud.emptyCloud):
                     self.emptyCloud = np.delete(self.emptyCloud, np.where((self.emptyCloud == p).all(axis=1)), axis=0)
         self.initMinMax()
-        pass
 
 
     def transform(self, offset: np.ndarray) -> None:
@@ -353,7 +329,7 @@ class OccupancyMap:
         self.max = np.array([max(maxs[:,0]), max(maxs[:,1])])
 
         # Calculate the shape of the occupancy map
-        self.shape = np.round((self.max - self.min) / xy_resolution, 3).astype(int)
+        self.shape = np.round((self.max - self.min) / xy_resolution).astype(int)
 
         # Generate the occupancy map with probability 0.5 in each cell
         self.occupancy_map = np.ones(self.shape) * 0.5
@@ -365,38 +341,37 @@ class OccupancyMap:
         Generates an occupancy map based on the given obstacle coordinates.
 
         Params:
-            fuzz (bool): Whether to apply a fuzzy filter to the occupancy map. Default is False.
+            fuzz (bool): Whether to apply a fuzzy filter to the occupancy map. Default is True.
             
         Returns:
             occupancy_map (numpy.ndarray): Occupancy map representing the environment, where 0.0 represents free area and 1.0 represents occupied area.
         """
 
+        # Draw Empty Space
         for cloud in self.pointclouds:
             o = self.translate(cloud.origin, True)    # Normalise the origin
             for p in cloud.cloud():
-                # x, y coordinates of the the occupied area
-                i = self.translate(p, True)
+                i = self.translate(p, True)   # Normalise the point
+                # Draw ray between origin and point
                 line = bresenham(o, i)
-
                 for p_l in line:
                     try:
                         self.occupancy_map[int(p_l[0])][int(p_l[1])] = 0  # free area 0.0
                     except IndexError:
                         pass
-                    
+        
         # Draw on Obstacles
         wall_thickness = 1
         for cloud in self.pointclouds:
-                for (x, y) in cloud.objectCloud:
-                    ix = int(round((x - self.min[0]) / self.xy_resolution))
-                    iy = int(round((y - self.min[1]) / self.xy_resolution))
+                for p in cloud.objectCloud:
+                    i = self.translate(p, True)
                     
-                    for i in range(wall_thickness+1):
+                    for w in range(wall_thickness+1):
                         try:
-                            self.occupancy_map[ix][iy] = 1.0  # occupied area 1.0
-                            self.occupancy_map[ix + i][iy] = 1.0  # extend the occupied area
-                            self.occupancy_map[ix][iy + i] = 1.0  # extend the occupied area
-                            self.occupancy_map[ix + i][iy + i] = 1.0  # extend the occupied area
+                            self.occupancy_map[i[0]][i[1]] = 1.0  # occupied area 1.0
+                            self.occupancy_map[i[0] + w][i[1]] = 1.0  # extend the occupied area
+                            self.occupancy_map[i[0]][i[1] + w] = 1.0  # extend the occupied area
+                            self.occupancy_map[i[0] + w][i[1] + w] = 1.0  # extend the occupied area
                         except IndexError:
                             pass
             
@@ -429,11 +404,10 @@ class OccupancyMap:
                 cloud.transform(cloud.origin - self.offset)
                 # TODO: find efficient method of removing duplicates
                 # cloud.removeDuplicates(new_pointcloud)
+                
                 if cloud.isEmpty():
                     continue
                 new_pointcloud.append(cloud)
-        
-        # Maybe try merging pointclouds with similar origins (some tolerance)
         
         # rerolls the offset so it doesn't get rolled twice
         self.__init__(np.roll(self.offset,1), new_pointcloud)
@@ -470,9 +444,9 @@ class OccupancyMap:
             int: The grid index corresponding to the translated coordinate.
         """
         if yx:
-            return np.round(((coord - self.offset) - self.min) / self.xy_resolution , 0).astype(int)
+            return np.round(((coord - self.offset) - self.min) / self.xy_resolution).astype(int)
         else:
-            return np.round(((np.roll(coord,1) - self.offset) - self.min) / self.xy_resolution , 0).astype(int)
+            return np.round(((np.roll(coord,1) - self.offset) - self.min) / self.xy_resolution).astype(int)
     
     
     def normalise(self) -> None:
@@ -528,37 +502,27 @@ class OccupancyMap:
 # ! TEST CODE
 
 def test_1():
-    if os.path.exists("move"):
-        shutil.rmtree("move")
-    os.makedirs("move")
-    
-    if os.path.exists("map"):
-        shutil.rmtree("map")
-    os.makedirs("map")
-    
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
-    res = 5
+    res = 10
     max_dist = 1.5
-    controller = simulate.Controller(np.array([0, 1]), 0, region, res, max_scan_dist=max_dist)
-    
+    controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
     cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
     m = OccupancyMap(controller.pos, [cloud])
-    index = 1
-    for dist in [0.25*i for i in range(1, 10)]:
-        for angle in [30 for x in range(360//30)]:
-            controller.turn(angle, deg=True)
-            if not controller.forward(dist):
-                continue
-            cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
-            m.merge(OccupancyMap(controller.pos, [cloud]))
-            m.generate()
-            m.show(save=True, path=f"map/{index}.png")
-            controller.show(save=True, path=f"move/{index}.png")
-            index+=1
-
-    m.generate()
-    m.show()
+    
+    for i in range(0, 33):
+        cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+        m.merge(OccupancyMap(controller.pos, [cloud]))
+        m.generate()
+        
+        next = nextMappingPoint(m, max_dist)
+        path = route(controller, next, m)
+        next = path[-1]
+        
+        for p in path:
+            toPoint(controller, p)
+        
+        m.show()
 
 
 def test_2():
@@ -598,6 +562,6 @@ def test_2():
         m.show(save=True, path=f"map/{index}.png")
         index+=o
     
-test_2()
-simulate.folderToGIF("map")
-simulate.folderToGIF("move", frame_length = 10)
+# test_2()
+# simulate.folderToGIF("map")
+# simulate.folderToGIF("move", frame_length = 10)
