@@ -21,7 +21,7 @@ def route(controller: "simulate.Controller", end: np.ndarray, map: "OccupancyMap
         np.ndarray: The calculated route as an array of coordinates.
     """
     start = controller.pos
-    moveDist = map.xy_resolution
+    moveDist = map.resolution
     
     g = {}
     g[str(start)] = 0
@@ -35,7 +35,7 @@ def route(controller: "simulate.Controller", end: np.ndarray, map: "OccupancyMap
     while q.empty() == False:
         _, cur = q.get()
         cur = np.array(cur)
-        str_cur = str(cur)
+        strCur = str(cur)
         
         if np.linalg.norm(cur - end) < moveDist:
             found = True
@@ -44,20 +44,20 @@ def route(controller: "simulate.Controller", end: np.ndarray, map: "OccupancyMap
         for d in np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1] if (x,y) != (0,0)]):
             
             next = cur + d * moveDist
-            str_next = str(next)
+            strNext = str(next)
             
             # TODO: Penalize being near obstacles
-            if map.sample_coord(next) > 0.2:
+            if map.sampleCoord(next) > 0.2:
                 continue
             
             try:
-                if g[str_cur] + controller.move_dist < g[str_next]:
-                    g[str_next] = g[str_cur] + moveDist
-                    parent[str_next] = cur
+                if g[strCur] + controller.move_dist < g[strNext]:
+                    g[strNext] = g[strCur] + moveDist
+                    parent[strNext] = cur
             except KeyError:
-                g[str_next] = g[str_cur] + moveDist
+                g[strNext] = g[strCur] + moveDist
                 q.put((f(next), tuple(next)))
-                parent[str_next] = cur
+                parent[strNext] = cur
             
 
     if found:
@@ -90,10 +90,10 @@ def nextMappingPoint(map: "OccupancyMap", scanDist: float = 0.5) -> np.ndarray:
     # BFS
     for cloud in clouds:
         for p in cloud.emptyCloud:
-            d = (p - cloud.origin) / np.linalg.norm(p - cloud.origin) * map.xy_resolution
+            d = (p - cloud.origin) / np.linalg.norm(p - cloud.origin) * map.resolution
             if any(np.linalg.norm(p - c.origin) < 0.5 for c in clouds) or \
-                map.sample_coord(p + d, yx=True, mean=True) <= 1e-4 or \
-                map.sample_coord(p + d, yx=True, mean=True) >= 0.55:
+                map.sampleCoord(p + d, yx=True, mean=True) <= 1e-4 or \
+                map.sampleCoord(p + d, yx=True, mean=True) >= 0.55:
                 continue
             return np.roll(p - d, 1)
     
@@ -304,24 +304,24 @@ class OccupancyMap:
     Attributes:
     - offset: numpy.ndarray - The offset of the occupancy map.
     - pointclouds: list - The coordinates of the obstacles.
-    - xy_resolution: float - The resolution of the occupancy map.
+    - resolution: float - The resolution of the occupancy map.
     """
     
-    def __init__(self, offset: np.ndarray, pointclouds: list['PointCloud'], xy_resolution: float=0.05):
+    def __init__(self, offset: np.ndarray, pointclouds: list['PointCloud'], resolution: float=0.05):
         """
         Initializes an occupancy map based on the given obstacle coordinates and resolution.
 
         Params:
             offset (np.ndarray): The offset of the occupancy map, given (x, y).
             pointclouds (list[np.ndarray]): The coordinates of the obstacles, given [ox, oy].T.
-            xy_resolution (float, optional): Resolution of the occupancy map. Defaults to 0.02.
+            resolution (float, optional): Resolution of the occupancy map. Defaults to 0.02.
 
         Returns:
             None
         """
         # explanatory
         self.offset = np.roll(offset,1)
-        self.xy_resolution = xy_resolution 
+        self.resolution = resolution 
         self.pointclouds = pointclouds if not isinstance(pointclouds, PointCloud) else [pointclouds]
 
         # Gets the minimum and maximum x and y coordinates of the obstacles
@@ -332,10 +332,10 @@ class OccupancyMap:
         self.max = np.array([max(maxs[:,0]), max(maxs[:,1])])
 
         # Calculate the shape of the occupancy map
-        self.shape = np.round((self.max - self.min) / xy_resolution).astype(int)
+        self.shape = np.round((self.max - self.min) / resolution).astype(int)
 
         # Generate the occupancy map with probability 0.5 in each cell
-        self.occupancy_map = np.ones(self.shape) * 0.5
+        self.map = np.ones(self.shape) * 0.5
 
 
     
@@ -347,7 +347,7 @@ class OccupancyMap:
             fuzz (bool): Whether to apply a fuzzy filter to the occupancy map. Default is True.
             
         Returns:
-            occupancy_map (numpy.ndarray): Occupancy map representing the environment, where 0.0 represents free area and 1.0 represents occupied area.
+            map (numpy.ndarray): Occupancy map representing the environment, where 0.0 represents free area and 1.0 represents occupied area.
         """
 
         # Draw Empty Space
@@ -357,29 +357,29 @@ class OccupancyMap:
                 i = self.translate(p, True)   # Normalise the point
                 # Draw ray between origin and point
                 line = bresenham(o, i)
-                for p_l in line:
+                for pl in line:
                     try:
-                        self.occupancy_map[int(p_l[0])][int(p_l[1])] = 0  # free area 0.0
+                        self.map[int(pl[0])][int(pl[1])] = 0  # free area 0.0
                     except IndexError:
                         pass
         
         # Draw on Obstacles
-        wall_thickness = 3
+        wallThickness = 3
         for cloud in self.pointclouds:
                 for p in cloud.objectCloud:
                     i = self.translate(p, True)
                     
-                    for w in range(wall_thickness):
+                    for w in range(wallThickness):
                         try:
                             prob = 1
-                            self.occupancy_map[i[0] + w][i[1]] = prob  # extend the occupied area
-                            self.occupancy_map[i[0]][i[1] + w] = prob  # extend the occupied area
-                            self.occupancy_map[i[0] + w][i[1] + w] = prob  # extend the occupied area
+                            self.map[i[0] + w][i[1]] = prob  # extend the occupied area
+                            self.map[i[0]][i[1] + w] = prob  # extend the occupied area
+                            self.map[i[0] + w][i[1] + w] = prob  # extend the occupied area
                         except IndexError:
                             pass
             
         # Apply Fuzzy Filter
-        self.occupancy_map = manFuzz(self.occupancy_map) if fuzz else self.occupancy_map
+        self.map = manFuzz(self.map) if fuzz else self.map
 
         return self
 
@@ -399,25 +399,25 @@ class OccupancyMap:
         
         for other in others:
             
-            new_pointcloud = self.pointclouds
+            newPointcloud = self.pointclouds
 
             # Normalise the other pointclouds
             for cloud in other.pointclouds:
 
                 cloud.transform(cloud.origin - self.offset)
                 # TODO: find efficient method of removing duplicates
-                # cloud.removeDuplicates(new_pointcloud)
+                # cloud.removeDuplicates(newPointcloud)
                 
                 if cloud.isEmpty():
                     continue
-                new_pointcloud.append(cloud)
+                newPointcloud.append(cloud)
         
         # rerolls the offset so it doesn't get rolled twice
-        self.__init__(np.roll(self.offset,1), new_pointcloud)
+        self.__init__(np.roll(self.offset,1), newPointcloud)
         return self
     
     
-    def sample_coord(self, coord: np.ndarray, yx=False, mean=False, n=3) -> np.ndarray:
+    def sampleCoord(self, coord: np.ndarray, yx=False, mean=False, n=3) -> np.ndarray:
         """
         Sample the occupancy map at a given coordinate.
 
@@ -431,10 +431,10 @@ class OccupancyMap:
         try:
             coord = self.translate(coord, yx)
             if not mean:
-                return self.occupancy_map[coord[0], coord[1]]
+                return self.map[coord[0], coord[1]]
             else:
-                return 1 if 1 in self.occupancy_map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n] \
-                            else np.mean(self.occupancy_map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n])
+                return 1 if 1 in self.map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n] \
+                            else np.mean(self.map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n])
         except IndexError:
             return 1
     
@@ -451,9 +451,9 @@ class OccupancyMap:
             int: The grid index corresponding to the translated coordinate.
         """
         if yx:
-            return np.round(((coord - self.offset) - self.min) / self.xy_resolution).astype(int)
+            return np.round(((coord - self.offset) - self.min) / self.resolution).astype(int)
         else:
-            return np.round(((np.roll(coord,1) - self.offset) - self.min) / self.xy_resolution).astype(int)
+            return np.round(((np.roll(coord,1) - self.offset) - self.min) / self.resolution).astype(int)
     
     
     def normalise(self) -> None:
@@ -475,7 +475,7 @@ class OccupancyMap:
         """   
         plt.figure(1, figsize=(4, 4))
         if not raycast:
-            plt.imshow(self.occupancy_map, cmap="PiYG_r")
+            plt.imshow(self.map, cmap="PiYG_r")
             plt.clim(0, 1)
             plt.gca().set_xticks(np.arange(-.5, self.shape[1], 1), minor=True)
             plt.gca().set_yticks(np.arange(-.5, self.shape[0], 1), minor=True)
@@ -529,7 +529,7 @@ def test_1():
         for p in path:
             toPoint(controller, p)
             p = m.translate(p)
-            m.occupancy_map[p[0], p[1]] = 1
+            m.map[p[0], p[1]] = 1
         
         m.show()
 

@@ -226,6 +226,8 @@ class Controller:
         Returns:
             np.ndarray: An array containing the lidar scan results.
         """
+        # TODO: Add the angle of the bot to the lidar angles
+        
         # Init
         angles = [np.deg2rad(i) for i in np.arange(0, 360, self.scan_res)]
         
