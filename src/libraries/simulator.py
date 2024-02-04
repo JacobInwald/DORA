@@ -127,7 +127,7 @@ def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], no
     return min_dist + noise if min_dist < max_dist else np.inf
 
 
-def folderToGIF(dir: str, frame_length: int = 100):
+def folderToGIF(dir: str, frame_length: int = 100, length = None):
     """
     Converts a folder of PNG images into a GIF animation.
 
@@ -143,6 +143,12 @@ def folderToGIF(dir: str, frame_length: int = 100):
     frames = [Image.open(frame) for frame in frames]
     shutil.rmtree(dir)
     frame_one = frames[0]
+    
+    if length:
+        frame_length = length // len(frames)
+    if frame_length < 5:
+        frame_length = 5
+        
     frame_one.save(fp_out, format="GIF", append_images=frames,
                save_all=True, duration=frame_length, loop=0)
 
@@ -181,14 +187,14 @@ class Controller:
         move_dir = np.array([np.cos(self.rot), np.sin(self.rot)]) * dist
 
         if len(lineIntersectPolygon(self.pos, move_dir, self.map)) > 0:
-            plt.figure(1, figsize=(4, 4))
-            plt.plot([self.pos[0], self.pos[0] + move_dir[0]],
-                     [self.pos[1], self.pos[1] + move_dir[1]],
-                     "ro-")
-            for region in self.map:
-                r = np.append(region, [region[0]], axis=0)
-                plt.plot(r[:,0], r[:,1], "bo-")
-            plt.show()
+            # plt.figure(1, figsize=(4, 4))
+            # plt.plot([self.pos[0], self.pos[0] + move_dir[0]],
+            #          [self.pos[1], self.pos[1] + move_dir[1]],
+            #          "ro-")
+            # for region in self.map:
+            #     r = np.append(region, [region[0]], axis=0)
+            #     plt.plot(r[:,0], r[:,1], "bo-")
+            # plt.show()
             print("Collision detected, cannot move forward.")
             return False
         
