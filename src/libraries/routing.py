@@ -47,7 +47,7 @@ def route(controller: "simulate.Controller", end: np.ndarray, map: "OccupancyMap
             str_next = str(next)
             
             # TODO: Penalize being near obstacles
-            if map.sample_coord(next) >= 0.4:
+            if map.sample_coord(next) > 0.2:
                 continue
             
             try:
@@ -69,7 +69,7 @@ def route(controller: "simulate.Controller", end: np.ndarray, map: "OccupancyMap
         route.reverse()
         return np.array(route)
     
-    return []
+    return [start]
 
 
 def nextMappingPoint(map: "OccupancyMap", scanDist: float = 0.5) -> np.ndarray:
@@ -90,10 +90,13 @@ def nextMappingPoint(map: "OccupancyMap", scanDist: float = 0.5) -> np.ndarray:
     # BFS
     for cloud in clouds:
         for p in cloud.emptyCloud:
-            if any(np.linalg.norm(c.origin - p) < (scanDist / 2) for c in clouds) or\
-                map.sample_coord(p, True) >= 0.5:
+            d = (p - cloud.origin) / np.linalg.norm(p - cloud.origin) * map.xy_resolution
+            if any(np.linalg.norm(p - c.origin) < 0.5 for c in clouds) or \
+                map.sample_coord(p + d, yx=True, mean=True) <= 1e-4 or \
+                map.sample_coord(p + d, yx=True, mean=True) >= 0.55:
                 continue
-            return np.roll(p,1) * 0.9
+            return np.roll(p - d, 1)
+    
         
     return clouds[-1].origin
     
@@ -127,7 +130,7 @@ def manFuzz(grid: np.ndarray) -> np.ndarray:
     """
     for i in range(grid.shape[0]):
         for j in range(grid.shape[1]):
-            if grid[i, j] == 1:
+            if grid[i, j] >= 0.95 or grid[i, j] == 0:
                 continue
             try:
                 grid[i, j] = np.mean([grid[i+x, j+y] for x in range(-1,2) for y in range(-1,2)])
@@ -361,17 +364,17 @@ class OccupancyMap:
                         pass
         
         # Draw on Obstacles
-        wall_thickness = 1
+        wall_thickness = 3
         for cloud in self.pointclouds:
                 for p in cloud.objectCloud:
                     i = self.translate(p, True)
                     
-                    for w in range(wall_thickness+1):
+                    for w in range(wall_thickness):
                         try:
-                            self.occupancy_map[i[0]][i[1]] = 1.0  # occupied area 1.0
-                            self.occupancy_map[i[0] + w][i[1]] = 1.0  # extend the occupied area
-                            self.occupancy_map[i[0]][i[1] + w] = 1.0  # extend the occupied area
-                            self.occupancy_map[i[0] + w][i[1] + w] = 1.0  # extend the occupied area
+                            prob = 1
+                            self.occupancy_map[i[0] + w][i[1]] = prob  # extend the occupied area
+                            self.occupancy_map[i[0]][i[1] + w] = prob  # extend the occupied area
+                            self.occupancy_map[i[0] + w][i[1] + w] = prob  # extend the occupied area
                         except IndexError:
                             pass
             
@@ -414,7 +417,7 @@ class OccupancyMap:
         return self
     
     
-    def sample_coord(self, coord: np.ndarray, yx=False) -> np.ndarray:
+    def sample_coord(self, coord: np.ndarray, yx=False, mean=False, n=3) -> np.ndarray:
         """
         Sample the occupancy map at a given coordinate.
 
@@ -427,7 +430,11 @@ class OccupancyMap:
         """
         try:
             coord = self.translate(coord, yx)
-            return self.occupancy_map[coord[0], coord[1]]
+            if not mean:
+                return self.occupancy_map[coord[0], coord[1]]
+            else:
+                return 1 if 1 in self.occupancy_map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n] \
+                            else np.mean(self.occupancy_map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n])
         except IndexError:
             return 1
     
@@ -514,13 +521,15 @@ def test_1():
         cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
-        
+        m.show()
         next = nextMappingPoint(m, max_dist)
         path = route(controller, next, m)
         next = path[-1]
         
         for p in path:
             toPoint(controller, p)
+            p = m.translate(p)
+            m.occupancy_map[p[0], p[1]] = 1
         
         m.show()
 
@@ -543,7 +552,7 @@ def test_2():
     m = OccupancyMap(controller.pos, [cloud])
     index = 1
     
-    for i in range(0, 33):
+    for i in range(0, 45):
         cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
@@ -562,6 +571,7 @@ def test_2():
         m.show(save=True, path=f"map/{index}.png")
         index+=o
     
-# test_2()
-# simulate.folderToGIF("map")
-# simulate.folderToGIF("move", frame_length = 10)
+test_2()
+length = 4 * 1000
+simulate.folderToGIF("map", length=length)
+simulate.folderToGIF("move", length=length)
