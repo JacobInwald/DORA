@@ -1,119 +1,11 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from collections import deque
 import simulator as simulate
 import os, shutil
 from queue import PriorityQueue
 
 
 # ! Library Methods
-
-def route(controller: "simulate.Controller", end: np.ndarray, map: "OccupancyMap") -> np.ndarray:
-    """
-    This function calculates the route from the current position to the given end point on the map.
-    
-    Parameters:
-        controller (simulate.Controller): The controller object used for simulation.
-        end (np.ndarray): The end point coordinates on the map.
-        map (OccupancyMap): The occupancy map object representing the environment.
-    
-    Returns:
-        np.ndarray: The calculated route as an array of coordinates.
-    """
-    start = controller.pos
-    moveDist = map.resolution
-    
-    g = {}
-    g[str(start)] = 0
-    f = lambda p: np.linalg.norm(p - end) + g[str(p)]
-    q = PriorityQueue()
-    q.put((f(start), start))
-    parent = {}
-    found = False
-    
-    # A* Algorithm
-    while q.empty() == False:
-        _, cur = q.get()
-        cur = np.array(cur)
-        strCur = str(cur)
-        
-        if np.linalg.norm(cur - end) < moveDist:
-            found = True
-            break
-        
-        for d in np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1] if (x,y) != (0,0)]):
-            
-            next = cur + d * moveDist
-            strNext = str(next)
-            
-            # TODO: Penalize being near obstacles
-            if map.sampleCoord(next) > 0.2:
-                continue
-            
-            try:
-                if g[strCur] + controller.move_dist < g[strNext]:
-                    g[strNext] = g[strCur] + moveDist
-                    parent[strNext] = cur
-            except KeyError:
-                g[strNext] = g[strCur] + moveDist
-                q.put((f(next), tuple(next)))
-                parent[strNext] = cur
-            
-
-    if found:
-        route = [cur]
-        cur = str(cur)
-        while cur in parent:
-            route.append(parent[cur])
-            cur = str(parent[cur])
-        route.reverse()
-        return np.array(route)
-    
-    return [start]
-
-
-def nextMappingPoint(map: "OccupancyMap", scanDist: float = 0.5) -> np.ndarray:
-    """
-    Finds the next mapping point in the occupancy map.
-
-    Parameters:
-    - map: OccupancyMap object representing the map.
-    - scanDist: float representing the scanning distance.
-
-    Returns:
-    - numpy array representing the next mapping point.
-    """
-    
-    map.normalise()
-    clouds = map.pointclouds
-    
-    # BFS
-    for cloud in clouds:
-        for p in cloud.emptyCloud:
-            d = (p - cloud.origin) / np.linalg.norm(p - cloud.origin) * map.resolution
-            if any(np.linalg.norm(p - c.origin) < 0.5 for c in clouds) or \
-                map.sampleCoord(p + d, yx=True, mean=True) <= 1e-4 or \
-                map.sampleCoord(p + d, yx=True, mean=True) >= 0.55:
-                continue
-            return np.roll(p - d, 1)
-    
-        
-    return clouds[-1].origin
-    
-
-def toPoint(controller: "simulate.Controller", end: np.ndarray) -> None:
-    """
-    Move the robot to the given end point on the map.
-    
-    Parameters:
-        controller (simulate.Controller): The controller object used for simulation.
-        end (np.ndarray): The end point coordinates on the map.
-    """
-    dist = np.linalg.norm(end - controller.pos)
-    angle = np.arctan2(end[1] - controller.pos[1], end[0] - controller.pos[0]) - controller.rot
-    controller.turn(angle)
-    controller.forward(dist)
-
 
 def manFuzz(grid: np.ndarray) -> np.ndarray:
     """
@@ -161,6 +53,203 @@ def bresenham(start: np.ndarray, end: np.ndarray, res: float=1) -> np.ndarray[np
     
     return result
 
+
+class GPS:
+    """
+    Represents a GPS sensor.
+    
+    Attributes:
+    - pos: numpy.ndarray - The current position of the robot.
+    TODO: Implement the GPS sensor class (Wilfredo)
+    """
+    
+    def __init__(self):
+        pass
+    
+    
+    def locate(self, controller: "simulate.Controller") -> np.ndarray, float:
+        """
+        Updates the position of the robot based on the GPS sensor.
+        """
+        img = controller.getOverheadImage()
+        return self.getPosInImage(img), self.getRotInImage(img)
+    
+    
+    def getPosInImage(self, img: np.ndarray) -> np.ndarray:
+        """
+        Returns the position of the robot in the given image.
+
+        Params:
+            img (np.ndarray): The image to search for the robot.
+
+        Returns:
+            np.ndarray: The position of the robot in the image.
+            
+        TODO: Implement the logic to find the position of the robot in the image. (Wilfredo)
+        """
+        pass
+    
+    
+    def getRotInImage(self, img: np.ndarray) -> float:
+        """
+        Returns the position of the robot in the given image.
+
+        Params:
+            img (np.ndarray): The image to search for the robot.
+
+        Returns:
+            np.ndarray: The position of the robot in the image.
+            
+        TODO: Implement the logic to find the position of the robot in the image. (Wilfredo)
+        """
+        pass
+    
+
+class Router:
+    """
+    The Router class is responsible for calculating routes and navigating the robot on the map.
+    TODO: Finish it (Keming)
+    """
+
+    def __init__(self, controller: "simulate.Controller"):
+        self.controller = controller
+
+
+    def route(self, end: np.ndarray, map: "OccupancyMap") -> np.ndarray:
+        """
+        This function calculates the route from the current position to the given end point on the map.
+        
+        Parameters:
+            controller (simulate.Controller): The controller object used for simulation.
+            end (np.ndarray): The end point coordinates on the map.
+            map (OccupancyMap): The occupancy map object representing the environment.
+        
+        Returns:
+            np.ndarray: The calculated route as an array of coordinates.
+        """
+        start = self.controller.pos
+        moveDist = map.resolution
+        
+        g = {}
+        g[str(start)] = 0
+        f = lambda p: np.linalg.norm(p - end) + g[str(p)]
+        q = PriorityQueue()
+        q.put((f(start), start))
+        parent = {}
+        found = False
+        
+        # A* Algorithm
+        while q.empty() == False:
+            _, cur = q.get()
+            cur = np.array(cur)
+            strCur = str(cur)
+            
+            if np.linalg.norm(cur - end) < moveDist:
+                found = True
+                break
+            
+            for d in np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1] if (x,y) != (0,0)]):
+                
+                next = cur + d * moveDist
+                strNext = str(next)
+                
+                # TODO: Penalize being near obstacles
+                if map.sampleCoord(next) > 0.2:
+                    continue
+                
+                try:
+                    if g[strCur] + self.controller.move_dist < g[strNext]:
+                        g[strNext] = g[strCur] + moveDist
+                        parent[strNext] = cur
+                except KeyError:
+                    g[strNext] = g[strCur] + moveDist
+                    q.put((f(next), tuple(next)))
+                    parent[strNext] = cur
+                
+
+        if found:
+            route = [cur]
+            cur = str(cur)
+            while cur in parent:
+                route.append(parent[cur])
+                cur = str(parent[cur])
+            route.reverse()
+            return np.array(route)
+        
+        return [start]
+
+
+    def nextMappingPoint(map: "OccupancyMap") -> np.ndarray:
+        """
+        Finds the next mapping point in the occupancy map.
+
+        Parameters:
+        - map: OccupancyMap object representing the map.
+
+        Returns:
+        - numpy array representing the next mapping point.
+        """
+        
+        map.normalise()
+        clouds = map.pointclouds
+        
+        # BFS
+        for cloud in clouds:
+            for p in cloud.emptyCloud:
+                d = (p - cloud.origin) / np.linalg.norm(p - cloud.origin) * map.resolution
+                if any(np.linalg.norm(p - c.origin) < 0.5 for c in clouds) or \
+                    map.sampleCoord(p + d, yx=True, mean=True) <= 1e-4 or \
+                    map.sampleCoord(p + d, yx=True, mean=True) >= 0.55:
+                    continue
+                return np.roll(p - d, 1)
+        
+            
+        return clouds[-1].origin
+     
+     
+    def nextTidyingPoint(map: "OccupancyMap") -> np.ndarray:
+        """
+        Finds the next tidying point in the occupancy map.
+
+        Parameters:
+        - map: OccupancyMap object representing the map.
+
+        Returns:
+        - numpy array representing the next tidying point.
+        
+        TODO: Implement the logic to find the next tidying point (Keming)
+        TODO: Feel free to change the structure as well, just document it in the PR
+        """
+        pass
+    
+    
+    def toPoint(self, end: np.ndarray) -> None:
+        """
+        Move the robot to the given end point on the map.
+        
+        Parameters:
+            controller (simulate.Controller): The controller object used for simulation.
+            end (np.ndarray): The end point coordinates on the map.
+        TODO: Probably should be moved to the Controller class (fine for now)
+        """
+        dist = np.linalg.norm(end - self.controller.pos)
+        angle = np.arctan2(end[1] - self.controller.pos[1], end[0] - self.controller.pos[0]) - self.controller.rot
+        self.controller.turn(angle)
+        self.controller.forward(dist)
+
+
+    def followRoute(self, route: np.ndarray) -> None:
+        """
+        Follow the given route on the map.
+        
+        Parameters:
+            controller (simulate.Controller): The controller object used for simulation.
+            route (np.ndarray): The calculated route as an array of coordinates.
+        TODO: Probratebly should be moved to the Controller class (fine for now)
+        """
+        for i in range(1, len(route)):
+            self.toPoint(route[i])
+    
 
 class PointCloud:
     """
@@ -299,7 +388,8 @@ class PointCloud:
 
 class OccupancyMap:  
     """
-    Represents an occupancy map based on obstacle coordinates and resolution.
+    Represents an occupancy map based on obstacle coordinates and resolution. 
+    nb: The coords are in the form [x, y].T or (y, x)
     
     Attributes:
     - offset: numpy.ndarray - The offset of the occupancy map.
@@ -509,25 +599,37 @@ class OccupancyMap:
 # ! TEST CODE
 
 def test_1():
+    # Initialise Bounds
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
-    res = 10
-    max_dist = 1.5
+    res = 10    # Resolution of LIDAR scans
+    max_dist = 1.5 # max distance of LIDAR scans
+    # Initialise Controller
     controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
+    # Initialise PointCloud with a LIDAR scan of the environment
     cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+    # Initialise a new OccupancyMap with the PointCloud
     m = OccupancyMap(controller.pos, [cloud])
-    
+    # Initiliase a router
+    router = Router(controller)
+    # Moves the controller 33 times
     for i in range(0, 33):
+        # Create a new scan
         cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+        # Merge the new Occupancy Map with the previous one
         m.merge(OccupancyMap(controller.pos, [cloud]))
+        # Generate it and show it
         m.generate()
         m.show()
-        next = nextMappingPoint(m, max_dist)
-        path = route(controller, next, m)
+        
+        # Move to the next mapping point
+        next = router.nextMappingPoint(m, max_dist)
+        path = router.route(controller, next, m)
         next = path[-1]
         
+        # Move and trace path on the map
         for p in path:
-            toPoint(controller, p)
+            router.toPoint(controller, p)
             p = m.translate(p)
             m.map[p[0], p[1]] = 1
         
@@ -535,6 +637,7 @@ def test_1():
 
 
 def test_2():
+    
     if os.path.exists("move"):
         shutil.rmtree("move")
     os.makedirs("move")
@@ -549,29 +652,66 @@ def test_2():
     max_dist = 1.5
     controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
     cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+    router = Router(controller)
     m = OccupancyMap(controller.pos, [cloud])
     index = 1
-    
     for i in range(0, 45):
         cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
         
-        next = nextMappingPoint(m, max_dist)
-        path = route(controller, next, m)
+        next = router.nextMappingPoint(m, max_dist)
+        path = router.route(controller, next, m)
         next = path[-1]
         
         m.generate()
+
         o=0
         for p in path:
             controller.show(save=True, path=f"move/{index+o}.png")
             o+=1
-            toPoint(controller, p)
+            router.toPoint(controller, p)
         
-        m.show(save=True, path=f"map/{index}.png")
+
         index+=o
+ 
+ 
+def test_3():
+    if os.path.exists("combine"):
+        shutil.rmtree("combine")
+    os.makedirs("combine")
     
-test_2()
-length = 4 * 1000
-simulate.folderToGIF("map", length=length)
-simulate.folderToGIF("move", length=length)
+    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
+                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
+    res = 10
+    max_dist = 1.5
+    controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
+    cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+    m = OccupancyMap(controller.pos, [cloud])
+    router = Router(controller)
+    index = 1
+    combine = 1
+    compress = 3
+    for i in range(0, 40):
+        cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+        m.merge(OccupancyMap(controller.pos, [cloud]))
+        m.generate()
+        
+        next = router.nextMappingPoint(m, max_dist)
+        path = router.route(controller, next, m)
+        next = path[-1]
+
+        for x in range(len(path) // compress):
+            m.show(save=True, path=f"combine/{combine}.png")
+            combine += 1
+
+        o=0
+        for p in path:
+            controller.show(save=True, path=f"combine/{combine}.png")
+            if o % compress == 0: 
+                combine += 1
+            o+=1
+            router.toPoint(controller, p)
+
+        index+=o
+        
