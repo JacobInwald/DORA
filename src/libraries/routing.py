@@ -67,7 +67,7 @@ class GPS:
         pass
     
     
-    def locate(self, controller: "simulate.Controller") -> np.ndarray, float:
+    def locate(self, controller: "simulate.Controller"):
         """
         Updates the position of the robot based on the GPS sensor.
         """
