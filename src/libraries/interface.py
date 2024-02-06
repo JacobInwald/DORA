@@ -8,7 +8,11 @@ class Controller:
         self.rot: float = rot
         
     # ! METHODS
-    # TODO: Implement these methods.
+    # TODO: Implement these methods. They are the basic movement and sensor methods.
+    # TODO: Use the simulator class as a base for how the output (if any) should look like.
+    # TODO: Most of these methods can't really be implemented without an idea of what method of hardware control we are using.
+    # TODO: For now, just implement whatever you can and research what the best approach is
+    # TODO: (Wanting)
     
     # Movement
     
@@ -53,3 +57,7 @@ class Controller:
     def __str__(self) -> str:
         return f"DORA at {self.pos}, with angle of {self.rot}"
      
+     
+controller = Controller(np.array([0, 0]), 0)
+controller.forward(10)
+controller.turn(np.pi/2)

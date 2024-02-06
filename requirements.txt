@@ -2,3 +2,8 @@ inference
 opencv-python
 roboflow
 ultralytics
+numpy
+glob
+natsort
+matplotlib
+PIL
