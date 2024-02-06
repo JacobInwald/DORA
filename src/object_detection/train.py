@@ -29,8 +29,8 @@ def train_model(data, model="yolov8n.yaml", epochs=100, batch_size=16, img_size=
     - data (str): The dataset to train the model on.
     - model (str): The model to use. Default is "yolov8".
     - epochs (int): The number of epochs to train for. Default is 100.
-    - batch_size (int): The batch size to use. Default is 16.
-    - img_size (int): The size of the images. Default is 416.
+    - batch (int): The batch size to use. Default is 16.
+    - imgsz (int): The size of the images. Default is 416.
     - weights (str): The weights to use. Default is "yolov8.pt".
 
     Returns:
@@ -46,5 +46,5 @@ if __name__ == '__main__':
     dataset = load_dataset(version=dataset_version)
     data = f'{dataset.location}/data.yaml'
     # data = 'Daycare-Toys-1/data.yaml'
-    model = train_model(data)
-    model.save(f'weights/best_{dataset_version}.pt')
+    model = train_model(data, batch_size=64)
+    # model.save(f'weights/best_{dataset_version}.pt')
