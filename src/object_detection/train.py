@@ -46,5 +46,5 @@ if __name__ == '__main__':
     dataset = load_dataset(version=dataset_version)
     data = f'{dataset.location}/data.yaml'
     # data = 'Daycare-Toys-1/data.yaml'
-    model = train_model(data)
-    model.save(f'weights/best_{dataset_version}.pt')
+    model = train_model(data, batch_size=32)
+    # model.save(f'weights/best_{dataset_version}.pt')

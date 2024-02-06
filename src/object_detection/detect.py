@@ -11,7 +11,7 @@ class Detect:
 
 
 if __name__ == '__main__':
-    path = 'weights/best_1.pt'
+    path = 'weights/best.pt'
     model = Detect(path)
-    vid_path = '../../data/vid/20240201_dav.mp4'
+    vid_path = '../../data/vid/20240201_dav_cut.mp4'
     model.predict(vid_path)
