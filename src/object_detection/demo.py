@@ -1,7 +1,5 @@
 import cv2
 import argparse
-import sys
-sys.path.insert(0, '../object_detection')
 from detect import Detect
 
 
