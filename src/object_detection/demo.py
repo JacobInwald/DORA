@@ -1,5 +1,8 @@
 import cv2
 import argparse
+
+import numpy as np
+
 from detect import Detect
 
 
@@ -9,21 +12,22 @@ def main(source, weights):
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            results = model.predict(frame)
+            results = model.predictions(frame)[0]
             pred = annotate(results)
-            out = cv2.vconcat([frame, pred])
+            out = cv2.resize(cv2.vconcat([frame, pred]), dsize=(0, 0), fx=0.4, fy=0.4)
             cv2.imshow('out', out)
         if cv2.waitKey(5) & 0xFF == ord('q'):
-                break
+            break
     cap.release()
 
 
 def annotate(results):
     bbox_colours = [(255, 255, 0), (255, 0, 255), (0, 255, 255)]
-    img = results.orig_img
+    img = results.orig_img.copy()
     boxes = results.boxes
-    for xyxy, cls in (boxes.xyxy, boxes.cls):
-        img = cv2.rectangle(img, xyxy[:2], xyxy[:2], bbox_colours[cls], thickness=2)
+    for xyxy, cls in zip(boxes.xyxy, boxes.cls):
+        xyxy = list(map(round, xyxy.cpu().numpy()))
+        img = cv2.rectangle(img, xyxy[:2], xyxy[2:], bbox_colours[int(cls)], thickness=5)
     return img
 
 
