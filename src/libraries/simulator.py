@@ -1,9 +1,11 @@
+import random as r
 import numpy as np
 import matplotlib.pyplot as plt
 import shutil
 import glob
 from natsort import natsorted
 from PIL import Image
+import routing as rt
 
 # ! Library Methods
 
@@ -127,7 +129,7 @@ def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], no
     return min_dist + noise if min_dist < max_dist else np.inf
 
 
-def folderToGIF(dir: str, frame_length: int = 100):
+def folderToGIF(dir: str, frame_length: int = 100, length = None, frame_div=1):
     """
     Converts a folder of PNG images into a GIF animation.
 
@@ -140,16 +142,45 @@ def folderToGIF(dir: str, frame_length: int = 100):
     fp_out = f"{dir.split('/')[-1]}.gif"
 
     frames = natsorted([file for file in glob.glob(fp_in)])
+    
     frames = [Image.open(frame) for frame in frames]
+    for f in frames:
+        f.putpixel((0,0), (r.randint(0,255),r.randint(0,255),r.randint(0,255),r.randint(0,255)))
+    frames = [frames[i] for i in range(len(frames)) if i % frame_div == 0]
+    frames[0].save(fp_out, save_all=True, append_images=frames[1:], optimize=False, duration=40, loop=0)
+    
     shutil.rmtree(dir)
-    frame_one = frames[0]
-    frame_one.save(fp_out, format="GIF", append_images=frames,
-               save_all=True, duration=frame_length, loop=0)
 
 
 # ! Controller Simulation
 
 class Controller:
+    """
+    A class representing a robot controller.
+
+    Attributes:
+        pos (np.ndarray): The initial position of the robot.
+        rot (float): The initial rotation of the robot in radians.
+        map (list[np.ndarray]): The map of the environment.
+        scan_res (float): The resolution of the LiDAR scan in degrees.
+        noise (bool): Whether to add noise to the LiDAR scan results.
+        max_scan_dist (float): The maximum distance to scan with the LiDAR.
+        move_dist (float): The distance to move the robot forward.
+
+    Methods:
+        __init__(self, pos: np.ndarray, rot: float, map: list[np.ndarray], scan_res: float = 1, noise: bool = True, max_scan_dist: float = 2, move_dist: float = 0.1): 
+            Initialize the controller.
+        forward(self, dist: float):
+            Move the robot forward by a given distance.
+        turn(self, angle: float, deg: bool = False):
+            Turn the robot by a given angle.
+        getLiDARScan(self):
+            Perform a circular LiDAR scan around a given start point within the specified bounds.
+        getOverheadImage(self):
+            Get the overhead image of the environment.
+        show(self, save:bool = False, path:str = ""):
+            Show the environment with the robot's position and orientation.
+    """
     
     def __init__(self, pos: np.ndarray, rot: float, map: list[np.ndarray], scan_res: float = 1, noise: bool = True, max_scan_dist: float = 2, move_dist: float = 0.1):
         """
@@ -159,8 +190,10 @@ class Controller:
             pos (np.ndarray): The initial position of the robot.
             rot (float): The initial rotation of the robot in radians.
             map (list[np.ndarray]): The map of the environment.
+            scan_res (float, optional): The resolution of the LiDAR scan in degrees. Defaults to 1.
             noise (bool, optional): Whether to add noise to the LiDAR scan results. Defaults to True.
             max_scan_dist (float, optional): The maximum distance to scan with the LiDAR. Defaults to 2.
+            move_dist (float, optional): The distance to move the robot forward. Defaults to 0.1.
         """
         self.pos = np.array(pos).astype(float)
         self.rot = rot
@@ -169,7 +202,7 @@ class Controller:
         self.noise = noise
         self.max_scan_dist = max_scan_dist
         self.move_dist = move_dist
-        
+        self.gps = rt.GPS()
 
     def forward(self, dist: float):
         """
@@ -181,55 +214,60 @@ class Controller:
         move_dir = np.array([np.cos(self.rot), np.sin(self.rot)]) * dist
 
         if len(lineIntersectPolygon(self.pos, move_dir, self.map)) > 0:
-            plt.figure(1, figsize=(4, 4))
-            plt.plot([self.pos[0], self.pos[0] + move_dir[0]],
-                     [self.pos[1], self.pos[1] + move_dir[1]],
-                     "ro-")
-            for region in self.map:
-                r = np.append(region, [region[0]], axis=0)
-                plt.plot(r[:,0], r[:,1], "bo-")
-            plt.show()
             print("Collision detected, cannot move forward.")
             return False
         
         self.pos += move_dir
         return True
 
-    
     def turn(self, angle: float, deg: bool = False):
         """
         Turn the robot by a given angle.
 
         Params:
             angle (float): The angle to turn the robot by in radians.
+            deg (bool, optional): Whether the angle is given in degrees. Defaults to False.
         """
         if deg:
             angle = np.deg2rad(angle)
         self.rot = (self.rot + angle) % (2 * np.pi)
 
-    
     def getLiDARScan(self):
         """
-        Perform a circular lidar scan around a given start point within the specified bounds.
-
-        Params:
-            start (np.ndarray): The starting point of the lidar scan.
-            bounds (np.ndarray): The bounds within which the lidar scan is performed.
-            res (int, optional): The resolution of the lidar scan in degrees. Defaults to 1.
+        Perform a circular LiDAR scan around a given start point within the specified bounds.
 
         Returns:
-            np.ndarray: An array containing the lidar scan results.
+            np.ndarray: An array containing the LiDAR scan results.
         """
-        # Init
         angles = [np.deg2rad(i) for i in np.arange(0, 360, self.scan_res)]
-        
-        # Get lidar scan results for each angle
         scan = [np.array([a, lidarRay(self.pos, a, self.map, self.noise, self.max_scan_dist)]) for a in angles]
-                
         return np.array(scan)
 
+    def localize(self):
+        """
+        Localizes the object using GPS coordinates.
+        TODO: Check if the method is working properly. (Wilfredo)
+        """
+        self.pos, self.rot = self.gps.locate()
+
+    def getOverheadImage(self):
+        """
+        Get the overhead image of the environment.
+
+        Returns:
+            TODO: Specify the return type. (Wilfredo)
+        """
+        # TODO: Implement the method.
+        pass
 
     def show(self, save:bool = False, path:str = ""):
+        """
+        Show the environment with the robot's position and orientation.
+
+        Params:
+            save (bool, optional): Whether to save the plot as an image. Defaults to False.
+            path (str, optional): The path to save the image. Required if save is True.
+        """
         plt.figure(1, figsize=(4, 4))
         for region in self.map:
             r = np.append(region, [region[0]], axis=0)
@@ -238,8 +276,8 @@ class Controller:
         plt.arrow(self.pos[0], self.pos[1], 0.15 * np.cos(self.rot), 0.15 * np.sin(self.rot), head_width=0.15, head_length=0.15, fc="r", ec="r")
         plt.axis("equal")
         plt.gca().set_aspect("equal", "box")
-        bottom, top = plt.ylim()  # return the current y-lim
-        plt.ylim((top, bottom))  # rescale y axis, to match the grid orientation
+        bottom, top = plt.ylim()
+        plt.ylim((top, bottom))
         if save:
             plt.savefig(path)
             plt.close()
