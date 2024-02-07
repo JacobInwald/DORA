@@ -154,6 +154,15 @@ class Router:
                 strNext = str(next)
                 
                 # TODO: Penalize being near obstacles
+                
+                # continue if the line formed by cur and next intersect with a berrier (high value in pointcloud)
+                # In this way I guess changing bresenham() helps to penalize being close to barrier e.g. imagine make the line thicker
+                path = bresenham(cur, end)
+                for point in path:
+                    if map.sampleCoord(point) > 0.2:
+                        continue
+                
+                
                 if map.sampleCoord(next) > 0.2:
                     continue
                 
@@ -714,4 +723,3 @@ def test_3():
             router.toPoint(controller, p)
 
         index+=o
-        
