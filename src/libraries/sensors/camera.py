@@ -19,10 +19,8 @@ class Camera:
 
     def __init__(self):
         self.currentFrame = None
-        pass
 
     def preprocess(self):
         """
         Updates the position of the robot based on the GPS sensor.
         """
-        pass

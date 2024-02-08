@@ -27,7 +27,6 @@ class GPS:
     def __init__(self):
         self.pos = np.zeros(2)
         self.rot = 0
-        pass
 
     def locate(self, controller: "simulate.Controller"):
         """
@@ -48,7 +47,6 @@ class GPS:
 
         TODO: Implement the logic to find the position of the robot in the image. (Wilfredo)
         """
-        pass
 
     def getRotInImage(self, img: np.ndarray) -> float:
         """
@@ -62,4 +60,3 @@ class GPS:
 
         TODO: Implement the logic to find the position of the robot in the image. (Wilfredo)
         """
-        pass

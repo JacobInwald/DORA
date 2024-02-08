@@ -1,4 +1,3 @@
-import numpy as np
 from sensors.camera import Camera
 from sensors.lidar import LiDAR
 from sensors.gps import GPS
@@ -21,7 +20,6 @@ class ROSInterface:
         """
         Moves the robot in a given direction at a given speed.
         """
-        pass
 
     def __str__(self) -> str:
         return f"DORA at {self.gps.pos}, with angle of {self.gps.pos}"
