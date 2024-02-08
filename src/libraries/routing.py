@@ -129,12 +129,13 @@ class Router:
         """
         start = self.controller.pos
         moveDist = map.resolution
-        
+
         g = {}
         g[str(start)] = 0
-        f = lambda p: np.linalg.norm(p - end) + g[str(p)]
+        alpha = 0.5 # the penalty parameter for being close to obstacles
+        f = lambda p,a: 3* np.linalg.norm(p - end) + g[str(p)] + a * alpha
         q = PriorityQueue()
-        q.put((f(start), start))
+        q.put((f(start,0), start))
         parent = {}
         found = False
         
@@ -154,25 +155,32 @@ class Router:
                 strNext = str(next)
                 
                 # TODO: Penalize being near obstacles
+                # may penalize by heuristic
+            
                 
-                # continue if the line formed by cur and next intersect with a berrier (high value in pointcloud)
-                # In this way I guess changing bresenham() helps to penalize being close to barrier e.g. imagine make the line thicker
-                path = bresenham(cur, end)
-                for point in path:
-                    if map.sampleCoord(point) > 0.2:
-                        continue
-                
-                
-                if map.sampleCoord(next) > 0.2:
+                if map.sampleCoord(next) > 0.5:
+                    g[strNext] = g[strCur] + np.inf
                     continue
                 
+                penalty = 0
+                nearestObsDist = 10
+                # penalize for being within 3 steps away from obstacle
+                for o in np.array([(x, y) for x in [-3, -2, -1, 0, 1, 2, 3] for y in [-3, -2, -1, 0, 1, 2, 3] if (x,y) != (0,0)]):
+                    aroundNext = next + o * moveDist
+                    strAroundNext = str(aroundNext)
+                    if map.sampleCoord(aroundNext) > 0.8:
+                        nearestObsDist = min(nearestObsDist, np.linalg.norm(next - aroundNext))
+                        penalty = 1 / nearestObsDist
+                
+                
+                                
                 try:
                     if g[strCur] + self.controller.move_dist < g[strNext]:
                         g[strNext] = g[strCur] + moveDist
                         parent[strNext] = cur
                 except KeyError:
                     g[strNext] = g[strCur] + moveDist
-                    q.put((f(next), tuple(next)))
+                    q.put((f(next,penalty), tuple(next)))
                     parent[strNext] = cur
                 
 
@@ -188,7 +196,7 @@ class Router:
         return [start]
 
 
-    def nextMappingPoint(map: "OccupancyMap") -> np.ndarray:
+    def nextMappingPoint(self, map: "OccupancyMap") -> np.ndarray:
         """
         Finds the next mapping point in the occupancy map.
 
@@ -206,8 +214,8 @@ class Router:
         for cloud in clouds:
             for p in cloud.emptyCloud:
                 d = (p - cloud.origin) / np.linalg.norm(p - cloud.origin) * map.resolution
-                if any(np.linalg.norm(p - c.origin) < 0.5 for c in clouds) or \
-                    map.sampleCoord(p + d, yx=True, mean=True) <= 1e-4 or \
+                if any(np.linalg.norm(p - c.origin) < 0.75 for c in clouds) or \
+                    map.sampleCoord(p + d, yx=True, mean=True) <= 1e-3 or \
                     map.sampleCoord(p + d, yx=True, mean=True) >= 0.55:
                     continue
                 return np.roll(p - d, 1)
@@ -229,6 +237,7 @@ class Router:
         TODO: Implement the logic to find the next tidying point (Keming)
         TODO: Feel free to change the structure as well, just document it in the PR
         """
+        # compare the clean map with the real map to locate toys, may start with greedy algorithm to pick up whatever closest 
         pass
     
     
@@ -571,7 +580,7 @@ class OccupancyMap:
         Params:
             raycast (bool, optional): If True, displays the occupancy map with raycast visualization. Defaults to False.
             region (np.ndarray, optional): The region to be plotted in the raycast visualization. Defaults to None.
-        """   
+        """ 
         plt.figure(1, figsize=(4, 4))
         if not raycast:
             plt.imshow(self.map, cmap="PiYG_r")
@@ -632,13 +641,13 @@ def test_1():
         m.show()
         
         # Move to the next mapping point
-        next = router.nextMappingPoint(m, max_dist)
-        path = router.route(controller, next, m)
+        next = router.nextMappingPoint(m)
+        path = router.route(next, m)
         next = path[-1]
         
         # Move and trace path on the map
         for p in path:
-            router.toPoint(controller, p)
+            router.toPoint(p)
             p = m.translate(p)
             m.map[p[0], p[1]] = 1
         
@@ -669,17 +678,18 @@ def test_2():
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
         
-        next = router.nextMappingPoint(m, max_dist)
-        path = router.route(controller, next, m)
+        next = router.nextMappingPoint(m)
+        path = router.route(next, m)
         next = path[-1]
         
         m.generate()
+        m.show(save=True, path=f"map/{index}.png")
 
         o=0
         for p in path:
             controller.show(save=True, path=f"move/{index+o}.png")
             o+=1
-            router.toPoint(controller, p)
+            router.toPoint(p)
         
 
         index+=o
@@ -700,26 +710,104 @@ def test_3():
     router = Router(controller)
     index = 1
     combine = 1
-    compress = 3
-    for i in range(0, 40):
+    compress = 4
+    next = np.array([0, 0])
+    for i in range(0, 22):
         cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
         
-        next = router.nextMappingPoint(m, max_dist)
-        path = router.route(controller, next, m)
-        next = path[-1]
+        for x in range(3):
+            plt.figure(1, figsize=(8, 4))
+            plt.subplot(122)
+            plt.imshow(m.map, cmap="PiYG_r")
+            plt.clim(0, 1)
+            plt.gca().set_xticks(np.arange(-.5, m.shape[1], 1), minor=True)
+            plt.gca().set_yticks(np.arange(-.5, m.shape[0], 1), minor=True)
+            plt.grid(True, which="minor", color="w", linewidth=0.6, alpha=0.5)
+            plt.colorbar()
+            plt.subplot(121)
+            for region in controller.map:
+                r = np.append(region, [region[0]], axis=0)
+                plt.plot(r[:,0], r[:,1], "bo-")
 
-        for x in range(len(path) // compress):
-            m.show(save=True, path=f"combine/{combine}.png")
+            plt.arrow(controller.pos[0], controller.pos[1], 0.15 * np.cos(controller.rot), 0.15 * np.sin(controller.rot), head_width=0.15, head_length=0.15, fc="r", ec="r")
+            plt.axis("equal")
+            plt.gca().set_aspect("equal", "box")
+            bottom, top = plt.ylim()
+            plt.ylim((top, bottom))
+            plt.plot(next[0], next[1], "rx")
+            plt.savefig(f"combine/{combine}.png")
+            plt.close()
             combine += 1
+        
+        next = router.nextMappingPoint(m)
+        path = router.route(next, m)
+        next = path[-1]
 
         o=0
         for p in path:
-            controller.show(save=True, path=f"combine/{combine}.png")
-            if o % compress == 0: 
+            if o % compress == 0:
+                plt.figure(1, figsize=(8, 4))
+                plt.subplot(122)
+                plt.imshow(m.map, cmap="PiYG_r")
+                plt.clim(0, 1)
+                plt.gca().set_xticks(np.arange(-.5, m.shape[1], 1), minor=True)
+                plt.gca().set_yticks(np.arange(-.5, m.shape[0], 1), minor=True)
+                plt.grid(True, which="minor", color="w", linewidth=0.6, alpha=0.5)
+                plt.colorbar()
+                plt.subplot(121)
+                for region in controller.map:
+                    r = np.append(region, [region[0]], axis=0)
+                    plt.plot(r[:,0], r[:,1], "bo-")
+
+                plt.arrow(controller.pos[0], controller.pos[1], 0.15 * np.cos(controller.rot), 0.15 * np.sin(controller.rot), head_width=0.15, head_length=0.15, fc="r", ec="r")
+                plt.axis("equal")
+                plt.gca().set_aspect("equal", "box")
+                bottom, top = plt.ylim()
+                plt.ylim((top, bottom))
+                plt.plot(next[0], next[1], "rx")
+                plt.savefig(f"combine/{combine}.png")
+                plt.close()
                 combine += 1
             o+=1
-            router.toPoint(controller, p)
+            router.toPoint(p)
 
-        index+=o
+def test_4():
+    # Initialise Bounds
+    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
+                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
+    res = 5    # Resolution of LIDAR scans
+    max_dist = 1.5 # max distance of LIDAR scans
+    # Initialise Controller
+    controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
+    # Initialise PointCloud with a LIDAR scan of the environment
+    cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+    # Initialise a new OccupancyMap with the PointCloud
+    m = OccupancyMap(controller.pos, [cloud])
+    # Initiliase a router
+    router = Router(controller)
+    # Moves the controller 33 times
+    for i in range(0, 33):
+        # Create a new scan
+        cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+        # Merge the new Occupancy Map with the previous one
+        m.merge(OccupancyMap(controller.pos, [cloud]))
+        # Generate it and show it
+        m.generate()
+        m.show()
+        
+        # Move to the next mapping point
+        next = router.nextMappingPoint(m)
+        path = router.route(next, m)
+        next = path[-1]
+        
+        # Move and trace path on the map
+        for p in path:
+            router.toPoint(p)
+            p = m.translate(p)
+            m.map[p[0], p[1]] = 1
+        
+        m.show()
+        
+test_1()
