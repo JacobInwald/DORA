@@ -5,7 +5,7 @@ import shutil
 import glob
 from natsort import natsorted
 from PIL import Image
-import routing as rt
+# import routing as rt
 
 # ! Library Methods
 
@@ -202,7 +202,6 @@ class Controller:
         self.noise = noise
         self.max_scan_dist = max_scan_dist
         self.move_dist = move_dist
-        self.gps = rt.GPS()
 
     def forward(self, dist: float):
         """
