@@ -5,7 +5,6 @@ import os
 import shutil
 from queue import PriorityQueue
 
-
 # ! Library Methods
 
 
@@ -27,18 +26,18 @@ def manFuzz(grid: np.ndarray) -> np.ndarray:
             if grid[i, j] >= 0.95 or grid[i, j] == 0:
                 continue
             try:
-                grid[i, j] = np.mean(
-                    [grid[i + x, j + y]
-                        for x in range(-1, 2) for y in range(-1, 2)]
-                )
+                grid[i, j] = np.mean([
+                    grid[i + x, j + y] for x in range(-1, 2)
+                    for y in range(-1, 2)
+                ])
             except IndexError:
                 pass
     return grid
 
 
-def bresenham(
-    start: np.ndarray, end: np.ndarray, res: float = 1
-) -> np.ndarray[np.float64]:
+def bresenham(start: np.ndarray,
+              end: np.ndarray,
+              res: float = 1) -> np.ndarray[np.float64]:
     """
     Generate a Bresenham line between two points in a grid.
 
@@ -56,9 +55,8 @@ def bresenham(
     result = np.zeros((length + 1, 2))
 
     for i in range(0, length + 1):
-        result[i] = (start + (i / length) * direction).round(
-            int(-np.log10(res)) if res < 1 else 0
-        ) // res
+        result[i] = (start + (i / length) * direction
+                     ).round(int(-np.log10(res)) if res < 1 else 0) // res
 
     return result
 
@@ -86,10 +84,8 @@ class Router:
         """
         start = self.controller.pos
         moveDist = map.resolution
-        directions = np.array(
-            [(x, y) for x in [-1, 0, 1]
-             for y in [-1, 0, 1] if (x, y) != (0, 0)]
-        )
+        directions = np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]
+                               if (x, y) != (0, 0)])
 
         g = {}
         g[str(start)] = 0
@@ -157,16 +153,11 @@ class Router:
         # BFS
         for cloud in clouds:
             for p in cloud.emptyCloud:
-                d = (
-                    (p - cloud.origin)
-                    / np.linalg.norm(p - cloud.origin)
-                    * map.resolution
-                )
-                if (
-                    any(np.linalg.norm(p - c.origin) < 0.75 for c in clouds)
-                    or map.sampleCoord(p + d, yx=True, mean=True) <= 1e-3
-                    or map.sampleCoord(p + d, yx=True, mean=True) >= 0.55
-                ):
+                d = ((p - cloud.origin) / np.linalg.norm(p - cloud.origin) *
+                     map.resolution)
+                if (any(np.linalg.norm(p - c.origin) < 0.75 for c in clouds)
+                        or map.sampleCoord(p + d, yx=True, mean=True) <= 1e-3
+                        or map.sampleCoord(p + d, yx=True, mean=True) >= 0.55):
                     continue
                 return np.roll(p - d, 1)
 
@@ -185,7 +176,6 @@ class Router:
         TODO: Implement the logic to find the next tidying point (Keming)
         TODO: Feel free to change the structure as well, just document it in the PR
         """
-        pass
 
     def toPoint(self, end: np.ndarray) -> None:
         """
@@ -197,11 +187,8 @@ class Router:
         TODO: Probably should be moved to the Controller class (fine for now)
         """
         dist = np.linalg.norm(end - self.controller.pos)
-        angle = (
-            np.arctan2(end[1] - self.controller.pos[1],
-                       end[0] - self.controller.pos[0])
-            - self.controller.rot
-        )
+        angle = (np.arctan2(end[1] - self.controller.pos[1], end[0] -
+                            self.controller.pos[0]) - self.controller.rot)
         self.controller.turn(angle)
         self.controller.forward(dist)
 
@@ -233,7 +220,8 @@ class PointCloud:
     - center: numpy.ndarray - The center point of the point cloud.
     """
 
-    def __init__(self, lidar: np.ndarray, origin: np.ndarray, maxScanDist: float):
+    def __init__(self, lidar: np.ndarray, origin: np.ndarray,
+                 maxScanDist: float):
         self.lidar = lidar
         self.origin = np.roll(origin, 1)
         self.maxScanDist = maxScanDist
@@ -252,16 +240,14 @@ class PointCloud:
 
         if len(self.objectCloud) > 0:
             omin = np.array(
-                [self.objectCloud[:, 0].min(), self.objectCloud[:, 1].min()]
-            )
+                [self.objectCloud[:, 0].min(), self.objectCloud[:, 1].min()])
             omax = np.array(
-                [self.objectCloud[:, 0].max(), self.objectCloud[:, 1].max()]
-            )
+                [self.objectCloud[:, 0].max(), self.objectCloud[:, 1].max()])
         if len(self.emptyCloud) > 0:
-            emin = np.array([self.emptyCloud[:, 0].min(),
-                            self.emptyCloud[:, 1].min()])
-            emax = np.array([self.emptyCloud[:, 0].max(),
-                            self.emptyCloud[:, 1].max()])
+            emin = np.array(
+                [self.emptyCloud[:, 0].min(), self.emptyCloud[:, 1].min()])
+            emax = np.array(
+                [self.emptyCloud[:, 0].max(), self.emptyCloud[:, 1].max()])
 
         self.min = np.array([min(omin[0], emin[0]), min(omin[1], emin[1])])
         self.max = np.array([max(omax[0], emax[0]), max(omax[1], emax[1])])
@@ -393,10 +379,9 @@ class OccupancyMap:
         # explanatory
         self.offset = np.roll(offset, 1)
         self.resolution = resolution
-        self.pointclouds = (
-            pointclouds if not isinstance(
-                pointclouds, PointCloud) else [pointclouds]
-        )
+        self.pointclouds = (pointclouds
+                            if not isinstance(pointclouds, PointCloud) else
+                            [pointclouds])
 
         # Gets the minimum and maximum x and y coordinates of the obstacles
         mins = np.array([c.min for c in self.pointclouds])
@@ -488,7 +473,11 @@ class OccupancyMap:
         self.__init__(np.roll(self.offset, 1), newPointcloud)
         return self
 
-    def sampleCoord(self, coord: np.ndarray, yx=False, mean=False, n=3) -> np.ndarray:
+    def sampleCoord(self,
+                    coord: np.ndarray,
+                    yx=False,
+                    mean=False,
+                    n=3) -> np.ndarray:
         """
         Sample the occupancy map at a given coordinate.
 
@@ -504,18 +493,10 @@ class OccupancyMap:
             if not mean:
                 return self.map[coord[0], coord[1]]
             else:
-                return (
-                    1
-                    if 1
-                    in self.map[
-                        coord[0] - n: coord[0] + n, coord[1] - n: coord[1] + n
-                    ]
-                    else np.mean(
-                        self.map[
-                            coord[0] - n: coord[0] + n, coord[1] - n: coord[1] + n
-                        ]
-                    )
-                )
+                return (1 if 1 in self.map[coord[0] - n:coord[0] + n,
+                                           coord[1] - n:coord[1] + n] else
+                        np.mean(self.map[coord[0] - n:coord[0] + n,
+                                         coord[1] - n:coord[1] + n]))
         except IndexError:
             return 1
 
@@ -531,13 +512,11 @@ class OccupancyMap:
             int: The grid index corresponding to the translated coordinate.
         """
         if yx:
-            return np.round(
-                ((coord - self.offset) - self.min) / self.resolution
-            ).astype(int)
+            return np.round(((coord - self.offset) - self.min) /
+                            self.resolution).astype(int)
         else:
-            return np.round(
-                ((np.roll(coord, 1) - self.offset) - self.min) / self.resolution
-            ).astype(int)
+            return np.round(((np.roll(coord, 1) - self.offset) - self.min) /
+                            self.resolution).astype(int)
 
     def normalise(self) -> None:
         """
@@ -603,20 +582,21 @@ class OccupancyMap:
 def test_1():
     # Initialise Bounds
     region = [
-        np.array([[-2, 4], [3, 4], [2, 2], [4, 3],
-                 [4, 0], [4, 0], [2, -1], [-2, 0]]),
+        np.array([[-2, 4], [3, 4], [2, 2], [4, 3], [4, 0], [4, 0], [2, -1],
+                  [-2, 0]]),
         np.array([[-1, 3], [-1, 2.5], [-1.5, 3]]),
     ]
     res = 10  # Resolution of LIDAR scans
     max_dist = 1.5  # max distance of LIDAR scans
     # Initialise Controller
-    controller = simulate.Controller(
-        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist
-    )
+    controller = simulate.Controller(np.array([0, 0]),
+                                     0,
+                                     region,
+                                     res,
+                                     max_scan_dist=max_dist)
     # Initialise PointCloud with a LIDAR scan of the environment
-    cloud = PointCloud(
-        controller.getLiDARScan(), controller.pos, controller.max_scan_dist
-    )
+    cloud = PointCloud(controller.getLiDARScan(), controller.pos,
+                       controller.max_scan_dist)
     # Initialise a new OccupancyMap with the PointCloud
     m = OccupancyMap(controller.pos, [cloud])
     # Initiliase a router
@@ -624,9 +604,8 @@ def test_1():
     # Moves the controller 33 times
     for i in range(0, 33):
         # Create a new scan
-        cloud = PointCloud(
-            controller.getLiDARScan(), controller.pos, controller.max_scan_dist
-        )
+        cloud = PointCloud(controller.getLiDARScan(), controller.pos,
+                           controller.max_scan_dist)
         # Merge the new Occupancy Map with the previous one
         m.merge(OccupancyMap(controller.pos, [cloud]))
         # Generate it and show it
@@ -657,25 +636,25 @@ def test_2():
     os.makedirs("map")
 
     region = [
-        np.array([[-2, 4], [3, 4], [2, 2], [4, 3],
-                 [4, 0], [4, 0], [2, -1], [-2, 0]]),
+        np.array([[-2, 4], [3, 4], [2, 2], [4, 3], [4, 0], [4, 0], [2, -1],
+                  [-2, 0]]),
         np.array([[-1, 3], [-1, 2.5], [-1.5, 3]]),
     ]
     res = 10
     max_dist = 1.5
-    controller = simulate.Controller(
-        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist
-    )
-    cloud = PointCloud(
-        controller.getLiDARScan(), controller.pos, controller.max_scan_dist
-    )
+    controller = simulate.Controller(np.array([0, 0]),
+                                     0,
+                                     region,
+                                     res,
+                                     max_scan_dist=max_dist)
+    cloud = PointCloud(controller.getLiDARScan(), controller.pos,
+                       controller.max_scan_dist)
     router = Router(controller)
     m = OccupancyMap(controller.pos, [cloud])
     index = 1
     for i in range(0, 45):
-        cloud = PointCloud(
-            controller.getLiDARScan(), controller.pos, controller.max_scan_dist
-        )
+        cloud = PointCloud(controller.getLiDARScan(), controller.pos,
+                           controller.max_scan_dist)
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
 
@@ -701,18 +680,19 @@ def test_3():
     os.makedirs("combine")
 
     region = [
-        np.array([[-2, 4], [3, 4], [2, 2], [4, 3],
-                 [4, 0], [4, 0], [2, -1], [-2, 0]]),
+        np.array([[-2, 4], [3, 4], [2, 2], [4, 3], [4, 0], [4, 0], [2, -1],
+                  [-2, 0]]),
         np.array([[-1, 3], [-1, 2.5], [-1.5, 3]]),
     ]
     res = 10
     max_dist = 1.5
-    controller = simulate.Controller(
-        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist
-    )
-    cloud = PointCloud(
-        controller.getLiDARScan(), controller.pos, controller.max_scan_dist
-    )
+    controller = simulate.Controller(np.array([0, 0]),
+                                     0,
+                                     region,
+                                     res,
+                                     max_scan_dist=max_dist)
+    cloud = PointCloud(controller.getLiDARScan(), controller.pos,
+                       controller.max_scan_dist)
     m = OccupancyMap(controller.pos, [cloud])
     router = Router(controller)
     index = 1
@@ -720,9 +700,8 @@ def test_3():
     compress = 4
     next = np.array([0, 0])
     for i in range(0, 22):
-        cloud = PointCloud(
-            controller.getLiDARScan(), controller.pos, controller.max_scan_dist
-        )
+        cloud = PointCloud(controller.getLiDARScan(), controller.pos,
+                           controller.max_scan_dist)
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
 
@@ -770,12 +749,15 @@ def test_3():
                 plt.subplot(122)
                 plt.imshow(m.map, cmap="PiYG_r")
                 plt.clim(0, 1)
-                plt.gca().set_xticks(
-                    np.arange(-0.5, m.shape[1], 1), minor=True)
-                plt.gca().set_yticks(
-                    np.arange(-0.5, m.shape[0], 1), minor=True)
-                plt.grid(True, which="minor", color="w",
-                         linewidth=0.6, alpha=0.5)
+                plt.gca().set_xticks(np.arange(-0.5, m.shape[1], 1),
+                                     minor=True)
+                plt.gca().set_yticks(np.arange(-0.5, m.shape[0], 1),
+                                     minor=True)
+                plt.grid(True,
+                         which="minor",
+                         color="w",
+                         linewidth=0.6,
+                         alpha=0.5)
                 plt.colorbar()
                 plt.subplot(121)
                 for region in controller.map:
