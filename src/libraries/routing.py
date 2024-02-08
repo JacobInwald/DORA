@@ -1,14 +1,15 @@
-import numpy as np
-from matplotlib import pyplot as plt
-import simulator as simulate
+"""Provides the PriorityQueue for A*"""
 import os
 import shutil
 from queue import PriorityQueue
+import numpy as np
+from matplotlib import pyplot as plt
+import simulator as simulate
 
 # ! Library Methods
 
 
-def manFuzz(grid: np.ndarray) -> np.ndarray:
+def man_fuzz(grid: np.ndarray) -> np.ndarray:
     """
     Applies the Manhattan Fuzz algorithm to the given grid.
 
@@ -70,9 +71,9 @@ class Router:
     def __init__(self, controller: "simulate.Controller"):
         self.controller = controller
 
-    def route(self, end: np.ndarray, map: "OccupancyMap") -> np.ndarray:
+    def route(self, end: np.ndarray, occ_map: "OccupancyMap") -> np.ndarray:
         """
-        This function calculates the route from the current position to the given end point on the map.
+        This function calculates the route from the current position to the end point.
 
         Parameters:
             controller (simulate.Controller): The controller object used for simulation.
@@ -83,7 +84,7 @@ class Router:
             np.ndarray: The calculated route as an array of coordinates.
         """
         start = self.controller.pos
-        moveDist = map.resolution
+        move_dist = occ_map.resolution
         directions = np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]
                                if (x, y) != (0, 0)])
 
@@ -99,30 +100,29 @@ class Router:
         found = False
 
         # A* Algorithm
-        while q.empty() == False:
+        while q.empty() is False:
             _, cur = q.get()
             cur = np.array(cur)
             strCur = str(cur)
 
-            if np.linalg.norm(cur - end) < moveDist:
+            if np.linalg.norm(cur - end) < move_dist:
                 found = True
                 break
 
             for d in directions:
-                next = cur + d * moveDist
-                strNext = str(next)
+                n = cur + d * move_dist
+                strNext = str(n)
 
-                # TODO: Penalize being near obstacles
-                if map.sampleCoord(next) > 0.3:
+                if occ_map.sampleCoord(n) > 0.3:
                     continue
 
                 try:
                     if g[strCur] + self.controller.move_dist < g[strNext]:
-                        g[strNext] = g[strCur] + moveDist
+                        g[strNext] = g[strCur] + move_dist
                         parent[strNext] = cur
                 except KeyError:
-                    g[strNext] = g[strCur] + moveDist
-                    q.put((f(next), tuple(next)))
+                    g[strNext] = g[strCur] + move_dist
+                    q.put((f(n), tuple(n)))
                     parent[strNext] = cur
 
         if found:
@@ -439,7 +439,7 @@ class OccupancyMap:
                         pass
 
         # Apply Fuzzy Filter
-        self.map = manFuzz(self.map) if fuzz else self.map
+        self.map = man_fuzz(self.map) if fuzz else self.map
 
         return self
 
