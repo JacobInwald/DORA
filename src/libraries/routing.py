@@ -129,12 +129,13 @@ class Router:
         """
         start = self.controller.pos
         moveDist = map.resolution
-        
+
         g = {}
         g[str(start)] = 0
-        f = lambda p: np.linalg.norm(p - end) + g[str(p)]
+        alpha = 0.5 # the penalty parameter for being close to obstacles
+        f = lambda p,a: 3* np.linalg.norm(p - end) + g[str(p)] + a * alpha
         q = PriorityQueue()
-        q.put((f(start), start))
+        q.put((f(start,0), start))
         parent = {}
         found = False
         
@@ -154,25 +155,32 @@ class Router:
                 strNext = str(next)
                 
                 # TODO: Penalize being near obstacles
+                # may penalize by heuristic
+            
                 
-                # continue if the line formed by cur and next intersect with a berrier (high value in pointcloud)
-                # In this way I guess changing bresenham() helps to penalize being close to barrier e.g. imagine make the line thicker
-                path = bresenham(cur, end)
-                for point in path:
-                    if map.sampleCoord(point) > 0.2:
-                        continue
-                
-                
-                if map.sampleCoord(next) > 0.3:
+                if map.sampleCoord(next) > 0.5:
+                    g[strNext] = g[strCur] + np.inf
                     continue
                 
+                penalty = 0
+                nearestObsDist = 10
+                # penalize for being within 3 steps away from obstacle
+                for o in np.array([(x, y) for x in [-3, -2, -1, 0, 1, 2, 3] for y in [-3, -2, -1, 0, 1, 2, 3] if (x,y) != (0,0)]):
+                    aroundNext = next + o * moveDist
+                    strAroundNext = str(aroundNext)
+                    if map.sampleCoord(aroundNext) > 0.8:
+                        nearestObsDist = min(nearestObsDist, np.linalg.norm(next - aroundNext))
+                        penalty = 1 / nearestObsDist
+                
+                
+                                
                 try:
                     if g[strCur] + self.controller.move_dist < g[strNext]:
                         g[strNext] = g[strCur] + moveDist
                         parent[strNext] = cur
                 except KeyError:
                     g[strNext] = g[strCur] + moveDist
-                    q.put((f(next), tuple(next)))
+                    q.put((f(next,penalty), tuple(next)))
                     parent[strNext] = cur
                 
 
@@ -229,6 +237,7 @@ class Router:
         TODO: Implement the logic to find the next tidying point (Keming)
         TODO: Feel free to change the structure as well, just document it in the PR
         """
+        # compare the clean map with the real map to locate toys, may start with greedy algorithm to pick up whatever closest 
         pass
     
     
@@ -764,6 +773,41 @@ def test_3():
             o+=1
             router.toPoint(p)
 
+def test_4():
+    # Initialise Bounds
+    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
+                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
+    res = 5    # Resolution of LIDAR scans
+    max_dist = 1.5 # max distance of LIDAR scans
+    # Initialise Controller
+    controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
+    # Initialise PointCloud with a LIDAR scan of the environment
+    cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+    # Initialise a new OccupancyMap with the PointCloud
+    m = OccupancyMap(controller.pos, [cloud])
+    # Initiliase a router
+    router = Router(controller)
+    # Moves the controller 33 times
+    for i in range(0, 33):
+        # Create a new scan
+        cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+        # Merge the new Occupancy Map with the previous one
+        m.merge(OccupancyMap(controller.pos, [cloud]))
+        # Generate it and show it
+        m.generate()
+        m.show()
         
+        # Move to the next mapping point
+        next = router.nextMappingPoint(m)
+        path = router.route(next, m)
+        next = path[-1]
         
-test_3()
+        # Move and trace path on the map
+        for p in path:
+            router.toPoint(p)
+            p = m.translate(p)
+            m.map[p[0], p[1]] = 1
+        
+        m.show()
+        
+test_1()
