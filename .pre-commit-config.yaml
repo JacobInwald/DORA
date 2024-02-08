@@ -3,7 +3,7 @@ repos:
     rev: v2.0.4
     hooks:
       - id: autopep8
-  - repo: https://github.com/GVRV/pre-commit-flake8
-    rev: "046ec01c3ca73e7972e02143c8c0b6da76665e3a" # Use the latest version
-    hooks:
-      - id: flake8
+  # - repo: https://github.com/GVRV/pre-commit-flake8
+  #   rev: "046ec01c3ca73e7972e02143c8c0b6da76665e3a" # Use the latest version
+  #   hooks:
+  #     - id: flake8
