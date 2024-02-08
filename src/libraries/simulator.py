@@ -5,7 +5,6 @@ import shutil
 import glob
 from natsort import natsorted
 from PIL import Image
-# import routing as rt
 
 # ! Library Methods
 
@@ -241,23 +240,6 @@ class Controller:
         angles = [np.deg2rad(i) for i in np.arange(0, 360, self.scan_res)]
         scan = [np.array([a, lidarRay(self.pos, a, self.map, self.noise, self.max_scan_dist)]) for a in angles]
         return np.array(scan)
-
-    def localize(self):
-        """
-        Localizes the object using GPS coordinates.
-        TODO: Check if the method is working properly. (Wilfredo)
-        """
-        self.pos, self.rot = self.gps.locate()
-
-    def getOverheadImage(self):
-        """
-        Get the overhead image of the environment.
-
-        Returns:
-            TODO: Specify the return type. (Wilfredo)
-        """
-        # TODO: Implement the method.
-        pass
 
     def show(self, save:bool = False, path:str = ""):
         """

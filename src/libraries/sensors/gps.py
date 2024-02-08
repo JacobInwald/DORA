@@ -63,3 +63,4 @@ class GPS:
         TODO: Implement the logic to find the position of the robot in the image. (Wilfredo)
         """
         pass
+    
