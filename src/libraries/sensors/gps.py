@@ -3,7 +3,7 @@ import numpy as np
 
 class GPS:
     """
-    Represents a GPS sensor.
+    Represents a GPS sensor. (Overhead camera)
 
     Attributes:
     - pos: numpy.ndarray - The current position of the robot.
