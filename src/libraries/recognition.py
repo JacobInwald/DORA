@@ -1,5 +1,3 @@
-
-
 class Model:
     """
     Change it however you want, but it should have the method:

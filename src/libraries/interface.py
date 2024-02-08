@@ -5,7 +5,6 @@ from sensors.gps import GPS
 
 
 class ROSInterface:
-
     def __init__(self) -> None:
         self.gps = GPS()
         self.lidar = LiDAR()
