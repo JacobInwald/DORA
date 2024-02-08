@@ -8,6 +8,7 @@ from queue import PriorityQueue
 
 # ! Library Methods
 
+
 def manFuzz(grid: np.ndarray) -> np.ndarray:
     """
     Applies the Manhattan Fuzz algorithm to the given grid.
