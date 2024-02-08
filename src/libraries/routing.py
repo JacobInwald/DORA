@@ -27,14 +27,18 @@ def manFuzz(grid: np.ndarray) -> np.ndarray:
             if grid[i, j] >= 0.95 or grid[i, j] == 0:
                 continue
             try:
-                grid[i, j] = np.mean([grid[i+x, j+y]
-                                     for x in range(-1, 2) for y in range(-1, 2)])
+                grid[i, j] = np.mean(
+                    [grid[i + x, j + y]
+                        for x in range(-1, 2) for y in range(-1, 2)]
+                )
             except IndexError:
                 pass
     return grid
 
 
-def bresenham(start: np.ndarray, end: np.ndarray, res: float = 1) -> np.ndarray[np.float64]:
+def bresenham(
+    start: np.ndarray, end: np.ndarray, res: float = 1
+) -> np.ndarray[np.float64]:
     """
     Generate a Bresenham line between two points in a grid.
 
@@ -52,8 +56,9 @@ def bresenham(start: np.ndarray, end: np.ndarray, res: float = 1) -> np.ndarray[
     result = np.zeros((length + 1, 2))
 
     for i in range(0, length + 1):
-        result[i] = (start + (i / length) *
-                     direction).round(int(-np.log10(res)) if res < 1 else 0) // res
+        result[i] = (start + (i / length) * direction).round(
+            int(-np.log10(res)) if res < 1 else 0
+        ) // res
 
     return result
 
@@ -81,12 +86,17 @@ class Router:
         """
         start = self.controller.pos
         moveDist = map.resolution
-        directions = np.array([(x, y) for x in [-1, 0, 1]
-                              for y in [-1, 0, 1] if (x, y) != (0, 0)])
+        directions = np.array(
+            [(x, y) for x in [-1, 0, 1]
+             for y in [-1, 0, 1] if (x, y) != (0, 0)]
+        )
 
         g = {}
         g[str(start)] = 0
-        def f(p): return np.linalg.norm(p - end) + g[str(p)]
+
+        def f(p):
+            return np.linalg.norm(p - end) + g[str(p)]
+
         q = PriorityQueue()
         q.put((f(start), start))
         parent = {}
@@ -103,7 +113,6 @@ class Router:
                 break
 
             for d in directions:
-
                 next = cur + d * moveDist
                 strNext = str(next)
 
@@ -148,11 +157,16 @@ class Router:
         # BFS
         for cloud in clouds:
             for p in cloud.emptyCloud:
-                d = (p - cloud.origin) / \
-                    np.linalg.norm(p - cloud.origin) * map.resolution
-                if any(np.linalg.norm(p - c.origin) < 0.75 for c in clouds) or \
-                        map.sampleCoord(p + d, yx=True, mean=True) <= 1e-3 or \
-                        map.sampleCoord(p + d, yx=True, mean=True) >= 0.55:
+                d = (
+                    (p - cloud.origin)
+                    / np.linalg.norm(p - cloud.origin)
+                    * map.resolution
+                )
+                if (
+                    any(np.linalg.norm(p - c.origin) < 0.75 for c in clouds)
+                    or map.sampleCoord(p + d, yx=True, mean=True) <= 1e-3
+                    or map.sampleCoord(p + d, yx=True, mean=True) >= 0.55
+                ):
                     continue
                 return np.roll(p - d, 1)
 
@@ -183,8 +197,11 @@ class Router:
         TODO: Probably should be moved to the Controller class (fine for now)
         """
         dist = np.linalg.norm(end - self.controller.pos)
-        angle = np.arctan2(end[1] - self.controller.pos[1],
-                           end[0] - self.controller.pos[0]) - self.controller.rot
+        angle = (
+            np.arctan2(end[1] - self.controller.pos[1],
+                       end[0] - self.controller.pos[0])
+            - self.controller.rot
+        )
         self.controller.turn(angle)
         self.controller.forward(dist)
 
@@ -234,10 +251,12 @@ class PointCloud:
         omax = np.array([-np.inf, -np.inf])
 
         if len(self.objectCloud) > 0:
-            omin = np.array([self.objectCloud[:, 0].min(),
-                            self.objectCloud[:, 1].min()])
-            omax = np.array([self.objectCloud[:, 0].max(),
-                            self.objectCloud[:, 1].max()])
+            omin = np.array(
+                [self.objectCloud[:, 0].min(), self.objectCloud[:, 1].min()]
+            )
+            omax = np.array(
+                [self.objectCloud[:, 0].max(), self.objectCloud[:, 1].max()]
+            )
         if len(self.emptyCloud) > 0:
             emin = np.array([self.emptyCloud[:, 0].min(),
                             self.emptyCloud[:, 1].min()])
@@ -271,8 +290,8 @@ class PointCloud:
             self.objectCloud = np.array([])
 
         try:
-            ex = (self.maxScanDist-0.2) * np.cos(eScan[:, 0])
-            ey = (self.maxScanDist-0.2) * np.sin(eScan[:, 0])
+            ex = (self.maxScanDist - 0.2) * np.cos(eScan[:, 0])
+            ey = (self.maxScanDist - 0.2) * np.sin(eScan[:, 0])
             self.emptyCloud = np.array([ex, ey]).T
         except Exception:
             self.emptyCloud = np.array([])
@@ -295,19 +314,26 @@ class PointCloud:
         Parameters:
         - clouds: list - The list of PointCloud objects to compare with.
         """
+
         # TODO: find efficient method of removing duplicates
-        def f(p, cloud): return any((np.abs(c - p) < 0.001).any()
-                                    for c in cloud)
+        def f(p, cloud):
+            return any((np.abs(c - p) < 0.001).any() for c in cloud)
 
         for cloud in clouds:
             for p in self.objectCloud:
                 if f(p, cloud.objectCloud):
-                    self.objectCloud = np.delete(self.objectCloud, np.where(
-                        (self.objectCloud == p).all(axis=1)), axis=0)
+                    self.objectCloud = np.delete(
+                        self.objectCloud,
+                        np.where((self.objectCloud == p).all(axis=1)),
+                        axis=0,
+                    )
             for p in self.emptyCloud:
                 if f(p, cloud.emptyCloud):
-                    self.emptyCloud = np.delete(self.emptyCloud, np.where(
-                        (self.emptyCloud == p).all(axis=1)), axis=0)
+                    self.emptyCloud = np.delete(
+                        self.emptyCloud,
+                        np.where((self.emptyCloud == p).all(axis=1)),
+                        axis=0,
+                    )
         self.initMinMax()
 
     def transform(self, offset: np.ndarray) -> None:
@@ -338,7 +364,7 @@ class PointCloud:
 
 class OccupancyMap:
     """
-    Represents an occupancy map based on obstacle coordinates and resolution. 
+    Represents an occupancy map based on obstacle coordinates and resolution.
     nb: The coords are in the form [x, y].T or (y, x)
 
     Attributes:
@@ -347,7 +373,12 @@ class OccupancyMap:
     - resolution: float - The resolution of the occupancy map.
     """
 
-    def __init__(self, offset: np.ndarray, pointclouds: list['PointCloud'], resolution: float = 0.05):
+    def __init__(
+        self,
+        offset: np.ndarray,
+        pointclouds: list["PointCloud"],
+        resolution: float = 0.05,
+    ):
         """
         Initializes an occupancy map based on the given obstacle coordinates and resolution.
 
@@ -362,8 +393,10 @@ class OccupancyMap:
         # explanatory
         self.offset = np.roll(offset, 1)
         self.resolution = resolution
-        self.pointclouds = pointclouds if not isinstance(
-            pointclouds, PointCloud) else [pointclouds]
+        self.pointclouds = (
+            pointclouds if not isinstance(
+                pointclouds, PointCloud) else [pointclouds]
+        )
 
         # Gets the minimum and maximum x and y coordinates of the obstacles
         mins = np.array([c.min for c in self.pointclouds])
@@ -391,9 +424,9 @@ class OccupancyMap:
 
         # Draw Empty Space
         for cloud in self.pointclouds:
-            o = self.translate(cloud.origin, True)    # Normalise the origin
+            o = self.translate(cloud.origin, True)  # Normalise the origin
             for p in cloud.cloud():
-                i = self.translate(p, True)   # Normalise the point
+                i = self.translate(p, True)  # Normalise the point
                 # Draw ray between origin and point
                 line = bresenham(o, i)
                 for pl in line:
@@ -439,12 +472,10 @@ class OccupancyMap:
             others = [others]
 
         for other in others:
-
             newPointcloud = self.pointclouds
 
             # Normalise the other pointclouds
             for cloud in other.pointclouds:
-
                 cloud.transform(cloud.origin - self.offset)
                 # TODO: find efficient method of removing duplicates
                 # cloud.removeDuplicates(newPointcloud)
@@ -473,8 +504,18 @@ class OccupancyMap:
             if not mean:
                 return self.map[coord[0], coord[1]]
             else:
-                return 1 if 1 in self.map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n] \
-                            else np.mean(self.map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n])
+                return (
+                    1
+                    if 1
+                    in self.map[
+                        coord[0] - n: coord[0] + n, coord[1] - n: coord[1] + n
+                    ]
+                    else np.mean(
+                        self.map[
+                            coord[0] - n: coord[0] + n, coord[1] - n: coord[1] + n
+                        ]
+                    )
+                )
         except IndexError:
             return 1
 
@@ -490,9 +531,13 @@ class OccupancyMap:
             int: The grid index corresponding to the translated coordinate.
         """
         if yx:
-            return np.round(((coord - self.offset) - self.min) / self.resolution).astype(int)
+            return np.round(
+                ((coord - self.offset) - self.min) / self.resolution
+            ).astype(int)
         else:
-            return np.round(((np.roll(coord, 1) - self.offset) - self.min) / self.resolution).astype(int)
+            return np.round(
+                ((np.roll(coord, 1) - self.offset) - self.min) / self.resolution
+            ).astype(int)
 
     def normalise(self) -> None:
         """
@@ -502,7 +547,13 @@ class OccupancyMap:
             c.transform(self.offset)
         self.offset = np.array([0, 0])
 
-    def show(self, raycast: bool = False, region: np.ndarray = None, save: bool = False, path: str = '') -> None:
+    def show(
+        self,
+        raycast: bool = False,
+        region: np.ndarray = None,
+        save: bool = False,
+        path: str = "",
+    ) -> None:
         """
         Display the occupancy map using matplotlib.
 
@@ -514,8 +565,8 @@ class OccupancyMap:
         if not raycast:
             plt.imshow(self.map, cmap="PiYG_r")
             plt.clim(0, 1)
-            plt.gca().set_xticks(np.arange(-.5, self.shape[1], 1), minor=True)
-            plt.gca().set_yticks(np.arange(-.5, self.shape[0], 1), minor=True)
+            plt.gca().set_xticks(np.arange(-0.5, self.shape[1], 1), minor=True)
+            plt.gca().set_yticks(np.arange(-0.5, self.shape[0], 1), minor=True)
             plt.grid(True, which="minor", color="w", linewidth=0.6, alpha=0.5)
             plt.colorbar()
         else:
@@ -527,8 +578,11 @@ class OccupancyMap:
                     continue
 
                 c = cloud.objectCloud + self.offset
-                plt.plot([c[:, 1], self.offset[1] + np.zeros(np.size(c[:, 1]))],
-                         [c[:, 0], self.offset[0] + np.zeros(np.size(c[:, 0]))], "ro-")
+                plt.plot(
+                    [c[:, 1], self.offset[1] + np.zeros(np.size(c[:, 1]))],
+                    [c[:, 0], self.offset[0] + np.zeros(np.size(c[:, 0]))],
+                    "ro-",
+                )
             plt.axis("equal")
             plt.plot(self.offset[1], self.offset[0], "ob")
             plt.gca().set_aspect("equal", "box")
@@ -545,18 +599,24 @@ class OccupancyMap:
 
 # ! TEST CODE
 
+
 def test_1():
     # Initialise Bounds
-    region = [np.array([[-2, 4], [3, 4], [2, 2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]),
-              np.array([[-1, 3], [-1, 2.5], [-1.5, 3]])]
-    res = 10    # Resolution of LIDAR scans
+    region = [
+        np.array([[-2, 4], [3, 4], [2, 2], [4, 3],
+                 [4, 0], [4, 0], [2, -1], [-2, 0]]),
+        np.array([[-1, 3], [-1, 2.5], [-1.5, 3]]),
+    ]
+    res = 10  # Resolution of LIDAR scans
     max_dist = 1.5  # max distance of LIDAR scans
     # Initialise Controller
     controller = simulate.Controller(
-        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
+        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist
+    )
     # Initialise PointCloud with a LIDAR scan of the environment
-    cloud = PointCloud(controller.getLiDARScan(),
-                       controller.pos, controller.max_scan_dist)
+    cloud = PointCloud(
+        controller.getLiDARScan(), controller.pos, controller.max_scan_dist
+    )
     # Initialise a new OccupancyMap with the PointCloud
     m = OccupancyMap(controller.pos, [cloud])
     # Initiliase a router
@@ -564,8 +624,9 @@ def test_1():
     # Moves the controller 33 times
     for i in range(0, 33):
         # Create a new scan
-        cloud = PointCloud(controller.getLiDARScan(),
-                           controller.pos, controller.max_scan_dist)
+        cloud = PointCloud(
+            controller.getLiDARScan(), controller.pos, controller.max_scan_dist
+        )
         # Merge the new Occupancy Map with the previous one
         m.merge(OccupancyMap(controller.pos, [cloud]))
         # Generate it and show it
@@ -587,7 +648,6 @@ def test_1():
 
 
 def test_2():
-
     if os.path.exists("move"):
         shutil.rmtree("move")
     os.makedirs("move")
@@ -596,20 +656,26 @@ def test_2():
         shutil.rmtree("map")
     os.makedirs("map")
 
-    region = [np.array([[-2, 4], [3, 4], [2, 2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]),
-              np.array([[-1, 3], [-1, 2.5], [-1.5, 3]])]
+    region = [
+        np.array([[-2, 4], [3, 4], [2, 2], [4, 3],
+                 [4, 0], [4, 0], [2, -1], [-2, 0]]),
+        np.array([[-1, 3], [-1, 2.5], [-1.5, 3]]),
+    ]
     res = 10
     max_dist = 1.5
     controller = simulate.Controller(
-        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
-    cloud = PointCloud(controller.getLiDARScan(),
-                       controller.pos, controller.max_scan_dist)
+        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist
+    )
+    cloud = PointCloud(
+        controller.getLiDARScan(), controller.pos, controller.max_scan_dist
+    )
     router = Router(controller)
     m = OccupancyMap(controller.pos, [cloud])
     index = 1
     for i in range(0, 45):
-        cloud = PointCloud(controller.getLiDARScan(),
-                           controller.pos, controller.max_scan_dist)
+        cloud = PointCloud(
+            controller.getLiDARScan(), controller.pos, controller.max_scan_dist
+        )
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
 
@@ -634,14 +700,19 @@ def test_3():
         shutil.rmtree("combine")
     os.makedirs("combine")
 
-    region = [np.array([[-2, 4], [3, 4], [2, 2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]),
-              np.array([[-1, 3], [-1, 2.5], [-1.5, 3]])]
+    region = [
+        np.array([[-2, 4], [3, 4], [2, 2], [4, 3],
+                 [4, 0], [4, 0], [2, -1], [-2, 0]]),
+        np.array([[-1, 3], [-1, 2.5], [-1.5, 3]]),
+    ]
     res = 10
     max_dist = 1.5
     controller = simulate.Controller(
-        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
-    cloud = PointCloud(controller.getLiDARScan(),
-                       controller.pos, controller.max_scan_dist)
+        np.array([0, 0]), 0, region, res, max_scan_dist=max_dist
+    )
+    cloud = PointCloud(
+        controller.getLiDARScan(), controller.pos, controller.max_scan_dist
+    )
     m = OccupancyMap(controller.pos, [cloud])
     router = Router(controller)
     index = 1
@@ -649,8 +720,9 @@ def test_3():
     compress = 4
     next = np.array([0, 0])
     for i in range(0, 22):
-        cloud = PointCloud(controller.getLiDARScan(),
-                           controller.pos, controller.max_scan_dist)
+        cloud = PointCloud(
+            controller.getLiDARScan(), controller.pos, controller.max_scan_dist
+        )
         m.merge(OccupancyMap(controller.pos, [cloud]))
         m.generate()
 
@@ -659,8 +731,8 @@ def test_3():
             plt.subplot(122)
             plt.imshow(m.map, cmap="PiYG_r")
             plt.clim(0, 1)
-            plt.gca().set_xticks(np.arange(-.5, m.shape[1], 1), minor=True)
-            plt.gca().set_yticks(np.arange(-.5, m.shape[0], 1), minor=True)
+            plt.gca().set_xticks(np.arange(-0.5, m.shape[1], 1), minor=True)
+            plt.gca().set_yticks(np.arange(-0.5, m.shape[0], 1), minor=True)
             plt.grid(True, which="minor", color="w", linewidth=0.6, alpha=0.5)
             plt.colorbar()
             plt.subplot(121)
@@ -668,8 +740,16 @@ def test_3():
                 r = np.append(region, [region[0]], axis=0)
                 plt.plot(r[:, 0], r[:, 1], "bo-")
 
-            plt.arrow(controller.pos[0], controller.pos[1], 0.15 * np.cos(controller.rot),
-                      0.15 * np.sin(controller.rot), head_width=0.15, head_length=0.15, fc="r", ec="r")
+            plt.arrow(
+                controller.pos[0],
+                controller.pos[1],
+                0.15 * np.cos(controller.rot),
+                0.15 * np.sin(controller.rot),
+                head_width=0.15,
+                head_length=0.15,
+                fc="r",
+                ec="r",
+            )
             plt.axis("equal")
             plt.gca().set_aspect("equal", "box")
             bottom, top = plt.ylim()
@@ -690,8 +770,10 @@ def test_3():
                 plt.subplot(122)
                 plt.imshow(m.map, cmap="PiYG_r")
                 plt.clim(0, 1)
-                plt.gca().set_xticks(np.arange(-.5, m.shape[1], 1), minor=True)
-                plt.gca().set_yticks(np.arange(-.5, m.shape[0], 1), minor=True)
+                plt.gca().set_xticks(
+                    np.arange(-0.5, m.shape[1], 1), minor=True)
+                plt.gca().set_yticks(
+                    np.arange(-0.5, m.shape[0], 1), minor=True)
                 plt.grid(True, which="minor", color="w",
                          linewidth=0.6, alpha=0.5)
                 plt.colorbar()
@@ -700,8 +782,16 @@ def test_3():
                     r = np.append(region, [region[0]], axis=0)
                     plt.plot(r[:, 0], r[:, 1], "bo-")
 
-                plt.arrow(controller.pos[0], controller.pos[1], 0.15 * np.cos(controller.rot), 0.15 * np.sin(
-                    controller.rot), head_width=0.15, head_length=0.15, fc="r", ec="r")
+                plt.arrow(
+                    controller.pos[0],
+                    controller.pos[1],
+                    0.15 * np.cos(controller.rot),
+                    0.15 * np.sin(controller.rot),
+                    head_width=0.15,
+                    head_length=0.15,
+                    fc="r",
+                    ec="r",
+                )
                 plt.axis("equal")
                 plt.gca().set_aspect("equal", "box")
                 bottom, top = plt.ylim()
