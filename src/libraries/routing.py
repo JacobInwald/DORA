@@ -159,7 +159,7 @@ class Router:
                         or map.sampleCoord(p + d, yx=True, mean=True) <= 1e-3
                         or map.sampleCoord(p + d, yx=True, mean=True) >= 0.55):
                     continue
-                return np.roll(p - d, 1)
+                return p - d
 
         return clouds[-1].origin
 
@@ -223,7 +223,7 @@ class PointCloud:
     def __init__(self, lidar: np.ndarray, origin: np.ndarray,
                  maxScanDist: float):
         self.lidar = lidar
-        self.origin = np.roll(origin, 1)
+        self.origin = np.copy(origin)
         self.maxScanDist = maxScanDist
 
         self.initClouds(lidar)
@@ -377,7 +377,7 @@ class OccupancyMap:
             None
         """
         # explanatory
-        self.offset = np.roll(offset, 1)
+        self.offset = offset
         self.resolution = resolution
         self.pointclouds = (pointclouds
                             if not isinstance(pointclouds, PointCloud) else
@@ -470,7 +470,7 @@ class OccupancyMap:
                 newPointcloud.append(cloud)
 
         # rerolls the offset so it doesn't get rolled twice
-        self.__init__(np.roll(self.offset, 1), newPointcloud)
+        self.__init__(self.offset, newPointcloud)
         return self
 
     def sampleCoord(self,
@@ -515,7 +515,7 @@ class OccupancyMap:
             return np.round(((coord - self.offset) - self.min) /
                             self.resolution).astype(int)
         else:
-            return np.round(((np.roll(coord, 1) - self.offset) - self.min) /
+            return np.round(((coord - self.offset) - self.min) /
                             self.resolution).astype(int)
 
     def normalise(self) -> None:
@@ -558,8 +558,8 @@ class OccupancyMap:
 
                 c = cloud.objectCloud + self.offset
                 plt.plot(
-                    [c[:, 1], self.offset[1] + np.zeros(np.size(c[:, 1]))],
                     [c[:, 0], self.offset[0] + np.zeros(np.size(c[:, 0]))],
+                    [c[:, 1], self.offset[1] + np.zeros(np.size(c[:, 1]))],
                     "ro-",
                 )
             plt.axis("equal")
@@ -784,3 +784,6 @@ def test_3():
                 combine += 1
             o += 1
             router.toPoint(p)
+
+
+test_1()

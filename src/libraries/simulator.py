@@ -123,7 +123,7 @@ def lidarRay(
         nb: return inf if there is no intersection
     """
 
-    dir_lidar = np.round(np.array([np.sin(angle), np.cos(angle)]), 3)
+    dir_lidar = np.round(np.array([np.cos(angle), np.sin(angle)]), 3)
     min_dist = np.inf
 
     for bound in bounds:
