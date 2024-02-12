@@ -1,5 +1,5 @@
 import roslibpy as rospy
-from std_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan
 
 
 class LiDAR:
@@ -15,25 +15,36 @@ class LiDAR:
      - The lidar will publish the image
      - The lidar sensor will pre-process the image
      - The lidar sensor will update its current frame attribute
-     - Continue...
 
     Attributes:
-    - currentScan: numpy.ndarray - The current scan of the camera.
+    - cur_scan: numpy.ndarray - The current scan of the camera.
     """
 
     def __init__(self):
-        self.currentScan = None
+        self.min_range = 0.0
+        self.cur_scan = None
 
-    def preprocess(self):
+    def preprocess(self, scan):
         """
-        Updates the position of the robot based on the GPS sensor, normalise the rotation of the scan
+        Prepares the scan for use in the network.
         """
+        return scan
 
     def listener(self):
         rospy.init_node('listener', anonymous=True)
         rospy.Subscriber("lidar", LaserScan, self.callback)
-        # spin() simply keeps python from exiting until this node is stopped
         rospy.spin()
 
-    def callback(self, data):
-        rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
+    def callback(self, msg):
+        # This assumes a LaserScan Class
+        res = msg.angle_increment
+        start = msg.angle_min
+        end = msg.angle_max
+        scan = []
+
+        for a in range(start, end, res):
+            scan.append([a, msg.ranges[a]])
+
+        self.cur_scan = self.preprocess(scan)
+
+        rospy.loginfo(rospy.get_caller_id() + "I heard %s", scan)
