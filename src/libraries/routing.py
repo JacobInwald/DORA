@@ -67,6 +67,7 @@ class Router:
     The Router class is responsible for calculating routes and navigating the robot on the map.
     TODO: Finish it (Keming)
     """
+    emptyMap = None
 
     def __init__(self, controller: "simulate.Controller"):
         self.controller = controller
@@ -90,12 +91,10 @@ class Router:
 
         g = {}
         g[str(start)] = 0
-
-        def f(p):
-            return np.linalg.norm(p - end) + g[str(p)]
-
+        alpha = 0.5 # the penalty parameter for being close to obstacles
+        f = lambda p,a: 3* np.linalg.norm(p - end) + g[str(p)] + a * alpha
         q = PriorityQueue()
-        q.put((f(start), start))
+        q.put((f(start,0), start))
         parent = {}
         found = False
 
@@ -112,17 +111,22 @@ class Router:
             for d in directions:
                 n = cur + d * move_dist
                 strNext = str(n)
-
-                if occ_map.sampleCoord(n) > 0.3:
+            
+                
+                if occ_map.sampleCoord(n) > 0.8:
+                    g[strNext] = g[strCur] + np.inf
                     continue
-
+                
+                # penalize for obstacles in 3 move_dist
+                penalty = occ_map.sampleCoord(n, mean=True)
+                
                 try:
                     if g[strCur] + self.controller.move_dist < g[strNext]:
                         g[strNext] = g[strCur] + move_dist
                         parent[strNext] = cur
                 except KeyError:
                     g[strNext] = g[strCur] + move_dist
-                    q.put((f(n), tuple(n)))
+                    q.put((f(n,penalty), tuple(n)))
                     parent[strNext] = cur
 
         if found:
@@ -162,8 +166,9 @@ class Router:
                 return p - d
 
         return clouds[-1].origin
-
-    def nextTidyingPoint(map: "OccupancyMap") -> np.ndarray:
+     
+     
+    def nextTidyingPoint(self, map: "OccupancyMap", cleanMap: "OccupancyMap") -> np.ndarray:
         """
         Finds the next tidying point in the occupancy map.
 
@@ -176,7 +181,23 @@ class Router:
         TODO: Implement the logic to find the next tidying point (Keming)
         TODO: Feel free to change the structure as well, just document it in the PR
         """
-
+        # compare the clean map with the real map to locate toys, may start with greedy algorithm to pick up whatever closest 
+        cur = self.controller.pos
+        contrastMap = map.map - cleanMap.map
+        nearest_obstacle = None
+        min_dist = np.inf()
+        for x in range(len(contrastMap.shape[0])):
+            for y in range(len(contrastMap.shape[1])):
+                if contrastMap[x,y] > 0.55:
+                    dist_to_cur = np.linalg.norm(cur - np.ndarray([x,y]))
+                    if dist_to_cur < min_dist:
+                        min_dist = dist_to_cur
+                        nearest_obstacle = np.ndarray([x,y])
+        
+        return nearest_obstacle
+    
+    
+    
     def toPoint(self, end: np.ndarray) -> None:
         """
         Move the robot to the given end point on the map.
@@ -785,5 +806,41 @@ def test_3():
             o += 1
             router.toPoint(p)
 
-
+def test_4():
+    # Initialise Bounds
+    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
+                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
+    res = 5    # Resolution of LIDAR scans
+    max_dist = 1.5 # max distance of LIDAR scans
+    # Initialise Controller
+    controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
+    # Initialise PointCloud with a LIDAR scan of the environment
+    cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+    # Initialise a new OccupancyMap with the PointCloud
+    m = OccupancyMap(controller.pos, [cloud])
+    # Initiliase a router
+    router = Router(controller)
+    # Moves the controller 33 times
+    for i in range(0, 20):
+        # Create a new scan
+        cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
+        # Merge the new Occupancy Map with the previous one
+        m.merge(OccupancyMap(controller.pos, [cloud]))
+        # Generate it and show it
+        m.generate()
+        m.show()
+        
+        # Move to the next mapping point
+        next = router.nextMappingPoint(m)
+        path = router.route(next, m)
+        next = path[-1]
+        
+        # Move and trace path on the map
+        for p in path:
+            router.toPoint(p)
+            p = m.translate(p)
+            m.map[p[0], p[1]] = 1
+        
+        m.show()
+        
 test_1()
