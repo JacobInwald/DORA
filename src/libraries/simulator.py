@@ -5,9 +5,10 @@ import shutil
 import glob
 from natsort import natsorted
 from PIL import Image
-# import routing as rt
+
 
 # ! Library Methods
+
 
 def isBetween(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> bool:
     """
@@ -21,10 +22,15 @@ def isBetween(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> bool:
     Returns:
     bool: True if c lies between a and b, False otherwise.
     """
-    return np.linalg.norm(a - c) + np.linalg.norm(b - c) - np.linalg.norm(a - b) < 0.0001
+    return (
+        np.linalg.norm(a - c) + np.linalg.norm(b - c) -
+        np.linalg.norm(a - b) < 0.0001
+    )
 
 
-def pointIntersect(p1: np.ndarray, d1: np.ndarray, p2: np.ndarray, d2: np.ndarray) -> np.ndarray:
+def pointIntersect(
+    p1: np.ndarray, d1: np.ndarray, p2: np.ndarray, d2: np.ndarray
+) -> np.ndarray:
     """
     Calculate the intersection point between two lines defined by a point and a direction vector.
 
@@ -41,17 +47,21 @@ def pointIntersect(p1: np.ndarray, d1: np.ndarray, p2: np.ndarray, d2: np.ndarra
     if d2[0] == 0:
         t = (p2[0] - p1[0]) / d1[0]
     else:
-        t = ((p2[1] - p1[1]) + (d2[1]/d2[0])*(p1[0] - p2[0])) / (d1[1] - (d2[1]*d1[0]) / d2[0])
-        
+        t = ((p2[1] - p1[1]) + (d2[1] / d2[0]) * (p1[0] - p2[0])) / (
+            d1[1] - (d2[1] * d1[0]) / d2[0]
+        )
+
     p = p1 + t * d1
-    
+
     if any(np.isnan(p)) or any(np.isinf(p)):
         return np.array([np.nan, np.nan])
 
     return p
 
 
-def lineIntersectPolygon(p: np.ndarray, d: np.ndarray, bounds: np.ndarray) -> np.ndarray:
+def lineIntersectPolygon(
+    p: np.ndarray, d: np.ndarray, bounds: np.ndarray
+) -> np.ndarray:
     """
     Calculate the intersection point between a line and a polygon.
 
@@ -64,31 +74,41 @@ def lineIntersectPolygon(p: np.ndarray, d: np.ndarray, bounds: np.ndarray) -> np
     numpy.ndarray: The intersection point of the line and the polygon.
     """
     intersects = []
-    
+
     for bound in bounds:
         for i in range(len(bound)):
             # Get a bounding line of the boundary region
             p_bound = bound[i]
-            d_bound = np.round(bound[i+1] - p_bound if i < len(bound)-1 else bound[0] - p_bound, 3)
-            
+            d_bound = np.round(
+                bound[i + 1] -
+                p_bound if i < len(bound) - 1 else bound[0] - p_bound, 3
+            )
+
             #  Get intersection point between the LiDAR ray and the bounding line
             intersect = pointIntersect(p, d, p_bound, d_bound)
-            
+
             # Checks if the intersection point is valid (pointing right way, not nan, not too far away,...)
-            if np.isnan(intersect).any() or  \
-                not isBetween(p_bound, p_bound+d_bound, intersect) or \
-                np.dot(d, intersect - p) < 0 or \
-                np.linalg.norm(intersect - p) > np.linalg.norm(d):
+            if (
+                np.isnan(intersect).any()
+                or not isBetween(p_bound, p_bound + d_bound, intersect)
+                or np.dot(d, intersect - p) < 0
+                or np.linalg.norm(intersect - p) > np.linalg.norm(d)
+            ):
                 continue
-            
+
             # Update minimum distance
             intersects.append(intersect)
-       
 
     return intersects
 
 
-def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], noise=True, max_dist=np.inf) -> float:
+def lidarRay(
+    start: np.ndarray,
+    angle: float,
+    bounds: np.ndarray[np.ndarray],
+    noise=True,
+    max_dist=np.inf,
+) -> float:
     """
     Calculates the minimum distance from a starting point to a boundary region
     along a given angle using LiDAR.
@@ -102,34 +122,38 @@ def lidarRay(start: np.ndarray, angle: float, bounds: np.ndarray[np.ndarray], no
         float: The minimum distance from the starting point to the boundary region.
         nb: return inf if there is no intersection
     """
-    
-    dir_lidar = np.round(np.array([np.sin(angle), np.cos(angle)]), 3)
+
+    dir_lidar = np.round(np.array([np.cos(angle), np.sin(angle)]), 3)
     min_dist = np.inf
 
     for bound in bounds:
         for i in range(len(bound)):
             # Get a bounding line of the boundary region
             p1 = bound[i]
-            dir = np.round(bound[i+1] - p1 if i < len(bound) - 1 else bound[0] - p1, 3)
-            
+            dir = np.round(
+                bound[i + 1] - p1 if i < len(bound) - 1 else bound[0] - p1, 3
+            )
+
             #  Get intersection point between the LiDAR ray and the bounding line
             p = pointIntersect(start, dir_lidar, p1, dir)
-            
+
             # Checks if the intersection point is valid (pointing right way, not nan, not too far away,...)
-            if np.isnan(p).any() or  \
-                not isBetween(p1, p1+dir, p) or \
-                np.dot(dir_lidar, p - start) < 0 or \
-                np.linalg.norm(p - start) >= min_dist:
+            if (
+                np.isnan(p).any()
+                or not isBetween(p1, p1 + dir, p)
+                or np.dot(dir_lidar, p - start) < 0
+                or np.linalg.norm(p - start) >= min_dist
+            ):
                 continue
-            
+
             # Update minimum distance
             min_dist = np.linalg.norm(p - start)
-            
+
     noise = np.random.normal(0, 0.01) if noise else 0
     return min_dist + noise if min_dist < max_dist else np.inf
 
 
-def folderToGIF(dir: str, frame_length: int = 100, length = None, frame_div=1):
+def folderToGIF(dir: str, frame_length: int = 100, length=None, frame_div=1):
     """
     Converts a folder of PNG images into a GIF animation.
 
@@ -142,17 +166,33 @@ def folderToGIF(dir: str, frame_length: int = 100, length = None, frame_div=1):
     fp_out = f"{dir.split('/')[-1]}.gif"
 
     frames = natsorted([file for file in glob.glob(fp_in)])
-    
+
     frames = [Image.open(frame) for frame in frames]
     for f in frames:
-        f.putpixel((0,0), (r.randint(0,255),r.randint(0,255),r.randint(0,255),r.randint(0,255)))
+        f.putpixel(
+            (0, 0),
+            (
+                r.randint(0, 255),
+                r.randint(0, 255),
+                r.randint(0, 255),
+                r.randint(0, 255),
+            ),
+        )
     frames = [frames[i] for i in range(len(frames)) if i % frame_div == 0]
-    frames[0].save(fp_out, save_all=True, append_images=frames[1:], optimize=False, duration=40, loop=0)
-    
+    frames[0].save(
+        fp_out,
+        save_all=True,
+        append_images=frames[1:],
+        optimize=False,
+        duration=40,
+        loop=0,
+    )
+
     shutil.rmtree(dir)
 
 
 # ! Controller Simulation
+
 
 class Controller:
     """
@@ -168,7 +208,7 @@ class Controller:
         move_dist (float): The distance to move the robot forward.
 
     Methods:
-        __init__(self, pos: np.ndarray, rot: float, map: list[np.ndarray], scan_res: float = 1, noise: bool = True, max_scan_dist: float = 2, move_dist: float = 0.1): 
+        __init__(self, pos: np.ndarray, rot: float, map: list[np.ndarray], scan_res: float = 1, noise: bool = True, max_scan_dist: float = 2, move_dist: float = 0.1):
             Initialize the controller.
         forward(self, dist: float):
             Move the robot forward by a given distance.
@@ -181,8 +221,17 @@ class Controller:
         show(self, save:bool = False, path:str = ""):
             Show the environment with the robot's position and orientation.
     """
-    
-    def __init__(self, pos: np.ndarray, rot: float, map: list[np.ndarray], scan_res: float = 1, noise: bool = True, max_scan_dist: float = 2, move_dist: float = 0.1):
+
+    def __init__(
+        self,
+        pos: np.ndarray,
+        rot: float,
+        map: list[np.ndarray],
+        scan_res: float = 1,
+        noise: bool = True,
+        max_scan_dist: float = 2,
+        move_dist: float = 0.1,
+    ):
         """
         Initialize the controller.
 
@@ -215,7 +264,7 @@ class Controller:
         if len(lineIntersectPolygon(self.pos, move_dir, self.map)) > 0:
             print("Collision detected, cannot move forward.")
             return False
-        
+
         self.pos += move_dir
         return True
 
@@ -239,27 +288,16 @@ class Controller:
             np.ndarray: An array containing the LiDAR scan results.
         """
         angles = [np.deg2rad(i) for i in np.arange(0, 360, self.scan_res)]
-        scan = [np.array([a, lidarRay(self.pos, a, self.map, self.noise, self.max_scan_dist)]) for a in angles]
+        scan = [
+            np.array(
+                [a, lidarRay(self.pos, a, self.map,
+                             self.noise, self.max_scan_dist)]
+            )
+            for a in angles
+        ]
         return np.array(scan)
 
-    def localize(self):
-        """
-        Localizes the object using GPS coordinates.
-        TODO: Check if the method is working properly. (Wilfredo)
-        """
-        self.pos, self.rot = self.gps.locate()
-
-    def getOverheadImage(self):
-        """
-        Get the overhead image of the environment.
-
-        Returns:
-            TODO: Specify the return type. (Wilfredo)
-        """
-        # TODO: Implement the method.
-        pass
-
-    def show(self, save:bool = False, path:str = ""):
+    def show(self, save: bool = False, path: str = ""):
         """
         Show the environment with the robot's position and orientation.
 
@@ -270,9 +308,18 @@ class Controller:
         plt.figure(1, figsize=(4, 4))
         for region in self.map:
             r = np.append(region, [region[0]], axis=0)
-            plt.plot(r[:,0], r[:,1], "bo-")
-        
-        plt.arrow(self.pos[0], self.pos[1], 0.15 * np.cos(self.rot), 0.15 * np.sin(self.rot), head_width=0.15, head_length=0.15, fc="r", ec="r")
+            plt.plot(r[:, 0], r[:, 1], "bo-")
+
+        plt.arrow(
+            self.pos[0],
+            self.pos[1],
+            0.15 * np.cos(self.rot),
+            0.15 * np.sin(self.rot),
+            head_width=0.15,
+            head_length=0.15,
+            fc="r",
+            ec="r",
+        )
         plt.axis("equal")
         plt.gca().set_aspect("equal", "box")
         bottom, top = plt.ylim()
