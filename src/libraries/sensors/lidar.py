@@ -1,5 +1,5 @@
 import roslibpy as rospy
-from std_msgs.msg import String
+from std_msgs.msg import LaserScan
 
 
 class LiDAR:
@@ -31,7 +31,7 @@ class LiDAR:
 
     def listener(self):
         rospy.init_node('listener', anonymous=True)
-        rospy.Subscriber("lidar", String, self.callback)
+        rospy.Subscriber("lidar", LaserScan, self.callback)
         # spin() simply keeps python from exiting until this node is stopped
         rospy.spin()
 
