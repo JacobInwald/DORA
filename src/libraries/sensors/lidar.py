@@ -1,3 +1,7 @@
+import roslibpy as rospy
+from std_msgs.msg import String
+
+
 class LiDAR:
     """
     Represents the LiDAR.
@@ -22,5 +26,14 @@ class LiDAR:
 
     def preprocess(self):
         """
-        Updates the position of the robot based on the GPS sensor.
+        Updates the position of the robot based on the GPS sensor, normalise the rotation of the scan
         """
+
+    def listener(self):
+        rospy.init_node('listener', anonymous=True)
+        rospy.Subscriber("lidar", String, self.callback)
+        # spin() simply keeps python from exiting until this node is stopped
+        rospy.spin()
+
+    def callback(self, data):
+        rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
