@@ -110,6 +110,7 @@ class Router:
     The Router class is responsible for calculating routes and navigating the robot on the map.
     TODO: Finish it (Keming)
     """
+    emptyMap = None
 
     def __init__(self, controller: "simulate.Controller"):
         self.controller = controller
@@ -154,9 +155,7 @@ class Router:
                 next = cur + d * moveDist
                 strNext = str(next)
                 
-                # TODO: Penalize being near obstacles
-                # may penalize by heuristic
-            
+                # TODO: Penalize being near obstacles            
                 
                 if map.sampleCoord(next) > 0.5:
                     g[strNext] = g[strCur] + np.inf
@@ -224,7 +223,7 @@ class Router:
         return clouds[-1].origin
      
      
-    def nextTidyingPoint(map: "OccupancyMap") -> np.ndarray:
+    def nextTidyingPoint(self, map: "OccupancyMap", cleanMap: "OccupancyMap") -> np.ndarray:
         """
         Finds the next tidying point in the occupancy map.
 
@@ -238,7 +237,16 @@ class Router:
         TODO: Feel free to change the structure as well, just document it in the PR
         """
         # compare the clean map with the real map to locate toys, may start with greedy algorithm to pick up whatever closest 
+        cur = self.controller.pos
+        contrastMap = map.map - cleanMap.map
+        for x in range(len(contrastMap.shape[0])):
+            for y in range(len(contrastMap.shape[1])):
+                if contrastMap[x,y] > 0.5:
+                    
+        
+        
         pass
+    
     
     
     def toPoint(self, end: np.ndarray) -> None:
@@ -788,7 +796,7 @@ def test_4():
     # Initiliase a router
     router = Router(controller)
     # Moves the controller 33 times
-    for i in range(0, 33):
+    for i in range(0, 20):
         # Create a new scan
         cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
         # Merge the new Occupancy Map with the previous one
@@ -810,4 +818,4 @@ def test_4():
         
         m.show()
         
-test_1()
+test_4()
