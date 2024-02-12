@@ -113,29 +113,20 @@ class Router:
                 strNext = str(n)
             
                 
-                if occ_map.sampleCoord(n) > 0.5:
+                if occ_map.sampleCoord(n) > 0.8:
                     g[strNext] = g[strCur] + np.inf
                     continue
                 
-                penalty = 0
-                nearestObsDist = 10
-                # penalize for being within 3 steps away from obstacle
-                for o in np.array([(x, y) for x in [-3, -2, -1, 0, 1, 2, 3] for y in [-3, -2, -1, 0, 1, 2, 3] if (x,y) != (0,0)]):
-                    aroundNext = next + o * moveDist
-                    strAroundNext = str(aroundNext)
-                    if map.sampleCoord(aroundNext) > 0.8:
-                        nearestObsDist = min(nearestObsDist, np.linalg.norm(next - aroundNext))
-                        penalty = 1 / nearestObsDist
-                
-                
+                # penalize for obstacles in 3 move_dist
+                penalty = occ_map.sampleCoord(n, mean=True)
                 
                 try:
                     if g[strCur] + self.controller.move_dist < g[strNext]:
                         g[strNext] = g[strCur] + move_dist
                         parent[strNext] = cur
                 except KeyError:
-                    g[strNext] = g[strCur] + moveDist
-                    q.put((f(next,penalty), tuple(next)))
+                    g[strNext] = g[strCur] + move_dist
+                    q.put((f(n,penalty), tuple(n)))
                     parent[strNext] = cur
 
         if found:
@@ -193,13 +184,17 @@ class Router:
         # compare the clean map with the real map to locate toys, may start with greedy algorithm to pick up whatever closest 
         cur = self.controller.pos
         contrastMap = map.map - cleanMap.map
+        nearest_obstacle = None
+        min_dist = np.inf()
         for x in range(len(contrastMap.shape[0])):
             for y in range(len(contrastMap.shape[1])):
-                if contrastMap[x,y] > 0.5:
-                    
+                if contrastMap[x,y] > 0.55:
+                    dist_to_cur = np.linalg.norm(cur - np.ndarray([x,y]))
+                    if dist_to_cur < min_dist:
+                        min_dist = dist_to_cur
+                        nearest_obstacle = np.ndarray([x,y])
         
-        
-        pass
+        return nearest_obstacle
     
     
     
@@ -848,4 +843,4 @@ def test_4():
         
         m.show()
         
-test_4()
+test_1()
