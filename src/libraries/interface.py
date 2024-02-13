@@ -60,11 +60,4 @@ class ROSInterface:
     def __str__(self) -> str:
         return f"DORA at {self.gps.pos}, with angle of {self.gps.pos}"
 
-
-def spin():
-    rclpy.init()
-    interface = ROSInterface()
-    interface.spin()
-    interface.destroy()
-    print("Done")   
     
