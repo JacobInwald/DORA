@@ -1,7 +1,13 @@
 import numpy as np
+import rclpy
+from std_msgs.msg import Header
+from geometry_msgs.msg import Point
+from rclpy.node import Node
+class GPSData(Header):
+    # Image data to be sent by ROS
+    pass
 
-
-class GPS:
+class GPS(Node):
     """
     Represents a GPS sensor. (Overhead camera)
 
@@ -25,9 +31,37 @@ class GPS:
     """
 
     def __init__(self):
-        self.pos = np.zeros(2)
-        self.rot = 0
+        super().__init__("lidar_subscriber")
+        self.subsciber_ = self.create_subscription(Point, "gps", self.callback, 10)
+        self.i = 0
+        
+        self.rot = 0.0
+        self.pos = None
 
+    def preprocess(self, scan):
+        """
+        Prepares the scan for use in the network.
+        """
+        return scan
+
+    def callback(self, msg: 'Point'):
+        # This assumes a LaserScan Class
+        self.pos = np.array([msg.x, msg.y])
+        self.rot = msg.z
+
+        self.get_logger().info("Heard: GPS %d" % self.i)
+        self.i += 1
+
+    def spin(self):
+        rclpy.spin(self)
+    
+    async def spin_once(self):
+        rclpy.spin_once(self, timeout_sec=0.01)
+    
+    def destroy(self):
+        self.destroy_node()
+        
+    # Incomplete 
     def locate(self, controller: "simulate.Controller"):
         """
         Updates the position of the robot based on the GPS sensor.
