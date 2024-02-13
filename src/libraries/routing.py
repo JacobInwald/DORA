@@ -4,10 +4,8 @@ import shutil
 from queue import PriorityQueue
 import numpy as np
 from matplotlib import pyplot as plt
-import simulator as simulate
-import time
+import simulation_no_ros as simulate
 import interface
-import simulation as sim
 import rclpy
 # ! Library Methods
 
