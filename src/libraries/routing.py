@@ -5,7 +5,7 @@ from queue import PriorityQueue
 import numpy as np
 from matplotlib import pyplot as plt
 import simulator as simulate
-
+import time
 import interface
 import simulation as sim
 import rclpy
@@ -208,10 +208,9 @@ class Router:
             end (np.ndarray): The end point coordinates on the map.
         TODO: Probably should be moved to the Controller class (fine for now)
         """
-        dist = np.linalg.norm(end - pos)
-        angle = (np.arctan2(end[1] - pos[1], end[0] -
-                            pos[0]) - rot)
-        
+        dist = np.round(np.linalg.norm(end - pos), 3)
+        angle = int(np.rad2deg((np.arctan2(end[1] - pos[1], end[0] - pos[0]) - rot) % (2 * np.pi)))
+        # print(end, pos + dist * np.array([np.cos(angle), np.sin(angle)]))
         self.controller.turn(angle)
         self.controller.forward(dist)
 
@@ -831,22 +830,11 @@ def test_4():
         
         m.show()
      
-import asyncio, time
-        
+  
 def test_5():
-    # Initialise Bounds
-    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
-                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
     max_dist = 1.5 # max distance of LIDAR scans
-    rclpy.init()
-    # simul = sim.Simulation(np.array([0,0]), region)
+    
     inter = interface.ROSInterface()
-    # task = asyncio.run(inter.spin())
-    # while inter.lidar.cur_scan is None:
-    #     time.sleep(1)
-    #     print(inter.lidar.cur_scan)
-    # # print(inter.lidar.cur_scan)
-    # time.sleep(1)
     while inter.lidar.cur_scan is None:
         inter.update_sensors()
     
@@ -874,16 +862,16 @@ def test_5():
         next = path[-1]
         
         # Move and trace path on the map
-        for p in path:
-            inter.update_sensors()
+        for p in path[1:]:
             router.toPoint(inter.gps.pos, inter.gps.rot, p)
+            for i in range(5):
+                inter.update_sensors()
             p = m.translate(p)
             m.map[p[0], p[1]] = 1
         inter.update_sensors()
-        print(inter.gps.pos)
+
         m.show()
-    
-    asyncio.get_event_loop().close()
+        
     inter.destroy()
     rclpy.shutdown()    
     

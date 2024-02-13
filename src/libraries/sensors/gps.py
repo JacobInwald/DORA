@@ -31,7 +31,7 @@ class GPS(Node):
     """
 
     def __init__(self):
-        super().__init__("lidar_subscriber")
+        super().__init__("gps_subscriber")
         self.subsciber_ = self.create_subscription(Point, "gps", self.callback, 10)
         self.i = 0
         
@@ -49,7 +49,7 @@ class GPS(Node):
         self.pos = np.array([msg.x, msg.y])
         self.rot = msg.z
 
-        self.get_logger().info("Heard: GPS %d" % self.i)
+        self.get_logger().info(f"Heard: GPS {self.i}: {self.pos} {self.rot}")
         self.i += 1
 
     def spin(self):

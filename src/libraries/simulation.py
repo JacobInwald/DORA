@@ -13,26 +13,6 @@ from rclpy.node import Node
 
 # ! Library Methods
 
-async def spin_node(node: Node):
-    cancel = node.create_guard_condition(lambda: None)
-    def _spin(node: Node,
-              future: asyncio.Future,
-              event_loop: asyncio.AbstractEventLoop):
-        while not future.cancelled():
-            rclpy.spin_once(node)
-        if not future.cancelled():
-            event_loop.call_soon_threadsafe(future.set_result, None)
-    event_loop = asyncio.get_event_loop()
-    spin_task = event_loop.create_future()
-    spin_thread = threading.Thread(target=_spin, args=(node, spin_task, event_loop))
-    spin_thread.start()
-    try:
-        await spin_task
-    except asyncio.CancelledError:
-        cancel.trigger()
-    spin_thread.join()
-    node.destroy_guard_condition(cancel)
-
 def isBetween(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> bool:
     """
     Check if point c lies between points a and b.
@@ -188,13 +168,6 @@ class LiDARPublisher(Node):
         self.destroy_node()
 
 
-class GPSData(Header):
-    
-    def __init__(self, pos, rot) -> None:
-        super().__init__()
-        self.pos = pos
-        self.rot = rot
-
 class GPSPublisher(Node):
     """
     Represents the GPS.
@@ -221,7 +194,7 @@ class GPSPublisher(Node):
         msg.z = float(rot)
         # Publish
         self.publisher_.publish(msg)
-        self.get_logger().info("Publishing: GPS %d" % self.i)
+        self.get_logger().info(f"Publishing: GPS {self.i}: {pos} {rot}")
         self.i += 1
     
     def spin(self):
@@ -240,13 +213,6 @@ class MoveType(Enum):
     BACKWARD = 1
     TURN = 2
     PASS = 3
-
-class MoveMsg(Header):
-    
-    def __init__(self, type: MoveType, arg) -> None:
-        super().__init__()
-        self.type = type
-        self.arg = arg
 
 class MoveSubscriber(Node):
     """
@@ -268,17 +234,27 @@ class MoveSubscriber(Node):
         elif int(msg.x) == 1:
             self.simulation.forward(-msg.y)
         elif int(msg.x) == 2:
-            self.simulation.turn(msg.y)
+            self.simulation.turn(msg.y, True)
         elif int(msg.x) == 3:
             pass
-        self.get_logger().info(f"Heard: Move {msg.x} {msg.y}")
+        self.get_logger().info(f"Heard: Move number {self.i}: {msg.x} {msg.y}")
         self.i += 1
     
     def spin(self):
         rclpy.spin(self)
     
-    async def spin_once(self):
-        rclpy.spin_once(self, timeout_sec=0.1)  
+    async def spin_once(self, timeout_sec=0.01):
+        spin_task = asyncio.get_event_loop().create_task(self.spin())
+        sleep_task = asyncio.get_event_loop().create_task(asyncio.sleep(timeout_sec))
+
+        # concurrently execute both tasks
+        await asyncio.wait([spin_task, sleep_task], return_when=asyncio.FIRST_COMPLETED)
+
+        # cancel tasks
+        if spin_task.cancel():
+            await spin_task
+        if sleep_task.cancel():
+            await sleep_task
     
     
     def destroy(self):
@@ -377,10 +353,10 @@ class Simulation:
             return False
 
         self.pos += move_dir
-        print(f"DORA is at {self.pos} with angle of {self.rot}")
+        print(f"DORA is at {self.pos} with angle of {np.rad2deg(self.rot)}")
         return True
 
-    def turn(self, angle: float, deg: bool = False):
+    def turn(self, angle: float, deg: bool = True):
         """
         Turn the robot by a given angle.
 
@@ -392,40 +368,16 @@ class Simulation:
             angle = np.deg2rad(angle)
         self.rot = (self.rot + angle) % (2 * np.pi)
 
-    def norm_spin(self):
+    def spin(self):
         """
         Spins the robot.
         """
         while(True):
-            rclpy.spin_once(self.lidar_publisher)
-            rclpy.spin_once(self.gps_publisher)
-            rclpy.spin_once(self.move_subscriber)
+            rclpy.spin_once(self.lidar_publisher, timeout_sec=0.01)
+            rclpy.spin_once(self.gps_publisher, timeout_sec=0.01)
+            rclpy.spin_once(self.move_subscriber, timeout_sec=0.01)
         rclpy.shutdown()
     
-    def spin(self) -> None:
-        """
-        Spins the robot.
-        """
-        for i in range(10000):
-            for n in [self.lidar_publisher, self.move_subscriber, self.gps_publisher]:
-                asyncio.get_event_loop().run_until_complete(self.run(n))    
-        asyncio.get_event_loop().close()
-        rclpy.shutdown()
-        
-    async def run(self, node) -> None:
-        """
-        """    
-        spin_task = asyncio.get_event_loop().create_task(spin_node(node))
-        sleep_task = asyncio.get_event_loop().create_task(asyncio.sleep(1.0))
-
-        # concurrently execute both tasks
-        await asyncio.wait([spin_task, sleep_task], return_when=asyncio.FIRST_COMPLETED)
-
-        # cancel tasks
-        if spin_task.cancel():
-            await spin_task
-        if sleep_task.cancel():
-            await sleep_task
     
     def destroy(self):
         self.lidar_publisher.destroy()
@@ -449,7 +401,7 @@ def spin():
     res = 5    # Resolution of LIDAR scans
     max_dist = 1.5 # max distance of LIDAR scans
     sim = Simulation(np.array([0.0, 0.0]), region)
-    sim.norm_spin()
+    sim.spin()
     
     sim.destroy()
     
