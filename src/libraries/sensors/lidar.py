@@ -1,8 +1,10 @@
 import roslibpy as rospy
 from sensor_msgs.msg import LaserScan
+from rclpy.node import Node
+import rclpy
+import numpy as np
 
-
-class LiDAR:
+class LiDAR(Node):
     """
     Represents the LiDAR.
 
@@ -21,7 +23,10 @@ class LiDAR:
     """
 
     def __init__(self):
-        self.min_range = 0.0
+        super().__init__("lidar_subscriber")
+        self.subsciber_ = self.create_subscription(LaserScan, "lidar", self.callback, 10)
+        self.i = 0
+        self.max_range = 0.0
         self.cur_scan = None
 
     def preprocess(self, scan):
@@ -30,21 +35,28 @@ class LiDAR:
         """
         return scan
 
-    def listener(self):
-        rospy.init_node('listener', anonymous=True)
-        rospy.Subscriber("lidar", LaserScan, self.callback)
-        rospy.spin()
-
-    def callback(self, msg):
+    def callback(self, msg: 'LaserScan'):
         # This assumes a LaserScan Class
         res = msg.angle_increment
         start = msg.angle_min
         end = msg.angle_max
         scan = []
-
-        for a in range(start, end, res):
-            scan.append([a, msg.ranges[a]])
+        a = start
+        for i in range(len(msg.ranges)):
+            scan.append([a, msg.ranges[i]])
+            a += res
 
         self.cur_scan = self.preprocess(scan)
 
-        rospy.loginfo(rospy.get_caller_id() + "I heard %s", scan)
+        self.get_logger().info("Heard: LiDAR scan %d" % self.i)
+        self.i += 1
+
+    def spin(self):
+        rclpy.spin(self)
+    
+    async def spin_once(self):
+        rclpy.spin_once(self, timeout_sec=0.01)
+    
+    def destroy(self):
+        self.destroy_node()
+        rclpy.shutdown()

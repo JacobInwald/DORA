@@ -6,6 +6,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 import simulator as simulate
 
+import interface
+import simulation as sim
+import rclpy
 # ! Library Methods
 
 
@@ -72,7 +75,7 @@ class Router:
     def __init__(self, controller: "simulate.Controller"):
         self.controller = controller
 
-    def route(self, end: np.ndarray, occ_map: "OccupancyMap") -> np.ndarray:
+    def route(self, start, end: np.ndarray, occ_map: "OccupancyMap") -> np.ndarray:
         """
         This function calculates the route from the current position to the end point.
 
@@ -84,7 +87,6 @@ class Router:
         Returns:
             np.ndarray: The calculated route as an array of coordinates.
         """
-        start = self.controller.pos
         move_dist = occ_map.resolution
         directions = np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]
                                if (x, y) != (0, 0)])
@@ -168,7 +170,7 @@ class Router:
         return clouds[-1].origin
      
      
-    def nextTidyingPoint(self, map: "OccupancyMap", cleanMap: "OccupancyMap") -> np.ndarray:
+    def nextTidyingPoint(self, cur, map: "OccupancyMap", cleanMap: "OccupancyMap") -> np.ndarray:
         """
         Finds the next tidying point in the occupancy map.
 
@@ -182,7 +184,6 @@ class Router:
         TODO: Feel free to change the structure as well, just document it in the PR
         """
         # compare the clean map with the real map to locate toys, may start with greedy algorithm to pick up whatever closest 
-        cur = self.controller.pos
         contrastMap = map.map - cleanMap.map
         nearest_obstacle = None
         min_dist = np.inf()
@@ -198,7 +199,7 @@ class Router:
     
     
     
-    def toPoint(self, end: np.ndarray) -> None:
+    def toPoint(self, pos, rot, end: np.ndarray) -> None:
         """
         Move the robot to the given end point on the map.
 
@@ -207,23 +208,12 @@ class Router:
             end (np.ndarray): The end point coordinates on the map.
         TODO: Probably should be moved to the Controller class (fine for now)
         """
-        dist = np.linalg.norm(end - self.controller.pos)
-        angle = (np.arctan2(end[1] - self.controller.pos[1], end[0] -
-                            self.controller.pos[0]) - self.controller.rot)
+        dist = np.linalg.norm(end - pos)
+        angle = (np.arctan2(end[1] - pos[1], end[0] -
+                            pos[0]) - rot)
+        
         self.controller.turn(angle)
         self.controller.forward(dist)
-
-    def followRoute(self, route: np.ndarray) -> None:
-        """
-        Follow the given route on the map.
-
-        Parameters:
-            controller (simulate.Controller): The controller object used for simulation.
-            route (np.ndarray): The calculated route as an array of coordinates.
-        TODO: Probratebly should be moved to the Controller class (fine for now)
-        """
-        for i in range(1, len(route)):
-            self.toPoint(route[i])
 
 
 class PointCloud:
@@ -646,7 +636,6 @@ def test_1():
 
         m.show()
 
-
 def test_2():
     if os.path.exists("move"):
         shutil.rmtree("move")
@@ -693,7 +682,6 @@ def test_2():
             router.toPoint(p)
 
         index += o
-
 
 def test_3():
     if os.path.exists("combine"):
@@ -842,5 +830,60 @@ def test_4():
             m.map[p[0], p[1]] = 1
         
         m.show()
+     
+import asyncio, time
         
-test_1()
+def test_5():
+    # Initialise Bounds
+    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
+                    np.array([[-1,3],[-1,2.5],[-1.5,3]])]
+    max_dist = 1.5 # max distance of LIDAR scans
+    rclpy.init()
+    # simul = sim.Simulation(np.array([0,0]), region)
+    inter = interface.ROSInterface()
+    # task = asyncio.run(inter.spin())
+    # while inter.lidar.cur_scan is None:
+    #     time.sleep(1)
+    #     print(inter.lidar.cur_scan)
+    # # print(inter.lidar.cur_scan)
+    # time.sleep(1)
+    while inter.lidar.cur_scan is None:
+        inter.update_sensors()
+    
+    cloud = PointCloud(inter.lidar.cur_scan, inter.gps.pos, max_dist)
+    # Initialise a new OccupancyMap with the PointCloud
+    m = OccupancyMap(inter.gps.pos, [cloud])
+    # Initiliase a router
+    router = Router(inter)
+    
+    # Moves the controller 33 times
+    for i in range(0, 20):
+        # Create a new scan
+        inter.update_sensors()
+        cloud = PointCloud(inter.lidar.cur_scan, inter.gps.pos, max_dist)
+        # Merge the new Occupancy Map with the previous one
+        m.merge(OccupancyMap(inter.gps.pos, [cloud]))
+        
+        # Generate it and show it
+        m.generate()
+        m.show()
+        
+        # Move to the next mapping point
+        next = router.nextMappingPoint(m)
+        path = router.route(inter.gps.pos, next, m)
+        next = path[-1]
+        
+        # Move and trace path on the map
+        for p in path:
+            inter.update_sensors()
+            router.toPoint(inter.gps.pos, inter.gps.rot, p)
+            p = m.translate(p)
+            m.map[p[0], p[1]] = 1
+        inter.update_sensors()
+        print(inter.gps.pos)
+        m.show()
+    
+    asyncio.get_event_loop().close()
+    inter.destroy()
+    rclpy.shutdown()    
+    
