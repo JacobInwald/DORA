@@ -389,7 +389,12 @@ class OccupancyMap:
         self.pointclouds = (pointclouds
                             if not isinstance(pointclouds, PointCloud) else
                             [pointclouds])
-
+        if len(self.pointclouds) == 0:
+            self.min = np.array([0, 0])
+            self.max = np.array([0, 0])
+            self.shape = np.array([0, 0])
+            self.map = np.array([[]])
+            return
         # Gets the minimum and maximum x and y coordinates of the obstacles
         mins = np.array([c.min for c in self.pointclouds])
         maxs = np.array([c.max for c in self.pointclouds])
@@ -872,4 +877,4 @@ def test_5():
     inter.destroy()
     rclpy.shutdown()    
     
-test_5()
+# test_5()
