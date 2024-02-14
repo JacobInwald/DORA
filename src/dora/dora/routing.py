@@ -154,13 +154,13 @@ class Router:
         clouds = map.pointclouds
 
         # BFS
-        for cloud in clouds:
+        for cloud in reversed(clouds):
             for p in cloud.emptyCloud:
                 d = ((p - cloud.origin) / np.linalg.norm(p - cloud.origin) *
                      map.resolution)
                 if (any(np.linalg.norm(p - c.origin) < 0.75 for c in clouds)
-                        or map.sampleCoord(p + d, yx=True, mean=True) <= 1e-3
-                        or map.sampleCoord(p + d, yx=True, mean=True) >= 0.55):
+                        or map.sampleCoord(p + d, mean=True) <= 1e-2
+                        or map.sampleCoord(p + d, mean=True) >= 0.55):
                     continue
                 return p - d
 
