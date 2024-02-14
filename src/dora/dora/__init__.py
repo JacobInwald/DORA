@@ -1,1 +1,1 @@
-from .ros import actuator, sensor, simulation_ros
+from .ros import actuators, sensors, simulation_ros
