@@ -19,7 +19,7 @@ class DORA:
         last_pos = self.interface.gps.pos
         next_pos = last_pos - 1
         n = 0
-        max_iter = 3
+        max_iter = 10
         
         while not (last_pos[0] == next_pos[0] and last_pos[1] == next_pos[1]) and n < max_iter:
             
@@ -37,6 +37,8 @@ class DORA:
                 # Update sensors
                 for i in range(5):
                     self.interface.update_sensors()
+            self.ground_truth.generate()
+            self.ground_truth.show()
             n+=1
             
 
@@ -47,3 +49,4 @@ dora = DORA()
 dora.map()
 dora.ground_truth.generate()
 dora.ground_truth.show()
+dora.tidy()
