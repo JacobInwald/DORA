@@ -1,0 +1,23 @@
+[0.323s] Invoking command in '/home/jacob/Desktop/dora_ws/src/dora': PYTHONPATH=/home/jacob/Desktop/dora_ws/build/dora/prefix_override:/home/jacob/Desktop/dora_ws/install/dora/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/dora build --build-base /home/jacob/Desktop/dora_ws/build/dora/build install --record /home/jacob/Desktop/dora_ws/build/dora/install.log --single-version-externally-managed
+[0.427s] running egg_info
+[0.427s] writing ../../build/dora/dora.egg-info/PKG-INFO
+[0.427s] writing dependency_links to ../../build/dora/dora.egg-info/dependency_links.txt
+[0.427s] writing entry points to ../../build/dora/dora.egg-info/entry_points.txt
+[0.428s] writing requirements to ../../build/dora/dora.egg-info/requires.txt
+[0.428s] writing top-level names to ../../build/dora/dora.egg-info/top_level.txt
+[0.429s] reading manifest file '../../build/dora/dora.egg-info/SOURCES.txt'
+[0.429s] adding license file 'LICENSE'
+[0.429s] writing manifest file '../../build/dora/dora.egg-info/SOURCES.txt'
+[0.429s] running build
+[0.429s] running build_py
+[0.429s] running install
+[0.429s] /usr/lib/python3/dist-packages/setuptools/command/install.py:34: SetuptoolsDeprecationWarning: setup.py install is deprecated. Use build and pip and other standards-based tools.
+[0.430s]   warnings.warn(
+[0.430s] running install_lib
+[0.430s] running install_data
+[0.430s] running install_egg_info
+[0.432s] removing '/home/jacob/Desktop/dora_ws/install/dora/lib/python3.10/site-packages/dora-0.0.0-py3.10.egg-info' (and everything under it)
+[0.432s] Copying ../../build/dora/dora.egg-info to /home/jacob/Desktop/dora_ws/install/dora/lib/python3.10/site-packages/dora-0.0.0-py3.10.egg-info
+[0.432s] running install_scripts
+[0.454s] writing list of installed files to '/home/jacob/Desktop/dora_ws/build/dora/install.log'
+[0.472s] Invoked command in '/home/jacob/Desktop/dora_ws/src/dora' returned '0': PYTHONPATH=/home/jacob/Desktop/dora_ws/build/dora/prefix_override:/home/jacob/Desktop/dora_ws/install/dora/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/dora build --build-base /home/jacob/Desktop/dora_ws/build/dora/build install --record /home/jacob/Desktop/dora_ws/build/dora/install.log --single-version-externally-managed

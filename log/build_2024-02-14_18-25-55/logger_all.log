@@ -1,0 +1,126 @@
+[0.392s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.392s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=2, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, verb_parser=<colcon_defaults.argument_parser.defaults.DefaultArgumentsDecorator object at 0xffff9d124760>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0xffff9e026d70>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0xffff9e026d70>>)
+[0.418s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.418s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.419s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.419s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.419s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.419s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.419s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/jacob/Desktop/dora_ws'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.419s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.420s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.420s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.426s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.426s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.426s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.426s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.426s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.427s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.428s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extensions ['ignore', 'ignore_ament_install']
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extension 'ignore'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extension 'ignore_ament_install'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extensions ['colcon_pkg']
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extension 'colcon_pkg'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extensions ['colcon_meta']
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extension 'colcon_meta'
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extensions ['ros']
+[0.429s] Level 1:colcon.colcon_core.package_identification:_identify(src/dora) by extension 'ros'
+[0.431s] DEBUG:colcon.colcon_core.package_identification:Package 'src/dora' with type 'ros.ament_python' and name 'dora'
+[0.431s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.431s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.431s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.432s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.432s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.471s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.471s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.483s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 281 installed packages in /opt/ros/iron
+[0.484s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'cmake_args' from command line to 'None'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'cmake_target' from command line to 'None'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'cmake_clean_cache' from command line to 'False'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'cmake_clean_first' from command line to 'False'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'cmake_force_configure' from command line to 'False'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'ament_cmake_args' from command line to 'None'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'catkin_cmake_args' from command line to 'None'
+[0.536s] Level 5:colcon.colcon_core.verb:set package 'dora' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.536s] DEBUG:colcon.colcon_core.verb:Building package 'dora' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/jacob/Desktop/dora_ws/build/dora', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/jacob/Desktop/dora_ws/install/dora', 'merge_install': False, 'path': '/home/jacob/Desktop/dora_ws/src/dora', 'symlink_install': False, 'test_result_base': None}
+[0.541s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.546s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.547s] INFO:colcon.colcon_ros.task.ament_python.build:Building ROS package in '/home/jacob/Desktop/dora_ws/src/dora' with build type 'ament_python'
+[0.547s] Level 1:colcon.colcon_core.shell:create_environment_hook('dora', 'ament_prefix_path')
+[0.553s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.553s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jacob/Desktop/dora_ws/install/dora/share/dora/hook/ament_prefix_path.ps1'
+[0.554s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/jacob/Desktop/dora_ws/install/dora/share/dora/hook/ament_prefix_path.dsv'
+[0.554s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jacob/Desktop/dora_ws/install/dora/share/dora/hook/ament_prefix_path.sh'
+[0.566s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.566s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.731s] INFO:colcon.colcon_core.task.python.build:Building Python package in '/home/jacob/Desktop/dora_ws/src/dora'
+[0.737s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.737s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[1.006s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/jacob/Desktop/dora_ws/src/dora': PYTHONPATH=/home/jacob/Desktop/dora_ws/build/dora/prefix_override:/home/jacob/Desktop/dora_ws/install/dora/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/dora build --build-base /home/jacob/Desktop/dora_ws/build/dora/build install --record /home/jacob/Desktop/dora_ws/build/dora/install.log --single-version-externally-managed
+[1.154s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/jacob/Desktop/dora_ws/src/dora' returned '0': PYTHONPATH=/home/jacob/Desktop/dora_ws/build/dora/prefix_override:/home/jacob/Desktop/dora_ws/install/dora/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base ../../build/dora build --build-base /home/jacob/Desktop/dora_ws/build/dora/build install --record /home/jacob/Desktop/dora_ws/build/dora/install.log --single-version-externally-managed
+[1.163s] Level 1:colcon.colcon_core.environment:checking '/home/jacob/Desktop/dora_ws/install/dora' for CMake module files
+[1.163s] Level 1:colcon.colcon_core.environment:checking '/home/jacob/Desktop/dora_ws/install/dora' for CMake config files
+[1.163s] Level 1:colcon.colcon_core.environment:checking '/home/jacob/Desktop/dora_ws/install/dora/lib'
+[1.163s] Level 1:colcon.colcon_core.environment:checking '/home/jacob/Desktop/dora_ws/install/dora/bin'
+[1.163s] Level 1:colcon.colcon_core.environment:checking '/home/jacob/Desktop/dora_ws/install/dora/lib/pkgconfig/dora.pc'
+[1.164s] Level 1:colcon.colcon_core.environment:checking '/home/jacob/Desktop/dora_ws/install/dora/lib/python3.10/site-packages'
+[1.164s] Level 1:colcon.colcon_core.shell:create_environment_hook('dora', 'pythonpath')
+[1.170s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jacob/Desktop/dora_ws/install/dora/share/dora/hook/pythonpath.ps1'
+[1.170s] INFO:colcon.colcon_core.shell:Creating environment descriptor '/home/jacob/Desktop/dora_ws/install/dora/share/dora/hook/pythonpath.dsv'
+[1.170s] INFO:colcon.colcon_core.shell:Creating environment hook '/home/jacob/Desktop/dora_ws/install/dora/share/dora/hook/pythonpath.sh'
+[1.170s] Level 1:colcon.colcon_core.environment:checking '/home/jacob/Desktop/dora_ws/install/dora/bin'
+[1.170s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(dora)
+[1.181s] INFO:colcon.colcon_core.shell:Creating package script '/home/jacob/Desktop/dora_ws/install/dora/share/dora/package.ps1'
+[1.181s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/jacob/Desktop/dora_ws/install/dora/share/dora/package.dsv'
+[1.181s] INFO:colcon.colcon_core.shell:Creating package script '/home/jacob/Desktop/dora_ws/install/dora/share/dora/package.sh'
+[1.182s] INFO:colcon.colcon_core.shell:Creating package script '/home/jacob/Desktop/dora_ws/install/dora/share/dora/package.bash'
+[1.183s] INFO:colcon.colcon_core.shell:Creating package script '/home/jacob/Desktop/dora_ws/install/dora/share/dora/package.zsh'
+[1.183s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/jacob/Desktop/dora_ws/install/dora/share/colcon-core/packages/dora)
+[1.183s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[1.183s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[1.183s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '0'
+[1.183s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[1.199s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[1.199s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[1.199s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[1.222s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[1.240s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/jacob/Desktop/dora_ws/install/local_setup.ps1'
+[1.246s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/jacob/Desktop/dora_ws/install/_local_setup_util_ps1.py'
+[1.247s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/jacob/Desktop/dora_ws/install/setup.ps1'
+[1.253s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/jacob/Desktop/dora_ws/install/local_setup.sh'
+[1.253s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/jacob/Desktop/dora_ws/install/_local_setup_util_sh.py'
+[1.254s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/jacob/Desktop/dora_ws/install/setup.sh'
+[1.274s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/jacob/Desktop/dora_ws/install/local_setup.bash'
+[1.277s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/jacob/Desktop/dora_ws/install/setup.bash'
+[1.286s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/jacob/Desktop/dora_ws/install/local_setup.zsh'
+[1.287s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/jacob/Desktop/dora_ws/install/setup.zsh'
