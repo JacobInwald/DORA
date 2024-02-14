@@ -1,0 +1,6 @@
+source;share/dora/hook/pythonpath.ps1
+source;share/dora/hook/pythonpath.dsv
+source;share/dora/hook/pythonpath.sh
+source;share/dora/hook/ament_prefix_path.ps1
+source;share/dora/hook/ament_prefix_path.dsv
+source;share/dora/hook/ament_prefix_path.sh
