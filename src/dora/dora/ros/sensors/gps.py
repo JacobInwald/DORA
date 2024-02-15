@@ -1,7 +1,6 @@
 import numpy as np
 import rclpy
-# TODO: Write our own message for this
-from geometry_msgs.msg import Point
+from dora_msgs.msg import Pose
 from rclpy.node import Node
 
 
@@ -30,7 +29,7 @@ class GPS(Node):
 
     def __init__(self):
         super().__init__("gps_subscriber")
-        self.subsciber_ = self.create_subscription(Point, "gps", self.callback, 10)
+        self.subsciber_ = self.create_subscription(Pose, "gps", self.callback, 10)
         self.i = 0
         
         self.rot = 0.0
@@ -42,10 +41,10 @@ class GPS(Node):
         """
         return scan
 
-    def callback(self, msg: 'Point'):
+    def callback(self, msg: 'Pose'):
         # This assumes a LaserScan Class
         self.pos = np.array([msg.x, msg.y])
-        self.rot = msg.z
+        self.rot = msg.rot
 
         self.get_logger().info(f"Heard: GPS {self.i}: {self.pos} {self.rot}")
         self.i += 1

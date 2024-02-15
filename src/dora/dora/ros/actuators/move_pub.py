@@ -1,7 +1,7 @@
 from enum import Enum
 from rclpy.node import Node
 import rclpy
-from geometry_msgs.msg import Point
+from dora_msgs.msg import Move
 
 # TODO: Create our own message type for this
 
@@ -18,18 +18,18 @@ class MovePublisher(Node):
     
     def __init__(self) -> None:
         super().__init__("move_publisher")
-        self.publisher_ = self.create_publisher(Point, "move", 10)
+        self.publisher_ = self.create_publisher(Move, "move", 10)
         self.i = 0
         
     def publish(self, move_type=MoveType.PASS, args=0.0) -> None:
         """
         Publishes the GPS data to the map.
         """
-        msg = Point()
-        msg.x = float(move_type.value)
-        msg.y = float(args)
+        msg = Move()
+        msg.type = int(move_type.value)
+        msg.arg_1 = float(args)
         self.publisher_.publish(msg)
-        self.get_logger().info(f"Publishing: Move {self.i}: {msg.x} {msg.y}")
+        self.get_logger().info(f"Publishing: Move {self.i}: {msg.type} {msg.arg_1}")
         self.i += 1
         self.spin_once()
     

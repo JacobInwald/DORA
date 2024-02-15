@@ -10,6 +10,10 @@ setup.py
 ../../build/dora/dora.egg-info/top_level.txt
 ../../build/dora/dora.egg-info/zip-safe
 dora/__init__.py
+dora/dora.py
+dora/interface.py
+dora/recognition.py
+dora/routing.py
 dora/simulator.py
 resource/dora
 test/test_copyright.py

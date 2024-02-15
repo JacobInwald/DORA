@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Point
+from dora_msgs.msg import Move
 
 
 # class MoveType(Enum):
@@ -16,23 +16,23 @@ class MoveSubscriber(Node):
     
     def __init__(self, simulation) -> None:
         super().__init__("move_subscriber")
-        self.subscription = self.create_subscription(Point, "move", self.callback, 10)
+        self.subscription = self.create_subscription(Move, "move", self.callback, 10)
         self.i = 0
         self.simulation = simulation
 
-    def callback(self, msg: Point) -> None:
+    def callback(self, msg: Move) -> None:
         """
         Receives the movement commands from the robot.
         """
-        if int(msg.x) == 0:
-            self.simulation.forward(msg.y)
-        elif int(msg.x) == 1:
-            self.simulation.forward(-msg.y)
-        elif int(msg.x) == 2:
-            self.simulation.turn(msg.y, True)
-        elif int(msg.x) == 3:
+        if int(msg.type) == 0:
+            self.simulation.forward(msg.arg_1)
+        elif int(msg.type) == 1:
+            self.simulation.forward(-msg.arg_1)
+        elif int(msg.type) == 2:
+            self.simulation.turn(msg.arg_1, True)
+        elif int(msg.type) == 3:
             pass
-        self.get_logger().info(f"Heard: Move number {self.i}: {msg.x} {msg.y}")
+        self.get_logger().info(f"Heard: Move number {self.i}: {msg.type} {msg.arg_1}")
         self.i += 1
     
     def spin(self):

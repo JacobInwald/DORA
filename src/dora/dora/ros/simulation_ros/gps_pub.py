@@ -1,8 +1,6 @@
 import rclpy
 from rclpy.node import Node
-# cant use custom message for some reason
-# from dora.msg import GPSData
-from geometry_msgs.msg import Point
+from dora_msgs.msg import Pose
 
 class GPSPublisher(Node):
     """
@@ -11,7 +9,7 @@ class GPSPublisher(Node):
 
     def __init__(self, simulation) -> None:
         super().__init__("gps_publisher")
-        self.publisher_ = self.create_publisher(Point, "gps", 10)
+        self.publisher_ = self.create_publisher(Pose, "gps", 10)
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.publish)
         self.i = 0
@@ -24,10 +22,10 @@ class GPSPublisher(Node):
         pos = self.simulation.get_pos()
         rot = self.simulation.get_rot()
         # Generate the GPS data
-        msg = Point()
+        msg = Pose()
         msg.x = float(pos[0])
         msg.y = float(pos[1])
-        msg.z = float(rot)
+        msg.rot = float(rot)
         # Publish
         self.publisher_.publish(msg)
         self.get_logger().info(f"Publishing: GPS {self.i}: {pos} {rot}")
