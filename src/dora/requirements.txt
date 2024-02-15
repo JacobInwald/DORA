@@ -5,6 +5,5 @@ ultralytics
 numpy
 natsort
 matplotlib
-PIL
 pre-commit
 roslibpy
