@@ -1,4 +1,6 @@
-class Camera:
+
+
+class CameraSubscriber:
     """
     Represents the front-facing camera.
 

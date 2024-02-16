@@ -1,7 +1,7 @@
-from ros.sensors.camera import Camera
-from ros.sensors.lidar import LiDAR
-from ros.sensors.gps import GPS
-from ros.actuators.move_pub import MovePublisher, MoveType
+from dora_software_ros.camera_sub import *
+from dora_software_ros.gps_sub import *
+from dora_software_ros.lidar_sub import *
+from dora_software_ros.move_pub import *
 import rclpy
 
 
@@ -9,18 +9,11 @@ class ROSInterface:
     
     def __init__(self) -> None:
         rclpy.init()
-        self.gps = GPS()
-        self.lidar = LiDAR()
-        self.camera = Camera()
+        self.gps = GPSSubscriber()
+        self.lidar = LidarSubscriber()
+        self.camera = CameraSubscriber()
         self.move_publisher = MovePublisher()
         self.move_dist = 0.05
-
-    # ! METHODS
-    # TODO: Implement these methods. They are the basic movement and sensor methods.
-    # TODO: Use the simulator class as a base for how the output (if any) should look like.
-    # TODO: Most of these methods can't really be implemented without an idea of what method of hardware control we are using.
-    # TODO: For now, just implement whatever you can and research what the best approach is
-    # TODO: (Wanting)
 
     def forward(self, move_dist) -> None:
         """
