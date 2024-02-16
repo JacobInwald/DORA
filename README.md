@@ -1,7 +1,9 @@
 To make work, run 
 ```
-source /opt/ros/iron/setup.bash
-colcon build --packages-select dora_msgs
+source /opt/ros/<distro>/setup.bash
+colcon build
 source install/setup.bash
 ```
 before running the python files in your terminal
+
+Alterantive just run `source setup.bash`
