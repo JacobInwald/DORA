@@ -1,6 +1,6 @@
 import routing as rt
-import recognition as rec
-from dora_software_ros.interface import ROSInterface
+from object_detection.recognition import Model
+from software_ros.interface import ROSInterface
 
 class DORA:
     
@@ -11,7 +11,7 @@ class DORA:
             self.interface.update_sensors()
             
         self.router = rt.Router(self.interface)
-        self.recognition = rec.Model()
+        self.recognition = Model()
         
         self.ground_truth = rt.OccupancyMap(self.interface.gps.pos, [])
     
