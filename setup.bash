@@ -1,3 +1,3 @@
 source /opt/ros/humble/setup.bash
-colcon build --packages-select dora_msgs
+colcon build
 source install/setup.bash
