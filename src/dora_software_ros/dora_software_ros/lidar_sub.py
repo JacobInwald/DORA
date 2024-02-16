@@ -4,11 +4,10 @@ from rclpy.node import Node
 import rclpy
 import numpy as np
 
-class LiDAR(Node):
+class LidarSubscriber(Node):
     """
     Represents the LiDAR.
 
-    TODO: Implement the LiDAR class (Jacob?)
     This is going to subscribe to the lidar in ROS to get the lidar pointcloud.
     There should be a call back function that automatically pre-processes the lidar.
 
@@ -24,7 +23,7 @@ class LiDAR(Node):
 
     def __init__(self):
         super().__init__("lidar_subscriber")
-        self.subsciber_ = self.create_subscription(LaserScan, "lidar", self.callback, 10)
+        self.subscriber_ = self.create_subscription(LaserScan, "lidar", self.callback, 10)
         self.i = 0
         self.max_range = 0.0
         self.cur_scan = None
