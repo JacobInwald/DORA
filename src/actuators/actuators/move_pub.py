@@ -10,7 +10,7 @@ class MoveType(Enum):
     TURN = 2
     PASS = 3
 
-class MoveSubscriber(Node):
+class MovePublisher(Node):
     """
     Sends movement commands to the robot.
     """
