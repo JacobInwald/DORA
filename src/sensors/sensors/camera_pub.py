@@ -1,3 +1,5 @@
+import rclpy
+from rclpy.node impot Node
 
 
 class CameraPublisher:
