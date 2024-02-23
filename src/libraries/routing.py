@@ -113,7 +113,7 @@ class Router:
                 strNext = str(n)
             
                 
-                if occ_map.sampleCoord(n) > 0.8:
+                if occ_map.sampleCoord(n) > 0.5:
                     g[strNext] = g[strCur] + np.inf
                     continue
                 
@@ -182,21 +182,24 @@ class Router:
         TODO: Feel free to change the structure as well, just document it in the PR
         """
         # compare the clean map with the real map to locate toys, may start with greedy algorithm to pick up whatever closest 
+        map.normalise()
+        cleanMap.normalise()
         cur = self.controller.pos
-        contrastMap = map.map - cleanMap.map
         nearest_obstacle = None
-        min_dist = np.inf()
-        for x in range(len(contrastMap.shape[0])):
-            for y in range(len(contrastMap.shape[1])):
-                if contrastMap[x,y] > 0.55:
-                    dist_to_cur = np.linalg.norm(cur - np.ndarray([x,y]))
+        min_dist = np.inf
+        
+        for x in range(map.map.shape[0]):
+            for y in range(map.map.shape[1]):
+                
+                if map.sampleCoord(np.array([x*map.resolution,y*map.resolution]), mean=True) - cleanMap.sampleCoord(np.array([x*map.resolution,y*map.resolution]), mean=True) > 0.8:
+                    dist_to_cur = np.linalg.norm(cur - np.array([x*map.resolution,y*map.resolution]))
                     if dist_to_cur < min_dist:
                         min_dist = dist_to_cur
-                        nearest_obstacle = np.ndarray([x,y])
-        
+                        nearest_obstacle = np.array([x*map.resolution,y*map.resolution])
+        print(cur)
+        print(nearest_obstacle)
+        print(map.sampleCoord(nearest_obstacle) - cleanMap.sampleCoord(nearest_obstacle))
         return nearest_obstacle
-    
-    
     
     def toPoint(self, end: np.ndarray) -> None:
         """
@@ -808,12 +811,17 @@ def test_3():
 
 def test_4():
     # Initialise Bounds
-    region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
+    region1 = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
-    res = 5    # Resolution of LIDAR scans
+    
+    region2 = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
+                    np.array([[-1,3],[-1,2.5],[-1.5,3]]), \
+                    np.array([[1,1],[1,1.2],[1.15,1]]), \
+                    np.array([[0,1],[0.5, 1],[0.25,0.25]])]
+    res = 5   # Resolution of LIDAR scans
     max_dist = 1.5 # max distance of LIDAR scans
     # Initialise Controller
-    controller = simulate.Controller(np.array([0, 0]), 0, region, res, max_scan_dist=max_dist)
+    controller = simulate.Controller(np.array([0, 0]), 0, region1, res, max_scan_dist=max_dist)
     # Initialise PointCloud with a LIDAR scan of the environment
     cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
     # Initialise a new OccupancyMap with the PointCloud
@@ -821,15 +829,17 @@ def test_4():
     # Initiliase a router
     router = Router(controller)
     # Moves the controller 33 times
-    for i in range(0, 20):
+    for i in range(0, 33):
         # Create a new scan
         cloud = PointCloud(controller.getLiDARScan(), controller.pos, controller.max_scan_dist)
         # Merge the new Occupancy Map with the previous one
         m.merge(OccupancyMap(controller.pos, [cloud]))
         # Generate it and show it
         m.generate()
-        m.show()
+        #m.show()
         
+    
+
         # Move to the next mapping point
         next = router.nextMappingPoint(m)
         path = router.route(next, m)
@@ -841,6 +851,74 @@ def test_4():
             p = m.translate(p)
             m.map[p[0], p[1]] = 1
         
-        m.show()
+    #m.show()
+    
+
+    # Initialise Controller
+    controller2 = simulate.Controller(np.array([0, 0]), 0, region2, res, max_scan_dist=max_dist)
+    # Initialise PointCloud with a LIDAR scan of the environment
+    cloud2 = PointCloud(controller2.getLiDARScan(), controller2.pos, controller2.max_scan_dist)
+    # Initialise a new OccupancyMap with the PointCloud
+    m2 = OccupancyMap(controller2.pos, [cloud2])
+    # Initiliase a router
+    router2 = Router(controller2)
+    
+    # Moves the controller 33 times
+    for i in range(0, 33):
+        # Create a new scan
+        cloud2 = PointCloud(controller2.getLiDARScan(), controller2.pos, controller2.max_scan_dist)
+        # Merge the new Occupancy Map with the previous one
+        m2.merge(OccupancyMap(controller2.pos, [cloud2]))
+        # Generate it and show it
+        m2.generate()
+        #m2.show()
         
-test_1()
+    
+        # Move to the next mapping point
+        next = router2.nextMappingPoint(m2)
+        path = router2.route(next, m2)
+        next = path[-1]
+        
+        # Move and trace path on the map
+        for p in path:
+            router2.toPoint(p)
+            p = m2.translate(p)
+            m2.map[p[0], p[1]] = 1
+        
+    m2.show()
+    
+    next = np.array([2.45,0])
+    path = router2.route(next, m2)
+    next = path[-1]
+    
+    #Move and trace path on the map
+    for p in path:
+        router2.toPoint(p)
+        p = m2.translate(p)
+        m2.map[p[0], p[1]] = 1
+    
+    m2.show()
+    
+    # Create a new scan
+    cloud2 = PointCloud(controller2.getLiDARScan(), controller2.pos, controller2.max_scan_dist)
+    # Merge the new Occupancy Map with the previous one
+    m2.merge(OccupancyMap(controller2.pos, [cloud2]))
+    # Generate it and show it
+    m2.generate()
+    m2.show()
+        
+    #Move to the next tidying point
+    next = router2.nextTidyingPoint(m2, m)
+    print(next)
+    print(router2.controller.pos)
+    path = router2.route(next, m2)
+    next = path[-1]
+    
+    #Move and trace path on the map
+    for p in path:
+        router2.toPoint(p)
+        p = m2.translate(p)
+        m2.map[p[0], p[1]] = 1
+    m2.show()
+    
+test_4()
