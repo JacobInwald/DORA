@@ -3,7 +3,7 @@ from ultralytics import YOLO
 
 class Detect:
 
-    def __init__(self, model_file):
+    def __init__(self, model_file='weights/best_32.pt'):
         self.model = YOLO(model_file)
 
     def predict(self, file, conf=0.5, save=True):
