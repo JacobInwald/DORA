@@ -4,20 +4,17 @@ from dora_msgs.msg import Pose
 from rclpy.node import Node
 
 
-class GPSPublisher(Node):
+class GpsNode(Node):
     """
-    Represents a GPS sensor. (Overhead camera)
+    Represents a GPS (Overhead camera).
     
-    This is going to subscribe to the Overhead camera in ROS to get the image to process.
-    There should be a call back function that automatically updates the position and rotation
-    of the robot
+    Subscribes to the overhead camera.
+    Publishes global location of robot.
 
     The control flow will be as follows:
      - The GPS sensor will subscribe to the overhead camera
-     - The overhead camera will publish the image
-     - The GPS sensor will process the image to find the position and rotation of the robot
-     - The GPS sensor will update the position and rotation of the robot
-     - Continue...
+     - Calculate the current global position and rotation of the robot
+     - Publish Pose of the robot with topic name "gps"
 
     Attributes:
     - pos: numpy.ndarray - The current position of the robot.
