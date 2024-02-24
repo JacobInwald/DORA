@@ -1,54 +1,62 @@
-from sensor_msgs.msg import LaserScan
-from rclpy.node import Node
-import rclpy
 import numpy as np
+import rclpy
+from rclpy.node import Node
+from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
+
 
 class LdsNode(Node):
     """
-    Represents the LiDAR.
+    Represents the LDS (Laser Distance Sensor).
 
-    This is going to subscribe to the lidar in ROS to get the lidar pointcloud.
-    There should be a call back function that automatically pre-processes the lidar.
+    TODO: Implement LDS node (Jacob)
+    Subscribes to the Turtlebot3 LDS-02 to get pointcloud.
+    Publishes occupancy map of environment.
 
     The control flow will be as follows:
-     - The lidar sensor will subscribe to the lidar
-     - The lidar will publish the image
-     - The lidar sensor will pre-process the image
-     - The lidar sensor will update its current frame attribute
+     - The LDS node will subscribe to hardware trigger topic and the LDS
+     - Calculates the occupancy map from the last laser scan when triggered by hardware
+     - Optional: shift pointcloud by time difference using odometry data from hardware
+     - Publishes the occupancy map
 
     Attributes:
-    - cur_scan: numpy.ndarray - The current scan of the camera.
+    - last_scan: numpy.ndarray - The most recent laser scan
     """
 
     def __init__(self):
-        super().__init__("lidar_subscriber")
-        self.subscriber_ = self.create_subscription(LaserScan, "lidar", self.callback, 10)
-        self.i = 0
+        super().__init__('lds_node')
+        self.lds_sub_ = self.create_subscription(LaserScan, 'scan', self.lds_callback, 10)
+        # change where appropriate
+        self.hardware_sub_ = self.create_subscription(..., 'topic', self.hardware_callback, 1)
         self.max_range = 0.0
-        self.cur_scan = None
+        self.last_scan = None
 
-    def preprocess(self, scan):
+    def hardware_callback(self):
         """
-        Prepares the scan for use in the network.
+        Calculate occupancy map from last scan and publish map
         """
-        return scan
+        pass
 
-    def callback(self, msg: 'LaserScan'):
-        # This assumes a LaserScan Class
-        res = msg.angle_increment
-        start = msg.angle_min
-        end = msg.angle_max
-        scan = []
-        a = start
-        for i in range(len(msg.ranges)):
-            scan.append([a, msg.ranges[i]])
-            a += res
+    def lds_callback(self, msg: 'LaserScan'):
+        """
+        Store last laser scan
 
-        self.cur_scan = self.preprocess(scan)
+        Args:
+            msg: message received
+        """
+        # res = msg.angle_increment
+        # start = msg.angle_min
+        # end = msg.angle_max
+        # scan = []
+        # a = start
+        # for i in range(len(msg.ranges)):
+        #     scan.append([a, msg.ranges[i]])
+        #     a += res
 
-        self.get_logger().info("Heard: LiDAR scan %d" % self.i)
-        self.i += 1
+        self.last_scan = msg
+        header = msg.header
+        self.get_logger().info(f'Heard: LDS scan {header.frame_id} at {header.stamp.sec}s{header.stamp.nanosec}')
 
+    # functions below can be removed as this class inherits all of them from Node
     def spin(self):
         rclpy.spin(self)
     

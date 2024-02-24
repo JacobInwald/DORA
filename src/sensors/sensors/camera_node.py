@@ -14,12 +14,12 @@ class CameraNode(Node):
     Represents the front-facing camera.
 
     Subscribes to the RPi camera.
-    Callback function publishes [Toy] with topic name 'toys'
+    Publishes [Toy] with topic name 'toys'
     """
 
     def __init__(self, camera_info='camera_info/camerav2_1280x960.yaml'):
         super.__init__('camera_node')
-        self.cam_sub = self.create_subscription(Image, '/dev/video0', self.listener_callback, 10)
+        self.cam_sub_ = self.create_subscription(Image, '/dev/video0', self.callback, 10)
         self.publisher_ = self.create_publisher([Toy], 'toys', 10)
         self.bridge = CvBridge()
         self.model = Detect()
@@ -28,7 +28,7 @@ class CameraNode(Node):
         with open(camera_info, 'r') as file:
             self.camera_info = yaml.safe_load(file)
 
-    def listener_callback(self, msg):
+    def callback(self, msg):
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         results = self.model.predictions(frame)[0]
         boxes = results.boxes

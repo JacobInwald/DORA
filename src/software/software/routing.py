@@ -837,10 +837,10 @@ def test_5():
     max_dist = 1.5 # max distance of LIDAR scans
     
     inter = interface.ROSInterface()
-    while inter.lidar.cur_scan is None:
+    while inter.lidar.last_scan is None:
         inter.update_sensors()
     
-    cloud = PointCloud(inter.lidar.cur_scan, inter.gps.pos, max_dist)
+    cloud = PointCloud(inter.lidar.last_scan, inter.gps.pos, max_dist)
     # Initialise a new OccupancyMap with the PointCloud
     m = OccupancyMap(inter.gps.pos, [cloud])
     # Initiliase a router
@@ -850,7 +850,7 @@ def test_5():
     for i in range(0, 20):
         # Create a new scan
         inter.update_sensors()
-        cloud = PointCloud(inter.lidar.cur_scan, inter.gps.pos, max_dist)
+        cloud = PointCloud(inter.lidar.last_scan, inter.gps.pos, max_dist)
         # Merge the new Occupancy Map with the previous one
         m.merge(OccupancyMap(inter.gps.pos, [cloud]))
         
