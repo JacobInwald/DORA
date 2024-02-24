@@ -1,10 +1,9 @@
-import roslibpy as rospy
 from sensor_msgs.msg import LaserScan
 from rclpy.node import Node
 import rclpy
 import numpy as np
 
-class LidarPublisher(Node):
+class LdsNode(Node):
     """
     Represents the LiDAR.
 
