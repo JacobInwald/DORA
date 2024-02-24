@@ -12,7 +12,7 @@ class GpsNode(Node):
     Publishes global location of robot.
 
     The control flow will be as follows:
-     - The GPS sensor will subscribe to the overhead camera
+     - The GPS node will subscribe to the overhead camera
      - Calculate the current global position and rotation of the robot
      - Publish Pose of the robot with topic name "gps"
 
@@ -24,17 +24,12 @@ class GpsNode(Node):
     """
 
     def __init__(self):
-        super().__init__("gps_subscriber")
-        self.subscriber_ = self.create_subscription(Pose, "gps", self.callback, 10)
+        super().__init__('gps_node')
+        self.subscription_ = self.create_subscription(Pose, 'topic', self.callback, 10)
+        self.publisher_ = self.create_publisher(Pose, 'gps', 10)
         self.i = 0 
         self.rot = 0.0
         self.pos = None
-
-    def preprocess(self, scan):
-        """
-        Prepares the scan for use in the network.
-        """
-        return scan
 
     def callback(self, msg: 'Pose'):
         self.pos = np.array([msg.x, msg.y])
@@ -43,12 +38,11 @@ class GpsNode(Node):
         self.get_logger().info(f"Heard: GPS {self.i}: {self.pos} {self.rot}")
         self.i += 1
 
-    def spin(self):
-        rclpy.spin(self)
-    
-    async def spin_once(self):
-        rclpy.spin_once(self, timeout_sec=0.01)
-    
-    def destroy(self):
-        self.destroy_node()
+
+if __name__=='__main__':
+    rclpy.init()
+    gps_node = GpsNode()
+    rclpy.spin(gps_node)
+    gps_node.destroy_node()
+    rclpy.shutdown()
     
