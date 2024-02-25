@@ -13,7 +13,7 @@ class Sweeper(Node):
 
     def __init__(self):
         super.__init__('sweeper')
-        self.service_ = self.create_service(SweeperCommand, 'sweeper_service', self.callback)
+        self.service_ = self.create_service(SweeperCommand, 'sweeper', self.callback)
 
     def callback(self, msg):
         if msg.move == 0:
@@ -25,7 +25,19 @@ class Sweeper(Node):
         return status
 
     def retrieve(self):
+        """
+        Control the SWEEPER arm to retrieve toy
+
+        Returns:
+            status: whether the move was executed
+        """
         return True
 
     def unload(self):
+        """
+        Control the SWEEPER arm to unload toy
+
+        Returns:
+            status: whether the move was executed
+        """
         return False

@@ -3,8 +3,8 @@
 <package format="3">
   <name>control</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="s2209602@todo.todo">s2209602</maintainer>
+  <description>Control for the robot movements</description>
+  <maintainer email="ardithhowaiman@gmail.com">Ardith Hp</maintainer>
   <license>TODO: License declaration</license>
 
   <test_depend>ament_copyright</test_depend>

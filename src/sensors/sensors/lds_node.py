@@ -58,7 +58,7 @@ class LdsNode(Node):
         header = msg.header
         self.get_logger().info(f'Heard: LDS scan {header.frame_id} at {header.stamp.sec}s{header.stamp.nanosec}')
 
-    # functions below can be removed as this class inherits all of them from Node
+    # functions below are not necessary
     def spin(self):
         rclpy.spin(self)
     
