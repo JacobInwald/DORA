@@ -30,7 +30,7 @@ class CameraNode(Node):
 
     def callback(self, msg):
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
-        results = self.model.predictions(frame)[0]
+        results = self.model.predictions(frame)[0]  # detect toys
         boxes = results.boxes
         pub_msg = []
         for xywh, cls, conf in zip(boxes.xywh, boxes.cls, boxes.conf):
