@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>dora_msgs</name>
+  <name>dora_srvs</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="Jacob.Inwald@Hotmail.com">Jacob Inwald</maintainer>
+  <maintainer email="ardithhowaiman@gmail.com">Ardith Ho</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
@@ -15,9 +15,6 @@
   <export>
     <build_type>ament_cmake</build_type>
   </export>
-
-  <depend>geometry_msgs</depend>
-  <depend>std_msgs</depend>
 
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
   <exec_depend>rosidl_default_runtime</exec_depend>

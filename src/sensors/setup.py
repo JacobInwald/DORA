@@ -13,10 +13,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='s2209602',
-    maintainer_email='s2209602@todo.todo',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='Ardith Ho',
+    maintainer_email='ardithhowaiman@gmail.com',
+    description='Sensor nodes',
+    license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
