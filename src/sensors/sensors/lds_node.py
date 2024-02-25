@@ -2,6 +2,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
+from doramsgs.msg import LdsCommand
 
 
 class LdsNode(Node):
@@ -13,10 +14,11 @@ class LdsNode(Node):
     Publishes occupancy map of environment.
 
     The control flow will be as follows:
-     - The LDS node will subscribe to hardware trigger topic and the LDS
+     - The LDS node will subscribe to the LDS
+     - The listen to the 'lds_scan' client call
      - Calculates the occupancy map from the last laser scan when triggered by hardware
      - Optional: shift pointcloud by time difference using odometry data from hardware
-     - Publishes the occupancy map
+     - Publishes the occupancy map and return True to client
 
     Attributes:
     - last_scan: numpy.ndarray - The most recent laser scan
@@ -26,15 +28,15 @@ class LdsNode(Node):
         super().__init__('lds_node')
         self.lds_sub_ = self.create_subscription(LaserScan, 'scan', self.lds_callback, 10)
         # change where appropriate
-        self.hardware_sub_ = self.create_subscription(..., 'topic', self.hardware_callback, 1)
+        self.scan_srv_ = self.create_service(LdsCommand, 'lds_service', self.scan_callback, 1)
         self.max_range = 0.0
         self.last_scan = None
 
-    def hardware_callback(self):
+    def scan_callback(self):
         """
         Calculate occupancy map from last scan and publish map
         """
-        pass
+        return True
 
     def lds_callback(self, msg: 'LaserScan'):
         """
