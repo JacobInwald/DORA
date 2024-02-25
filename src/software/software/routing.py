@@ -371,7 +371,7 @@ class OccupancyMap:
         resolution: float = 0.05,
     ):
         """
-        Initializes an occupancy map based on the given obstacle coordinates and resolution.
+        Initialises an occupancy map based on the given obstacle coordinates and resolution.
 
         Params:
             offset (np.ndarray): The offset of the occupancy map, given (x, y).
