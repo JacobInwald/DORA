@@ -13,9 +13,9 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='s2209602',
-    maintainer_email='s2209602@todo.todo',
-    description='TODO: Package description',
+    maintainer='Ardith Ho',
+    maintainer_email='ardithhowaiman@gmail.com',
+    description='Control for the robot movements',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
