@@ -7,7 +7,8 @@ from rclpy.node import Node
 class GpsNode(Node):
     """
     Represents a GPS (Overhead camera).
-    
+
+    TODO: Implement GPS node (Wilfredo?)
     Subscribes to the overhead camera.
     Publishes global location of robot.
 
