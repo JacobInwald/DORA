@@ -1,8 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-from Stepper import Stepper
-
+from stepper import Stepper
 
 MOTOR_PINS = {
     "left": {
@@ -52,6 +51,8 @@ class MotorsSubscriber(Node):
 
 
 def main(args=None):
+    print("Starting motors node")
+
     rclpy.init(args=args)
 
     motors_subscriber = MotorsSubscriber()
