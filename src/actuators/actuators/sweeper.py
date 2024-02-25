@@ -1,4 +1,4 @@
-imort rclpy
+import rclpy
 from rclpy.node import Node
 from dorasrvs.srv import SweeperCommand
 
@@ -16,10 +16,16 @@ class Sweeper(Node):
         self.service_ = self.create_service(SweeperCommand, 'sweeper_service', self.callback)
 
     def callback(self, msg):
+        if msg.move == 0:
+            status = self.retrieve()
+        elif msg.move == 1:
+            status = self.unload()
+        else:
+            status = False
+        return status
+
+    def retrieve(self):
         return True
 
-    def forward(self, dist: float):
-        pass
-
-    def turn(self, angle: float):
-        pass
+    def unload(self):
+        return False

@@ -1,4 +1,3 @@
-uint8 type
-float64 magnitude
+uint8 move
 ---
 bool status
