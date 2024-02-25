@@ -1,6 +1,12 @@
+from enum import Enum
 import rclpy
 from rclpy.node import Node
 from dorasrvs.srv import SweeperCommand
+
+
+class SweeperMove(Enum):
+    RETRIEVE = 0
+    UNLOAD = 1
 
 
 class Sweeper(Node):
@@ -16,9 +22,9 @@ class Sweeper(Node):
         self.service_ = self.create_service(SweeperCommand, 'sweeper', self.callback)
 
     def callback(self, msg):
-        if msg.move == 0:
+        if msg.move == SweeperMove.RETRIEVE:
             status = self.retrieve()
-        elif msg.move == 1:
+        elif msg.move == SweeperMove.UNLOAD:
             status = self.unload()
         else:
             status = False
