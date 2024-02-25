@@ -23,12 +23,10 @@ class Sweeper(Node):
 
     def callback(self, msg):
         if msg.move == SweeperMove.RETRIEVE:
-            status = self.retrieve()
+            return self.retrieve()
         elif msg.move == SweeperMove.UNLOAD:
-            status = self.unload()
-        else:
-            status = False
-        return status
+            return self.unload()
+        return False
 
     def retrieve(self):
         """

@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from dora_msgs.msg import Toy, Pose
-from dora_srvs.srv import SweeperCommand
+from dora_srvs.srv import SweeperCommand, WheelsCommand
 
 
 class Controller(Node):
@@ -16,20 +16,18 @@ class Controller(Node):
         super().__init__('controller')
         self.toy_sub_ = self.create_subscription([Toy], 'toys', self.toy_callback, 10)
         self.gps_sub_ = self.create_subscription(Pose, 'gps', self.gps_callback, 10)
+        self.wheels_cli_ = self.create_client(WheelsCommand, 'wheels')
         self.sweeper_cli_ = self.create_client(SweeperCommand, 'sweeper')
 
-    def toy_callback(self, msg):
+    def toy_callback(self, msg: [Toy]):
         """
-        Get relative location of toys and calculate map of toys?
+        Update list of toy positions
 
         Args:
             msg: list of Toy message
-
-        Returns:
-            map: map of toys
         """
 
-    def gps_callback(self, msg):
+    def gps_callback(self, msg: Pose):
         """
         Update self pose
 
