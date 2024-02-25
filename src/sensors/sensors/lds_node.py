@@ -2,7 +2,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
-from doramsgs.msg import LdsCommand
+from dorasrvs.srv import LdsCommand
 
 
 class LdsNode(Node):

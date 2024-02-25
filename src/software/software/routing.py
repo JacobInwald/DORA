@@ -193,9 +193,7 @@ class Router:
                         nearest_obstacle = np.ndarray([x,y])
         
         return nearest_obstacle
-    
-    
-    
+
     def toPoint(self, pos, rot, end: np.ndarray) -> None:
         """
         Move the robot to the given end point on the map.

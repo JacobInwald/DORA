@@ -31,12 +31,3 @@ class MovePublisher(Node):
         self.get_logger().info(f"Publishing: Move {self.i}: {msg.type} {msg.arg_1}")
         self.i += 1
         self.spin_once()
-    
-    def spin(self):
-        rclpy.spin(self)
-    
-    def spin_once(self):
-        rclpy.spin_once(self, timeout_sec=0.1)
-    
-    def destroy(self):
-        self.destroy_node()
