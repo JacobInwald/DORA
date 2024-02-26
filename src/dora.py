@@ -1,20 +1,14 @@
 import rclpy
 from rclpy.node import Node
-from dora_srvs.srv import JobCmd
-from control.control.job import DoraJob
+from dora_srvs.srv import LoopCmd
 
 
 class Dora(Node):
 
     def __init__(self):
-        self.client_ = self.create_client(JobCmd, 'job')
-        self.job = DoraJob.SCAN
-        self.job_cmd = JobCmd()
-
-    def run(self):
-        while True:
-            self.job_cmd.job = self.job
-            future = self.lds_cli_.call_async(self.job_cmd)
-            rclpy.spin_until_future_complete(self.cli_node_, future)
-            if future.result():
-                self.job = (self.job + 1) % len(DoraJob)
+        self.client_ = self.create_client(LoopCmd, 'loop')
+        loop_cmd = LoopCmd()
+        loop_cmd.start = True
+        self.client_.call_async(loop_cmd)
+        rclpy.spin_once(self, timeout_sec=0)
+        self.destroy_node()
