@@ -3,6 +3,17 @@ import numpy as np
 
 class GPS:
     """
+<<<<<<< HEAD
+    Represents a GPS sensor.
+
+    Attributes:
+    - pos: numpy.ndarray - The current position of the robot.
+    TODO: Implement the GPS sensor class (Wilfredo)
+    """
+
+    def __init__(self):
+        pass
+=======
     Represents a GPS sensor. (Overhead camera)
 
     TODO: Implement the GPS sensor class (Wilfredo)
@@ -27,6 +38,7 @@ class GPS:
     def __init__(self):
         self.pos = np.zeros(2)
         self.rot = 0
+>>>>>>> be2901fbc6efdc3942c3da3501484ee37220a803
 
     def locate(self, controller: "simulate.Controller"):
         """
@@ -47,6 +59,10 @@ class GPS:
 
         TODO: Implement the logic to find the position of the robot in the image. (Wilfredo)
         """
+<<<<<<< HEAD
+        pass
+=======
+>>>>>>> be2901fbc6efdc3942c3da3501484ee37220a803
 
     def getRotInImage(self, img: np.ndarray) -> float:
         """
@@ -60,3 +76,7 @@ class GPS:
 
         TODO: Implement the logic to find the position of the robot in the image. (Wilfredo)
         """
+<<<<<<< HEAD
+        pass
+=======
+>>>>>>> be2901fbc6efdc3942c3da3501484ee37220a803
