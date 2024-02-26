@@ -1,6 +1,7 @@
 import numpy as np
 from point_cloud import PointCloud
 from occupancy_map import OccupancyMap
+from dora_msgs.msg import Toy
 
 
 def man_fuzz(grid: np.ndarray) -> np.ndarray:
@@ -61,19 +62,31 @@ class Router:
     """
     The Router class is responsible for calculating routes.
     (the original Router class but without the navigation part)
+
+    TODO: Implement class (Keming)
     """
 
     def __init__(self):
         pass
 
     def route(self, start, end, map: OccupancyMap) -> np.ndarray:
+        """
+        This function calculates the route from the current position to the end point.
+
+        Parameters:
+            end (np.ndarray): The end point coordinates on the map.
+            map (OccupancyMap): The occupancy map object representing the environment.
+
+        Returns:
+            np.ndarray: The calculated route as an array of coordinates.
+        """
         pass
 
     def next_mapping_pt(self, map: OccupancyMap) -> np.ndarray:
         pass
 
-    def next_retrieve_pt(self, map: OccupancyMap, toys: ['Toy']) -> np.ndarray:
+    def next_retrieve_pt(self, map: OccupancyMap, toys: [Toy]) -> (np.ndarray, Toy):
         pass
 
-    def next_unload_pt(self, map: OccupancyMap, toy: 'Toy') -> np.ndarray:
+    def next_unload_pt(self, map: OccupancyMap, toy: Toy) -> np.ndarray:
         pass
