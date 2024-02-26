@@ -5,7 +5,7 @@ class Detect:
     Detect toys in image using our pre-trained model.
     """
 
-    def __init__(self, model_file='weights/best_32.pt'):
+    def __init__(self, model_file='data/weights/best_32.pt'):
         self.model = YOLO(model_file)
 
     def predict(self, file, conf=0.5, save=True):
