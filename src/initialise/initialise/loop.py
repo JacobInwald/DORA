@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import JobCmd
-from control.control.job import DoraJob
+from control.job import DoraJob
 
 
 class Loop(Node):
@@ -10,6 +10,7 @@ class Loop(Node):
     """
 
     def __init__(self):
+        super().__init__('loop')
         self.client_ = self.create_client(JobCmd, 'job')
         self.job = DoraJob.SCAN
         self.job_cmd = JobCmd()
