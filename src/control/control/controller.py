@@ -97,12 +97,12 @@ class Controller(Node):
         Returns:
             job status
         """
-        route, self.toy = self.router.next_retrieve_pt(self.router, self.map, self.toy_sub_)
+        route, self.toy = self.router.next_retrieve_pt(self.map, self.toy_sub_, self.pose)
         status = self.navigate(route)
         return status
 
     def navigate_to_storage(self) -> bool:
-        route = self.unload_pt(self.router, self.map, self.toy)
+        route = self.router.next_unload_pt(self.map, self.toy, self.pose)
         status = self.navigate(route)
         return status
 
@@ -139,7 +139,7 @@ class Controller(Node):
     def close_to(self, src, dst):
         dx = dst.x - src.x
         dy = dst.y - dst.x
-        return math.sqrt(dx^2 + dy^2) < self.close_thres
+        return math.sqrt(dx ^ 2 + dy ^ 2) < self.close_thres
 
 
 # Entry Point
