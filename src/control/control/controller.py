@@ -7,7 +7,7 @@ from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from router import Router
 from occupancy_map import OccupancyMap
 from job import DoraJob
-from move_type import MoveType
+from actuators.wheels import WheelsMove
 
 
 class Controller(Node):
@@ -31,6 +31,8 @@ class Controller(Node):
         self.router = Router()
         self.map = OccupancyMap()
         self.toy = None
+        self.pose = None
+        self.close_thres = 3
 
     def switch(self, msg):
         if msg.job == DoraJob.SCAN:
@@ -60,6 +62,7 @@ class Controller(Node):
         Args:
             msg: Pose message from GPS
         """
+        self.pose = Pose
 
     def scan_request(self):
         lds_cmd = LdsCmd()
@@ -86,7 +89,7 @@ class Controller(Node):
         """
         pass
 
-    def navigate_to_toy(self) -> DoraJob:
+    def navigate_to_toy(self) -> bool:
         """
         Calculate route to toy using router.
         Convert route to robot movements, send service call to actuators.
@@ -96,50 +99,45 @@ class Controller(Node):
         """
         (route, self.toy) = self.router.next_retrieve_pt(self.router, self.map, self.toy_sub_)
         success = self.navigate(self, route)
-        if success:
-            return DoraJob.NAV_TOY
-        else:
-            return None
+        return success
 
-    def navigate_to_storage(self) -> DoraJob:
+    def navigate_to_storage(self) -> bool:
         route = self.unload_pt(self.router, self.map, self.toy)
         success = self.navigate(self, route)
-        if success:
-            return DoraJob.NAV_STORAGE
-        else:
-            return None
+        return success
 
     def navigate(self, route: np.ndarray) -> bool:
         """
-        Publish format is a tuple contains MoveType and value (distance to move / angle to rotate)
+        Navigate through route.
+        Translate route to robot (wheels) moves
+        Call wheels service for every move.
 
-        Assume the gps will update the current position update automatically at a constant rate If not,
-        need to add timer in gps_node to call back often
+        Returns:
+            job status
         """
         for aim_point in route:
-            self.go_to_next_point(self, aim_point)
-            if self.gps_sub_.x == aim_point.x & self.gps_sub_.y == aim_point.y:
-                # Make sure robot reach the destination every time
-                continue
-            else:
-                self.go_to_next_point(aim_point)
+            while not self.close_to(aim_point, self.pose):
+                x_distance = aim_point.x - self.pose.x
+                y_distance = aim_point.y - self.pose.y
+                angle = math.atan2(y_distance, x_distance)
+
+                rotation = angle - self.pose.rot
+                wheels_rot_cmd = WheelsCmd.Request()
+                wheels_rot_cmd.type = WheelsMove.TURN
+                wheels_rot_cmd.magnitude = rotation
+                future = self.wheels_cli_.call_async(wheels_rot_cmd)
+                rclpy.spin_until_future_complete(self.cli_node_, future)
+
+                distance = math.sqrt(x_distance ^ 2 + y_distance ^ 2)
+                wheels_dist_cmd = WheelsCmd.Request()
+                wheels_dist_cmd.type = WheelsMove.FORWARD
+                wheels_dist_cmd.magnitude = distance
+                future = self.wheels_cli_.call_async(wheels_dist_cmd)
+                rclpy.spin_until_future_complete(self.cli_node_, future)
         return True
 
-    def go_to_next_point(self, aim_point):
-        x_distance = aim_point.x - self.gps_sub_.x
-        y_distance = aim_point.y - self.gps_sub_.y
-        end_rotation = math.atan2(y_distance, x_distance)
-        rotate = end_rotation - self.gps_sub_.rot
-        action = (MoveType.TURN, rotate)
+    def close_to(self, src, dst):
+        dx = dst.x - src.x
+        dy = dst.y - dst.x
+        return math.sqrt(dx^2 + dy^2) < self.close_thres
 
-        # TODO: Add client part to build connection to send and get response from the robot. The method will end after get response
-        # Wait for response from robot of completing action as well
-
-        self.get_logger().info(f'Move command：turn for {rotate} angle')
-
-        distance = math.sqrt(x_distance ^ 2 + y_distance ^ 2)
-        action = (MoveType.MOVE, distance)
-
-        self.get_logger().info(f'Move command：move for {distance} meters')
-
-    # Wait for some time for gps update?
