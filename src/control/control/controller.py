@@ -23,8 +23,8 @@ class Controller(Node):
         self.service_ = self.create_service(JobCmd, 'job', self.switch)
         self.toy_sub_ = self.create_subscription([Toy], 'toys', self.toy_callback, 10)
         self.gps_sub_ = self.create_subscription(Pose, 'gps', self.gps_callback, 10)
-        self.move_pub_ = self.create_publisher(tuple, 'move distance and rotation', 10)
         self.cli_node_ = Node()
+        self.move_cli_ = self.cli_node_.create_client(tuple, 'move distance and rotation')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, 'lds_service')
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, 'wheels')
         self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, 'sweeper')
@@ -112,27 +112,34 @@ class Controller(Node):
     def navigate(self, route: np.ndarray) -> bool:
         """
         Publish format is a tuple contains MoveType and value (distance to move / angle to rotate)
+
+        Assume the gps will update the current position update automatically at a constant rate If not,
+        need to add timer in gps_node to call back often
         """
-        current_pose = self.gps_sub_
-        current_rotation = self.gps_sub_.rot
         for aim_point in route:
-            x_distance = aim_point.x - current_pose.x
-            y_distance = aim_point.y - current_pose.y
-            end_rotation = math.atan2(y_distance, x_distance)
-            rotate = end_rotation - current_rotation
-            action = (MoveType.TURN, rotate)
-            self.move_pub_.publish(action)
-            self.get_logger().info(f'Move command：turn for {rotate} angle')
+            self.go_to_next_point(self, aim_point)
+            if self.gps_sub_.x == aim_point.x & self.gps_sub_.y == aim_point.y:
+                # Make sure robot reach the destination every time
+                continue
+            else:
+                self.go_to_next_point(aim_point)
+        return True
 
-            distance = math.sqrt(x_distance ^ 2 + y_distance ^ 2)
-            action = (MoveType.MOVE, distance)
-            self.move_pub_.publish(action)
-            self.get_logger().info(f'Move command：move for {distance} meters')
+    def go_to_next_point(self, aim_point):
+        x_distance = aim_point.x - self.gps_sub_.x
+        y_distance = aim_point.y - self.gps_sub_.y
+        end_rotation = math.atan2(y_distance, x_distance)
+        rotate = end_rotation - self.gps_sub_.rot
+        action = (MoveType.TURN, rotate)
 
-            # Will the current position update automatically every time? If not, need to add timer in gps_node to call back often
+        # TODO: Add client part to build connection to send and get response from the robot. The method will end after get response
+        # Wait for response from robot of completing action as well
 
-        if current_pose.x == route[-1].x & current_pose.y == route[-1].y:
-            # Make sure robot reach the destination
-            return True
-        else:
-            return False
+        self.get_logger().info(f'Move command：turn for {rotate} angle')
+
+        distance = math.sqrt(x_distance ^ 2 + y_distance ^ 2)
+        action = (MoveType.MOVE, distance)
+
+        self.get_logger().info(f'Move command：move for {distance} meters')
+
+    # Wait for some time for gps update?
