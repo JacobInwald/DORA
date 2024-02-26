@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'sensors'
+package_name = 'control'
 
 setup(
     name=package_name,
@@ -15,8 +15,8 @@ setup(
     zip_safe=True,
     maintainer='Ardith Ho',
     maintainer_email='ardithhowaiman@gmail.com',
-    description='Sensor nodes',
-    license='Apache License 2.0',
+    description='Control for the robot movements',
+    license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [

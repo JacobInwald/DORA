@@ -7,7 +7,7 @@ class DORA:
     def __init__(self) -> None:
         self.interface = ROSInterface()
         # Waits for it to initilize
-        while self.interface.lidar.cur_scan == None:
+        while self.interface.lidar.last_scan == None:
             self.interface.update_sensors()
             
         self.router = rt.Router(self.interface)
@@ -24,7 +24,7 @@ class DORA:
         while not (last_pos[0] == next_pos[0] and last_pos[1] == next_pos[1]) and n < max_iter:
             
             # Update the ground truth
-            cloud = rt.PointCloud(self.interface.lidar.cur_scan, self.interface.gps.pos, 1.5)
+            cloud = rt.PointCloud(self.interface.lidar.last_scan, self.interface.gps.pos, 1.5)
             self.ground_truth.merge(rt.OccupancyMap(last_pos, cloud))
             
             # Find next point

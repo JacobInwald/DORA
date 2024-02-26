@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'sensors'
+package_name = 'simulation'
 
 setup(
     name=package_name,
@@ -13,8 +13,8 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='s2209602',
-    maintainer_email='s2209602@todo.todo',
+    maintainer='Jacob Inwald',
+    maintainer_email='Jacob.Inwald@Hotmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
     tests_require=['pytest'],
