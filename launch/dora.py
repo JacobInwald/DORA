@@ -19,16 +19,16 @@ def generate_launch_description():
             package='sensors',
             executable='lds_node'
         ),
-        # Node(
-        #     namespace='sweeper',
-        #     package='actuators',
-        #     executable='sweeper'
-        # ),
-        # Node(
-        #     namespace='wheels',
-        #     package='actuators',
-        #     executable='wheels'
-        # ),
+        Node(
+            namespace='sweeper',
+            package='actuators',
+            executable='sweeper'
+        ),
+        Node(
+            namespace='wheels',
+            package='actuators',
+            executable='wheels'
+        ),
         Node(
             namespace='controller',
             package='control',

@@ -29,6 +29,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Map.msg"
   "msg/Move.msg"
   "msg/Toy.msg"
+  "msg/Toys.msg"
   DEPENDENCIES builtin_interfaces std_msgs
 )
 ament_package()

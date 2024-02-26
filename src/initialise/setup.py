@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             "dora = initialise.dora:Dora",
-            "loop = initialise.loop:Loop",
+            "loop = initialise.loop:main",
         ],
     },
 )

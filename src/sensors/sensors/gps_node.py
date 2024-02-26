@@ -26,7 +26,7 @@ class GpsNode(Node):
 
     def __init__(self):
         super().__init__('gps_node')
-        self.subscription_ = self.create_subscription(..., 'topic', self.callback, 10)
+        self.subscription_ = self.create_subscription(Pose, 'topic', self.callback, 10)
         self.publisher_ = self.create_publisher(Pose, 'gps', 10)
         self.i = 0 
         self.rot = 0.0
@@ -40,7 +40,8 @@ class GpsNode(Node):
         self.i += 1
 
 
-if __name__=='__main__':
+# Entry Point
+def main():
     rclpy.init()
     gps_node = GpsNode()
     rclpy.spin(gps_node)

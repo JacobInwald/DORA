@@ -1,6 +1,5 @@
 from ultralytics import YOLO
 
-
 class Detect:
     """
     Detect toys in image using our pre-trained model.

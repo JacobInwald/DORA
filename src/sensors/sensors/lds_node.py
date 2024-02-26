@@ -29,8 +29,8 @@ class LdsNode(Node):
         super().__init__('lds_node')
         self.lds_sub_ = self.create_subscription(LaserScan, 'scan', self.lds_callback, 10)
         # change where appropriate
-        self.map_pub_ = self.create_publisher(Map, 'map')
-        self.scan_srv_ = self.create_service(LdsCmd, 'lds_service', self.scan_callback, 1)
+        self.map_pub_ = self.create_publisher(Map, 'map', 10)
+        self.scan_srv_ = self.create_service(LdsCmd, 'lds_service', self.scan_callback)
         self.max_range = 0.0
         self.last_scan = None
 
@@ -59,3 +59,12 @@ class LdsNode(Node):
         self.last_scan = msg
         header = msg.header
         self.get_logger().info(f'Heard: LDS scan {header.frame_id} at {header.stamp.sec}s{header.stamp.nanosec}')
+
+
+# Entry Point
+def main():
+    rclpy.init()
+    lds_node = LdsNode()
+    rclpy.spin(lds_node)
+    lds_node.destroy_node()
+    rclpy.shutdown()
