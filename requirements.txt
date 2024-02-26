@@ -11,4 +11,5 @@ roslibpy==1.6.0
 setuptools~=67.6.0
 ultralytics~=8.0.186
 torch~=1.11.0
+RPi.GPIO~=0.7.0
 transformers~=4.38.1

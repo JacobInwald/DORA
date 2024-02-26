@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
 from dora_msgs.msg import Map
-from dorasrvs.srv import LdsCmd
+from dora_srvs.srv import LdsCmd
 
 
 class LdsNode(Node):
