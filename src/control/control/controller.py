@@ -97,12 +97,14 @@ class Controller(Node):
         Returns:
             job status
         """
-        route, self.toy = self.router.next_retrieve_pt(self.map, self.toy_sub_, self.pose)
+        next_retrieve_pt, self.toy = self.router.next_retrieve_pt(self.map, self.toy_sub_, self.pose)
+        route = self.router.route(self.pose, next_retrieve_pt, self.map)
         status = self.navigate(route)
         return status
 
     def navigate_to_storage(self) -> bool:
-        route = self.router.next_unload_pt(self.map, self.toy, self.pose)
+        next_unload_pt = self.router.next_unload_pt(self.map, self.toy, self.pose)
+        route = self.router.route(self.pose, next_unload_pt, self.map)
         status = self.navigate(route)
         return status
 
@@ -117,8 +119,8 @@ class Controller(Node):
         """
         for aim_point in route:
             while not self.close_to(aim_point, self.pose):
-                x_distance = aim_point.x - self.pose.x
-                y_distance = aim_point.y - self.pose.y
+                x_distance = aim_point[0] - self.pose.x
+                y_distance = aim_point[1] - self.pose.y
                 angle = math.atan2(y_distance, x_distance)
 
                 rotation = angle - self.pose.rot
@@ -136,7 +138,7 @@ class Controller(Node):
                 rclpy.spin_until_future_complete(self.cli_node_, future)
         return self.close_to(route[-1], self.pose)
 
-    def close_to(self, src, dst):
+    def close_to(self, src: np.ndarray, dst: Pose):
         dx = dst.x - src.x
         dy = dst.y - dst.x
         return math.sqrt(dx ^ 2 + dy ^ 2) < self.close_thres
