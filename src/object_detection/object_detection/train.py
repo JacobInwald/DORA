@@ -1,7 +1,5 @@
-import os
 from ultralytics import YOLO
 from roboflow import Roboflow
-from torch.cuda import empty_cache
 
 
 def load_dataset(api_key="exOzmfeaFpjkXbO6QvzA", workspace="toy-detection-ziaje", project_name="daycare-toys", version=1, format="yolov8"):
