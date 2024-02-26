@@ -59,14 +59,3 @@ class LdsNode(Node):
         self.last_scan = msg
         header = msg.header
         self.get_logger().info(f'Heard: LDS scan {header.frame_id} at {header.stamp.sec}s{header.stamp.nanosec}')
-
-    # functions below are not necessary
-    def spin(self):
-        rclpy.spin(self)
-    
-    async def spin_once(self):
-        rclpy.spin_once(self, timeout_sec=0.01)
-    
-    def destroy(self):
-        self.destroy_node()
-        rclpy.shutdown()

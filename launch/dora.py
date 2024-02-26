@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-
+import rclpy
 
 def generate_launch_description():
     return LaunchDescription([
@@ -33,5 +33,15 @@ def generate_launch_description():
             namespace='controller',
             package='control',
             executable='controller'
+        ),
+        Node(
+            namespace='dora',
+            package='initialise',
+            executable='dora'
+        ),
+        Node(
+            namespace='loop',
+            package='initialise',
+            executable='loop'
         )
     ])

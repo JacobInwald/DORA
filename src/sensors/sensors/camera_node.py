@@ -18,7 +18,7 @@ class CameraNode(Node):
     """
 
     def __init__(self, camera_info='camera_info/camerav2_1280x960.yaml'):
-        super.__init__('camera_node')
+        super().__init__('camera_node')
         self.cam_sub_ = self.create_subscription(Image, '/dev/video0', self.callback, 10)
         self.publisher_ = self.create_publisher([Toy], 'toys', 10)
         self.bridge = CvBridge()
