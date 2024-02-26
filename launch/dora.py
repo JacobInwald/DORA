@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-
+import rclpy
 
 def generate_launch_description():
     return LaunchDescription([
@@ -19,29 +19,29 @@ def generate_launch_description():
             package='sensors',
             executable='lds_node'
         ),
-        Node(
-            namespace='sweeper',
-            package='actuators',
-            executable='sweeper'
-        ),
-        Node(
-            namespace='wheels',
-            package='actuators',
-            executable='wheels'
-        ),
+        # Node(
+        #     namespace='sweeper',
+        #     package='actuators',
+        #     executable='sweeper'
+        # ),
+        # Node(
+        #     namespace='wheels',
+        #     package='actuators',
+        #     executable='wheels'
+        # ),
         Node(
             namespace='controller',
             package='control',
             executable='controller'
         ),
         Node(
-            namespace='loop',
-            package='dora',
-            executable='loop'
+            namespace='dora',
+            package='initialise',
+            executable='dora'
         ),
         Node(
-            namespace='dora',
-            package='dora',
-            executable='dora'
+            namespace='loop',
+            package='initialise',
+            executable='loop'
         )
     ])

@@ -1,6 +1,6 @@
 import numpy as np
-from point_cloud import PointCloud
-from occupancy_map import OccupancyMap
+from .point_cloud import PointCloud
+from .occupancy_map import OccupancyMap
 from dora_msgs.msg import Toy
 from queue import PriorityQueue
 

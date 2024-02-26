@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
 from dora_msgs.msg import Map
-from dorasrvs.srv import LdsCmd
+from dora_srvs.srv import LdsCmd
 
 
 class LdsNode(Node):
@@ -59,14 +59,3 @@ class LdsNode(Node):
         self.last_scan = msg
         header = msg.header
         self.get_logger().info(f'Heard: LDS scan {header.frame_id} at {header.stamp.sec}s{header.stamp.nanosec}')
-
-    # functions below are not necessary
-    def spin(self):
-        rclpy.spin(self)
-    
-    async def spin_once(self):
-        rclpy.spin_once(self, timeout_sec=0.01)
-    
-    def destroy(self):
-        self.destroy_node()
-        rclpy.shutdown()
