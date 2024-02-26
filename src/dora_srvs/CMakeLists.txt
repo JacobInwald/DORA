@@ -26,7 +26,10 @@ endif()
 
 find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/LdsCommand.srv"
-  "srv/SweeperCommand.srv"
+  "srv/JobCmd.srv"
+  "srv/LdsCmd.srv"
+  "srv/LoopCmd.srv"
+  "srv/SweeperCmd.srv"
+  "srv/WheelsCmd.srv"
 )
 ament_package()
