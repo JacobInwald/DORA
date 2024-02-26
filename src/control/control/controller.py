@@ -146,7 +146,7 @@ class Controller(Node):
         :param dst: Pose represent current coordinate
         """
         dx = dst.x - src[0]
-        dy = dst.y - dst[1]
+        dy = dst.y - src[1]
         return math.sqrt(dx ^ 2 + dy ^ 2) < self.close_thres
 
 
