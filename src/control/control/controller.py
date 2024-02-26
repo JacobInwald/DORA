@@ -97,14 +97,14 @@ class Controller(Node):
         Returns:
             job status
         """
-        (route, self.toy) = self.router.next_retrieve_pt(self.router, self.map, self.toy_sub_)
-        success = self.navigate(self, route)
-        return success
+        route, self.toy = self.router.next_retrieve_pt(self.router, self.map, self.toy_sub_)
+        status = self.navigate(route)
+        return status
 
     def navigate_to_storage(self) -> bool:
         route = self.unload_pt(self.router, self.map, self.toy)
-        success = self.navigate(self, route)
-        return success
+        status = self.navigate(route)
+        return status
 
     def navigate(self, route: np.ndarray) -> bool:
         """
@@ -134,7 +134,7 @@ class Controller(Node):
                 wheels_dist_cmd.magnitude = distance
                 future = self.wheels_cli_.call_async(wheels_dist_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
-        return True
+        return self.close_to(route[-1], self.pose)
 
     def close_to(self, src, dst):
         dx = dst.x - src.x
