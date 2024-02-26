@@ -2,7 +2,7 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from dora_msgs.msg import Toy, Pose
+from dora_msgs.msg import Toy, Pose, Toys
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from router import Router
 from occupancy_map import OccupancyMap
@@ -19,12 +19,12 @@ class Controller(Node):
     """
 
     def __init__(self):
+        rclpy.init()
         super().__init__('controller')
         self.service_ = self.create_service(JobCmd, 'job', self.switch)
-        self.toy_sub_ = self.create_subscription([Toy], 'toys', self.toy_callback, 10)
+        self.toy_sub_ = self.create_subscription(Toys, 'toys', self.toy_callback, 10)
         self.gps_sub_ = self.create_subscription(Pose, 'gps', self.gps_callback, 10)
-        self.cli_node_ = Node()
-        self.move_cli_ = self.cli_node_.create_client(tuple, 'move distance and rotation')
+        self.cli_node_ = Node('control_client')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, 'lds_service')
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, 'wheels')
         self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, 'sweeper')
@@ -47,7 +47,7 @@ class Controller(Node):
             return self.unload_request()
         return False
 
-    def toy_callback(self, msg: [Toy]):
+    def toy_callback(self, msg: Toys):
         """
         Update list of toy positions
 
@@ -141,3 +141,11 @@ class Controller(Node):
         dy = dst.y - dst.x
         return math.sqrt(dx^2 + dy^2) < self.close_thres
 
+
+# Entry Point
+def main():
+    rclpy.init()
+    controller = Controller()
+    rclpy.spin(controller)
+    controller.destroy_node()
+    rclpy.shutdown()

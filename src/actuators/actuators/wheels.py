@@ -2,7 +2,7 @@ from enum import Enum
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import WheelsCmd
-from stepper import Stepper
+from .stepper import Stepper
 
 
 class WheelsMove(Enum):

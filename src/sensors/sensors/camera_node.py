@@ -3,7 +3,7 @@ import torch
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from dora_msgs.msg import Toy, Pose
+from dora_msgs.msg import Toy, Pose, Toys
 from object_detection.detect import Detect
 from cv_bridge import CvBridge
 from transformers import DPTFeatureExtractor, DPTForDepthEstimation
@@ -18,9 +18,9 @@ class CameraNode(Node):
     """
 
     def __init__(self, camera_info='camera_info/camerav2_1280x960.yaml'):
-        super.__init__('camera_node')
+        super().__init__('camera_node')
         self.cam_sub_ = self.create_subscription(Image, '/dev/video0', self.callback, 10)
-        self.publisher_ = self.create_publisher([Toy], 'toys', 10)
+        self.publisher_ = self.create_publisher(Toys, 'toys', 10)
         self.bridge = CvBridge()
         self.model = Detect()
         self.feature_extractor = DPTFeatureExtractor.from_pretrained("Intel/dpt-large")
@@ -32,7 +32,8 @@ class CameraNode(Node):
         frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
         results = self.model.predictions(frame)[0]  # detect toys
         boxes = results.boxes
-        pub_msg = []
+        pub_msg = Toys()
+        toy_arr = []
         for xywh, cls, conf in zip(boxes.xywh, boxes.cls, boxes.conf):
             toy_msg = Toy()
             toy_msg.header = msg.header
@@ -40,7 +41,8 @@ class CameraNode(Node):
             toy_msg.conf = conf
             toy_msg.position = Pose()
             toy_msg.x, toy_msg.y = self.estimate_position(frame, xywh)
-            pub_msg.append(toy_msg)
+            toy_arr.append(toy_msg)
+        pub_msg.toys = toy_arr
         self.publisher_.publish(pub_msg)
 
     def estimate_position(self, img, xywh):
@@ -86,7 +88,7 @@ class CameraNode(Node):
         return output
 
 
-if __name__=='__main__':
+def main():
     rclpy.init()
     camera_node = CameraNode()
     rclpy.spin(camera_node)
