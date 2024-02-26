@@ -1,7 +1,7 @@
 from enum import Enum
 import rclpy
 from rclpy.node import Node
-from dorasrvs.srv import WheelsCommand
+from dorasrvs.srv import WheelsCmd
 
 
 class WheelsMove(Enum):
@@ -18,9 +18,9 @@ class Wheels(Node):
     """
     def __init__(self):
         super.__init__('wheels')
-        self.service_ = self.create_service(WheelsCommand, 'wheels', self.callback)
+        self.service_ = self.create_service(WheelsCmd, 'wheels', self.callback)
 
-    def callback(self, msg: WheelsCommand):
+    def callback(self, msg: WheelsCmd):
         if msg.type == WheelsMove.FORWARD:
             return self.forward(msg.magnitude)
         elif msg.type == WheelsMove.TURN:
