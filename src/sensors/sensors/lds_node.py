@@ -3,7 +3,7 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
 from dora_msgs.msg import Map
-from dorasrvs.srv import LdsCommand
+from dorasrvs.srv import LdsCmd
 
 
 class LdsNode(Node):
@@ -30,11 +30,11 @@ class LdsNode(Node):
         self.lds_sub_ = self.create_subscription(LaserScan, 'scan', self.lds_callback, 10)
         # change where appropriate
         self.map_pub_ = self.create_publisher(Map, 'map')
-        self.scan_srv_ = self.create_service(LdsCommand, 'lds_service', self.scan_callback, 1)
+        self.scan_srv_ = self.create_service(LdsCmd, 'lds_service', self.scan_callback, 1)
         self.max_range = 0.0
         self.last_scan = None
 
-    def scan_callback(self, msg: LdsCommand) -> bool:
+    def scan_callback(self, msg: LdsCmd) -> bool:
         """
         Calculate occupancy map from last scan and publish map
         """

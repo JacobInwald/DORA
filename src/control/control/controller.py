@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from dora_msgs.msg import Toy, Pose
-from dora_srvs.srv import JobCommand, LdsCommand, SweeperCommand, WheelsCommand
+from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from router import Router
 from job import DoraJob
 
@@ -17,15 +17,14 @@ class Controller(Node):
 
     def __init__(self):
         super().__init__('controller')
-        self.service_ = self.create_service(JobCommand, 'job', self.switch)
+        self.service_ = self.create_service(JobCmd, 'job', self.switch)
         self.toy_sub_ = self.create_subscription([Toy], 'toys', self.toy_callback, 10)
         self.gps_sub_ = self.create_subscription(Pose, 'gps', self.gps_callback, 10)
-        self.lds_cli_ = self.create_client(LdsCommand, 'lds_service')
-        self.wheels_cli_ = self.create_client(WheelsCommand, 'wheels')
-        self.sweeper_cli_ = self.create_client(SweeperCommand, 'sweeper')
         self.cli_node_ = Node()
+        self.lds_cli_ = self.cli_node_.create_client(LdsCmd, 'lds_service')
+        self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, 'wheels')
+        self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, 'sweeper')
         self.router = Router()
-        self.state = DoraJob.SCAN
 
     def switch(self, msg):
         if msg.job == DoraJob.SCAN:
@@ -57,16 +56,28 @@ class Controller(Node):
         """
 
     def scan_request(self):
-        lds_command = LdsCommand()
-        lds_command.scan = True
-        future = self.lds_cli_.call_async(lds_command)
+        lds_cmd = LdsCmd()
+        lds_cmd.scan = True
+        future = self.lds_cli_.call_async(lds_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         return future.result()
 
-    def retrieve_request(self):
+    def retrieve_request(self) -> bool:
+        """
+        Send service request for retrieving toy, similar to scan_request
+
+        Returns:
+            job status
+        """
         pass
 
-    def unload_request(self):
+    def unload_request(self) -> bool:
+        """
+        Send service request for unloading toy, similar to scan_request
+
+        Returns:
+            job status
+        """
         pass
 
     def navigate_to_toy(self):
