@@ -20,6 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "camera_node = sensors.camera_node:CameraNode",
+            "gps_node = sensors.gps_node:GpsNode",
+            "lds_node = sensors.lds_node:LdsNode"
         ],
     },
 )
