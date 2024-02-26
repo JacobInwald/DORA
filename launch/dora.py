@@ -33,15 +33,5 @@ def generate_launch_description():
             namespace='controller',
             package='control',
             executable='controller'
-        ),
-        Node(
-            namespace='loop',
-            package='dora',
-            executable='loop'
-        ),
-        Node(
-            namespace='dora',
-            package='dora',
-            executable='dora'
         )
     ])

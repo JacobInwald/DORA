@@ -1,7 +1,7 @@
 from enum import Enum
 import rclpy
 from rclpy.node import Node
-from dorasrvs.srv import WheelsCmd
+from dora_srvs.srv import WheelsCmd
 from stepper import Stepper
 
 
