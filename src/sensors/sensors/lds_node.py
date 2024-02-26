@@ -34,7 +34,7 @@ class LdsNode(Node):
         self.max_range = 0.0
         self.last_scan = None
 
-    def scan_callback(self):
+    def scan_callback(self, msg: LdsCommand) -> bool:
         """
         Calculate occupancy map from last scan and publish map
         """

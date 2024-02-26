@@ -16,8 +16,7 @@ class PointCloud:
     - center: numpy.ndarray - The center point of the point cloud.
     """
 
-    def __init__(self, lidar: np.ndarray, origin: np.ndarray,
-                 maxScanDist: float):
+    def __init__(self, lidar: np.ndarray, origin: np.ndarray, maxScanDist: float):
         self.lidar = lidar
         self.origin = np.copy(origin)
         self.maxScanDist = maxScanDist

@@ -21,7 +21,7 @@ class Sweeper(Node):
         super.__init__('sweeper')
         self.service_ = self.create_service(SweeperCommand, 'sweeper', self.callback)
 
-    def callback(self, msg):
+    def callback(self, msg: SweeperCommand):
         if msg.move == SweeperMove.RETRIEVE:
             return self.retrieve()
         elif msg.move == SweeperMove.UNLOAD:
