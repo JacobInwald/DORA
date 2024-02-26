@@ -97,14 +97,16 @@ class Controller(Node):
         Returns:
             job status
         """
-        next_retrieve_pt, self.toy = self.router.next_retrieve_pt(self.map, self.toy_sub_, self.pose)
-        route = self.router.route(np.array([self.pose.x,self.pose.y]), next_retrieve_pt, self.map)
+        cur_pos = np.array([self.pose.x, self.pose.y])
+        next_retrieve_pt, self.toy = self.router.next_retrieve_pt(self.map, self.toy_sub_, cur_pos)
+        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
         status = self.navigate(route)
         return status
 
     def navigate_to_storage(self) -> bool:
-        next_unload_pt = self.router.next_unload_pt(self.map, self.toy, self.pose)
-        route = self.router.route(np.array([self.pose.x,self.pose.y]), next_unload_pt, self.map)
+        cur_pos = np.array([self.pose.x, self.pose.y])
+        next_unload_pt = self.router.next_unload_pt(self.map, self.toy, cur_pos)
+        route = self.router.route(cur_pos, next_unload_pt, self.map)
         status = self.navigate(route)
         return status
 
