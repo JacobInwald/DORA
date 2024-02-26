@@ -11,7 +11,7 @@ class LdsNode(Node):
     Represents the LDS (Laser Distance Sensor).
 
     TODO: Implement LDS node (Jacob)
-    Subscribes to the Turtlebot3 LDS-02 to get pointcloud.
+    Subscribes to the Turtlebot3 LDS-01 to get pointcloud.
     Publishes occupancy map of environment.
 
     The control flow will be as follows:

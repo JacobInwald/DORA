@@ -25,6 +25,7 @@ class Controller(Node):
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, 'wheels')
         self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, 'sweeper')
         self.router = Router()
+        self.toy = None
 
     def switch(self, msg):
         if msg.job == DoraJob.SCAN:
@@ -80,8 +81,18 @@ class Controller(Node):
         """
         pass
 
-    def navigate_to_toy(self):
+    def navigate_to_toy(self) -> bool:
+        """
+        Calculate route to toy using router.
+        Convert route to robot movements, send service call to actuators.
+
+        Returns:
+            job status
+        """
         pass
 
-    def navigate_to_storage(self):
+    def navigate_to_storage(self) -> bool:
+        pass
+
+    def navigate(self, route: np.ndarray) -> bool:
         pass

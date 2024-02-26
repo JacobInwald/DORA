@@ -22,7 +22,7 @@ def generate_launch_description():
         Node(
             namespace='sweeper',
             package='actuators',
-            executabale='sweeper'
+            executable='sweeper'
         ),
         Node(
             namespace='wheels',
