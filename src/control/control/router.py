@@ -1,7 +1,7 @@
 import numpy as np
 from .point_cloud import PointCloud
 from .occupancy_map import OccupancyMap
-from dora_msgs.msg import Toy
+from dora_msgs.msg import Toy, Toys
 from queue import PriorityQueue
 
 
@@ -164,7 +164,7 @@ class Router:
 
         return clouds[-1].origin
 
-    def next_retrieve_pt(self, map: OccupancyMap, toys: [Toy], cur: np.ndarray) -> (np.ndarray, Toy):
+    def next_retrieve_pt(self, map: OccupancyMap, toys: Toys, cur: np.ndarray) -> tuple[np.ndarray, Toy]:
         """
         Finds the next point to retrieve toy in the occupancy map. (nearest toy from start position)
 
