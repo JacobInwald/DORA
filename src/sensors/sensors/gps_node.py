@@ -170,7 +170,6 @@ class Image_processor:
 
     def __init__(self):
         self.calibratred = False
-        self.undistorter = undistort()
         self.position_estimator = blob_detector()
         self.i = 0
         return
@@ -219,7 +218,7 @@ class Image_processor:
             angle = -999
 
         
-        print(pos)
+        # print(pos)
         # cv2.imshow('gps', vis)
         self.draw_robot_pos(vis, pos, pos_blue, angle)
         # print(vis.shape)
@@ -345,23 +344,27 @@ class Image_processor:
         return
     
 
-def main(args=None):
-    rclpy.init(args=args)
-    gps_simulator = GPSSimulator()
+def main():
+    rclpy.init()
+    node = GpsNode()
+    rclpy.spin(node)
+    rclpy.destroy_node(node)
+    rclpy.shutdown()
 
-    try:
-        rclpy.spin(gps_simulator)
-    except KeyboardInterrupt:
-        gps_simulator.get_logger().info('GPS Simulator stopped cleanly')
-    except BaseException as e:
-        # Log the exception with its traceback without using `exc_info`
-        gps_simulator.get_logger().error(f'Exception in GPS Simulator: {e}')
-        import traceback
-        gps_simulator.get_logger().error(traceback.format_exc())
-    finally:
-        gps_simulator.destroy_node()
-        rclpy.shutdown()
-        cv2.destroyAllWindows()
+# def main(args=None):
+#     rclpy.init(args=args)
+#     gps_simulator = GPSSimulator()
 
-if __name__ == '__main__':
-    main()
+#     try:
+#         rclpy.spin(gps_simulator)
+#     except KeyboardInterrupt:
+#         gps_simulator.get_logger().info('GPS Simulator stopped cleanly')
+#     except BaseException as e:
+#         # Log the exception with its traceback without using `exc_info`
+#         gps_simulator.get_logger().error(f'Exception in GPS Simulator: {e}')
+#         import traceback
+#         gps_simulator.get_logger().error(traceback.format_exc())
+#     finally:
+#         gps_simulator.destroy_node()
+#         rclpy.shutdown()
+#         cv2.destroyAllWindows()
