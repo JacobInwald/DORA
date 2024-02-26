@@ -3,7 +3,10 @@ import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
 from dora_msgs.msg import Map, Pose
+from dora_msgs.msg import Map, Pose
 from dora_srvs.srv import LdsCmd
+from control.control.occupancy_map import OccupancyMap
+from control.control.point_cloud import PointCloud
 from control.control.occupancy_map import OccupancyMap
 from control.control.point_cloud import PointCloud
 
