@@ -195,7 +195,7 @@ class Router:
 
     def next_unload_pt(self, map: OccupancyMap, toy: Toy) -> np.ndarray:
         """
-        Finds the next point to unload toy in the occupancy map. (Nearest unload point from start position)
+        Finds the closest unload point to the toy in the occupancy map. (Nearest unload point from start position)
 
         Parameters:
         - map: OccupancyMap object representing the map.
