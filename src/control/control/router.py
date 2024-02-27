@@ -5,17 +5,73 @@ from dora_msgs.msg import Toy, Toys
 from queue import PriorityQueue
 
 
+
+def man_fuzz(grid: np.ndarray) -> np.ndarray:
+    """
+    Applies the Manhattan Fuzz algorithm to the given grid.
+
+    The Manhattan Fuzz algorithm calculates the mean value of each cell in the grid
+    by considering its neighboring cells in the Manhattan distance.
+
+    Params:
+        grid (np.ndarray): The input grid.
+
+    Returns:
+        np.ndarray: The grid with the Manhattan Fuzz algorithm applied.
+    """
+    for i in range(grid.shape[0]):
+        for j in range(grid.shape[1]):
+            if grid[i, j] >= 0.95 or grid[i, j] == 0:
+                continue
+            try:
+                grid[i, j] = np.mean([
+                    grid[i + x, j + y] for x in range(-1, 2)
+                    for y in range(-1, 2)
+                ])
+            except IndexError:
+                pass
+    return grid
+
+
+def bresenham(start: np.ndarray,
+              end: np.ndarray,
+              res: float = 1) -> np.ndarray[np.float64]:
+    """
+    Generate a Bresenham line between two points in a grid.
+
+    Params:
+        start (np.ndarray): The starting point of the line.
+        end (np.ndarray): The ending point of the line.
+        res (float, optional): The resolution of the grid. Defaults to 1.
+
+    Returns:
+        np.ndarray: An array of points representing the Bresenham line.
+    """
+
+    direction = end - start
+    length = int(np.linalg.norm(direction) / res) + 1
+    result = np.zeros((length + 1, 2))
+
+    for i in range(0, length + 1):
+        result[i] = (start + (i / length) * direction
+                     ).round(int(-np.log10(res)) if res < 1 else 0) // res
+
+    return result
+
 class Router:
     """
     The Router class is responsible for calculating routes.
     (the original Router class but without the navigation part)
+    
+    Parameters:
+        unload_points: Key-value pair to store coodinate and type of the unload points.
+                       In form of (x, y): toy class
 
     TODO: Implement class (Keming)
     """
     
-
     def __init__(self):
-        self.unload_points = None
+        self.unload_points = {}
 
     def route(self, start, end, map: OccupancyMap) -> np.ndarray:
         """
@@ -117,7 +173,7 @@ class Router:
         Parameters:
         - map: OccupancyMap object representing the map.
         - toys: A list of Toy objects.
-        - cur: Current coordinate of np.array([x,y]).
+        - cur: The start point of DORA.
 
         Returns:
         - A tuple of coordinate and the Toy object.
@@ -139,14 +195,13 @@ class Router:
                 
         return (closest_point, closest_toy)
 
-    def next_unload_pt(self, map: OccupancyMap, toy: Toy, cur: np.ndarray) -> np.ndarray:
+    def next_unload_pt(self, map: OccupancyMap, toy: Toy) -> np.ndarray:
         """
-        Finds the next point to unload toy in the occupancy map. (Nearest unload point from start position)
+        Finds the closest unload point to the toy in the occupancy map. (Nearest unload point from start position)
 
         Parameters:
         - map: OccupancyMap object representing the map.
         - toy: The toy to unload.
-        - cur: Current coordinate of np.array([x,y]).
 
         Returns:
         - The coordinate of the unload point
@@ -156,8 +211,10 @@ class Router:
         closest_unload_point = None
         shortest_dist = None
         
-        for unload_point in self.unload_points:
-            this_dist = np.linalg.norm([unload_point.x, unload_point.y], cur)
+        for _, (unload_point, unload_point_class) in enumerate(self.unload_points):
+            if unload_point_class != Toy.cls:
+                continue
+            this_dist = np.linalg.norm([unload_point[0], unload_point[1]], [Toy.position.x, Toy.position.y])
             if closest_unload_point == None:
                 shortest_dist = this_dist
                 closest_unload_point = unload_point
