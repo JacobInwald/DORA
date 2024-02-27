@@ -1,0 +1,17 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from dora_srvs/srv/WheelsCmd.srv
+// generated code does not contain a copyright notice
+
+
+module dora_srvs {
+  module srv {
+    struct WheelsCmd_Request {
+      uint8 type;
+
+      double magnitude;
+    };
+    struct WheelsCmd_Response {
+      boolean status;
+    };
+  };
+};
