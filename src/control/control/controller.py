@@ -19,7 +19,6 @@ class Controller(Node):
     """
 
     def __init__(self):
-        rclpy.init()
         super().__init__('controller')
         self.service_ = self.create_service(JobCmd, 'job', self.switch)
         self.toy_sub_ = self.create_subscription(Toys, 'toys', self.toy_callback, 10)
@@ -97,12 +96,16 @@ class Controller(Node):
         Returns:
             job status
         """
-        route, self.toy = self.router.next_retrieve_pt(self.router, self.map, self.toy_sub_)
+        cur_pos = np.array([self.pose.x, self.pose.y])
+        next_retrieve_pt, self.toy = self.router.next_retrieve_pt(self.map, self.toy_sub_, cur_pos)
+        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
         status = self.navigate(route)
         return status
 
     def navigate_to_storage(self) -> bool:
-        route = self.unload_pt(self.router, self.map, self.toy)
+        cur_pos = np.array([self.pose.x, self.pose.y])
+        next_unload_pt = self.router.next_unload_pt(self.map, self.toy, cur_pos)
+        route = self.router.route(cur_pos, next_unload_pt, self.map)
         status = self.navigate(route)
         return status
 
@@ -117,8 +120,8 @@ class Controller(Node):
         """
         for aim_point in route:
             while not self.close_to(aim_point, self.pose):
-                x_distance = aim_point.x - self.pose.x
-                y_distance = aim_point.y - self.pose.y
+                x_distance = aim_point[0] - self.pose.x
+                y_distance = aim_point[1] - self.pose.y
                 angle = math.atan2(y_distance, x_distance)
 
                 rotation = angle - self.pose.rot
@@ -136,10 +139,14 @@ class Controller(Node):
                 rclpy.spin_until_future_complete(self.cli_node_, future)
         return self.close_to(route[-1], self.pose)
 
-    def close_to(self, src, dst):
-        dx = dst.x - src.x
-        dy = dst.y - dst.x
-        return math.sqrt(dx^2 + dy^2) < self.close_thres
+    def close_to(self, src: np.ndarray, dst: Pose):
+        """
+        :param src: np.array([x,y]) represents coordinate
+        :param dst: Pose represent current coordinate
+        """
+        dx = dst.x - src[0]
+        dy = dst.y - src[1]
+        return math.sqrt(dx ^ 2 + dy ^ 2) < self.close_thres
 
 
 # Entry Point

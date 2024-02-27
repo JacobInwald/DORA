@@ -36,7 +36,7 @@ class Wheels(Node):
     """
 
     def __init__(self):
-        super.__init__('wheels')
+        super().__init__('wheels')
         self.service_ = self.create_service(WheelsCmd, 'wheels', self.callback)
 
         # initialize the stepper motors
@@ -62,3 +62,11 @@ class Wheels(Node):
             self.left_motor.step(angle * STEPS_PER_DEGREE, "right", SPEED)
             self.right_motor.step(
                 angle * STEPS_PER_DEGREE, "right", SPEED)
+
+
+def main():
+    rclpy.init()
+    wheels = Wheels()
+    rclpy.spin(wheels)
+    wheels.destroy_node()
+    rclpy.shutdown()

@@ -1,5 +1,60 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from dora_msgs.msg import Map
+
+
+def man_fuzz(grid: np.ndarray) -> np.ndarray:
+    """
+    Applies the Manhattan Fuzz algorithm to the given grid.
+
+    The Manhattan Fuzz algorithm calculates the mean value of each cell in the grid
+    by considering its neighboring cells in the Manhattan distance.
+
+    Params:
+        grid (np.ndarray): The input grid.
+
+    Returns:
+        np.ndarray: The grid with the Manhattan Fuzz algorithm applied.
+    """
+    for i in range(grid.shape[0]):
+        for j in range(grid.shape[1]):
+            if grid[i, j] >= 0.95 or grid[i, j] == 0:
+                continue
+            try:
+                grid[i, j] = np.mean([
+                    grid[i + x, j + y] for x in range(-1, 2)
+                    for y in range(-1, 2)
+                ])
+            except IndexError:
+                pass
+    return grid
+
+
+def bresenham(start: np.ndarray,
+              end: np.ndarray,
+              res: float = 1) -> np.ndarray[np.float64]:
+    """
+    Generate a Bresenham line between two points in a grid.
+
+    Params:
+        start (np.ndarray): The starting point of the line.
+        end (np.ndarray): The ending point of the line.
+        res (float, optional): The resolution of the grid. Defaults to 1.
+
+    Returns:
+        np.ndarray: An array of points representing the Bresenham line.
+    """
+
+    direction = end - start
+    length = int(np.linalg.norm(direction) / res) + 1
+    result = np.zeros((length + 1, 2))
+
+    for i in range(0, length + 1):
+        result[i] = (start + (i / length) * direction
+                     ).round(int(-np.log10(res)) if res < 1 else 0) // res
+
+    return result
+
 
 
 class OccupancyMap:
@@ -68,9 +123,9 @@ class OccupancyMap:
 
         # Draw Empty Space
         for cloud in self.pointclouds:
-            o = self.translate(cloud.origin, True)  # Normalise the origin
+            o = self.translate(cloud.origin)  # Normalise the origin
             for p in cloud.cloud():
-                i = self.translate(p, True)  # Normalise the point
+                i = self.translate(p)  # Normalise the point
                 # Draw ray between origin and point
                 line = bresenham(o, i)
                 for pl in line:
@@ -148,7 +203,7 @@ class OccupancyMap:
             np.ndarray: The sampled value, nan if the coordinate is out of bounds.
         """
         try:
-            coord = self.translate(coord, yx)
+            coord = self.translate(coord)
             if not mean:
                 return self.map[coord[0], coord[1]]
             else:
@@ -159,22 +214,17 @@ class OccupancyMap:
         except IndexError:
             return 1
 
-    def translate(self, coord: np.ndarray, yx=False) -> np.ndarray:
+    def translate(self, coord: np.ndarray) -> np.ndarray:
         """
         Translates a coordinate to a grid index.
 
         Params:
             coord (float): The coordinate value to be translated.
-            yx (bool, optional): If True, the coordinate is treated as (y, x) instead of (x, y). Defaults to False.
-
+            
         Returns:
             int: The grid index corresponding to the translated coordinate.
         """
-        if yx:
-            return np.round(((coord - self.offset) - self.min) /
-                            self.resolution).astype(int)
-        else:
-            return np.round(((coord - self.offset) - self.min) /
+        return np.round(((coord - self.offset) - self.min) /
                             self.resolution).astype(int)
 
     def normalise(self) -> None:
@@ -185,6 +235,37 @@ class OccupancyMap:
             c.transform(self.offset)
         self.offset = np.array([0, 0])
 
+    def to_msg(self) -> "Map":
+        """
+        Converts the OccupancyMap to a ROS message.
+
+        Returns:
+            Map: The ROS message representing the OccupancyMap.
+        """
+        msg = Map()
+        msg.offset.x = self.offset[0]
+        msg.offset.y = self.offset[1]
+        msg.resolution = self.resolution
+        msg.clouds = [c.toMsg() for c in self.pointclouds]
+        return msg
+    
+    def from_msg(msg: "Map") -> "OccupancyMap":
+        """
+        Converts a ROS message to an OccupancyMap.
+
+        Params:
+            msg (Map): The ROS message to be converted.
+
+        Returns:
+            OccupancyMap: The OccupancyMap representing the ROS message.
+        """
+        pos = np.array([msg.offset.x, msg.offset.y])
+        rot = msg.offset.rot
+        clouds = [PointCloud.fromMsg(c) for c in msg.clouds]
+        res = msg.resolution
+        return OccupancyMap(pos, clouds, res)
+    
+    
     def show(
         self,
         raycast: bool = False,

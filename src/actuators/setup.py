@@ -20,9 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "stepper = actuators.stepper:Stepper",
-            "sweeper = actuators.sweeper:Sweeper",
-            "wheels = actuators.wheels:Wheels"  
+            "sweeper = actuators.sweeper:main",
+            "wheels = actuators.wheels:main"  
         ],
     },
 )
