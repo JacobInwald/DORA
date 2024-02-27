@@ -3,8 +3,6 @@ from .point_cloud import PointCloud
 from .occupancy_map import OccupancyMap
 from dora_msgs.msg import Toy, Toys
 from queue import PriorityQueue
-from enum import Enum
-
 
 def man_fuzz(grid: np.ndarray) -> np.ndarray:
     """
@@ -71,7 +69,7 @@ class Router:
     """
     
     def __init__(self):
-        self.unload_points = {} # key-value pair should be (x, y): toy class(which represented by int)
+        self.unload_points = {}
 
     def route(self, start, end, map: OccupancyMap) -> np.ndarray:
         """
