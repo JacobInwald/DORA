@@ -2,13 +2,9 @@
 datasets
 runs
 yolov8n.pt
-data
 ToyDetector-2
 .idea/
 venv/
-data/
-build/
-install/
 log/
 *.jpg
 *.mp4

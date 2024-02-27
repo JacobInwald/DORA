@@ -1,6 +1,7 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription
 from launch.substitutions import LaunchConfiguration
@@ -28,7 +29,8 @@ def generate_launch_description():
     return LaunchDescription([
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([lidar_pkg_dir, LDS_LAUNCH_FILE]),
-            launch_arguments={'port': '/dev/ttyUSB0', 'frame_id': 'base_scan'}.items(),
+            launch_arguments={'port': '/dev/ttyUSB0',
+                              'frame_id': 'base_scan'}.items(),
         ),
         Node(
             namespace='camera',
