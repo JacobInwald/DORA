@@ -4,7 +4,6 @@ from .occupancy_map import OccupancyMap
 from dora_msgs.msg import Toy, Toys
 from queue import PriorityQueue
 
-
 def man_fuzz(grid: np.ndarray) -> np.ndarray:
     """
     Applies the Manhattan Fuzz algorithm to the given grid.
@@ -57,19 +56,20 @@ def bresenham(start: np.ndarray,
 
     return result
 
-
-
 class Router:
     """
     The Router class is responsible for calculating routes.
     (the original Router class but without the navigation part)
+    
+    Parameters:
+        unload_points: Key-value pair to store coodinate and type of the unload points.
+                       In form of (x, y): toy class
 
     TODO: Implement class (Keming)
     """
     
-
     def __init__(self):
-        self.unload_points = None
+        self.unload_points = {}
 
     def route(self, start, end, map: OccupancyMap) -> np.ndarray:
         """
@@ -171,7 +171,7 @@ class Router:
         Parameters:
         - map: OccupancyMap object representing the map.
         - toys: A list of Toy objects.
-        - cur: Current coordinate of np.array([x,y]).
+        - cur: The start point of DORA.
 
         Returns:
         - A tuple of coordinate and the Toy object.
@@ -193,14 +193,13 @@ class Router:
                 
         return (closest_point, closest_toy)
 
-    def next_unload_pt(self, map: OccupancyMap, toy: Toy, cur: np.ndarray) -> np.ndarray:
+    def next_unload_pt(self, map: OccupancyMap, toy: Toy) -> np.ndarray:
         """
-        Finds the next point to unload toy in the occupancy map. (Nearest unload point from start position)
+        Finds the closest unload point to the toy in the occupancy map. (Nearest unload point from start position)
 
         Parameters:
         - map: OccupancyMap object representing the map.
         - toy: The toy to unload.
-        - cur: Current coordinate of np.array([x,y]).
 
         Returns:
         - The coordinate of the unload point
@@ -210,8 +209,10 @@ class Router:
         closest_unload_point = None
         shortest_dist = None
         
-        for unload_point in self.unload_points:
-            this_dist = np.linalg.norm([unload_point.x, unload_point.y], cur)
+        for _, (unload_point, unload_point_class) in enumerate(self.unload_points):
+            if unload_point_class != Toy.cls:
+                continue
+            this_dist = np.linalg.norm([unload_point[0], unload_point[1]], [Toy.position.x, Toy.position.y])
             if closest_unload_point == None:
                 shortest_dist = this_dist
                 closest_unload_point = unload_point
