@@ -1,6 +1,7 @@
 import cv2
 import torch
 import yaml
+import time
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Header
@@ -29,6 +30,7 @@ class CameraNode(Node):
         self.depth_model = DPTForDepthEstimation.from_pretrained("Intel/dpt-large")
         with open(camera_info, 'r') as file:
             self.camera_info = yaml.safe_load(file)
+        self.frame_no = 1
 
     def capture(self):
         while self.cap.isOpened():
@@ -36,10 +38,13 @@ class CameraNode(Node):
             stamp = self.get_clock().now()
             if ret:
                 self.callback(frame, stamp)
+                self.frame_no += 1
 
     def callback(self, frame, stamp):
         header = Header()
         header.stamp = stamp
+        header.frame_id = str(self.frame_no)
+        start_time = time.time()
         results = self.model.predictions(frame)[0]  # detect toys
         boxes = results.boxes
         pub_msg = Toys()
@@ -52,8 +57,10 @@ class CameraNode(Node):
             toy_msg.position = Pose()
             toy_msg.x, toy_msg.y = self.estimate_position(frame, xywh)
             toy_arr.append(toy_msg)
+        end_time = time.time()
         pub_msg.toys = toy_arr
         self.publisher_.publish(pub_msg)
+        self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
         self.display(frame, results)
 
     def display(self, frame, results):
