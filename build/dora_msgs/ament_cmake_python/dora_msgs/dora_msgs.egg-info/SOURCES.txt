@@ -4,3 +4,10 @@ dora_msgs.egg-info/PKG-INFO
 dora_msgs.egg-info/SOURCES.txt
 dora_msgs.egg-info/dependency_links.txt
 dora_msgs.egg-info/top_level.txt
+dora_msgs/msg/__init__.py
+dora_msgs/msg/_cloud.py
+dora_msgs/msg/_map.py
+dora_msgs/msg/_move.py
+dora_msgs/msg/_pose.py
+dora_msgs/msg/_toy.py
+dora_msgs/msg/_toys.py

@@ -1,5 +1,6 @@
 import numpy as np
 import rclpy
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from rclpy.node import Node
 from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
 from dora_msgs.msg import Map, Pose
@@ -28,7 +29,10 @@ class LdsNode(Node):
 
     def __init__(self):
         super().__init__('lds_node')
-        self.lds_sub_ = self.create_subscription(LaserScan, '/scan', self.lds_callback, 10)
+        lds_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT
+        )
+        self.lds_sub_ = self.create_subscription(LaserScan, '/scan', self.lds_callback, lds_qos)
         self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
         # change where appropriate
         self.map_pub_ = self.create_publisher(Map, '/map', 10)
