@@ -4,9 +4,9 @@ import rclpy
 from rclpy.node import Node
 from dora_msgs.msg import Toy, Pose, Toys
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
-from router import Router
-from occupancy_map import OccupancyMap
-from job import DoraJob
+from .router import Router
+from .occupancy_map import OccupancyMap
+from .job import DoraJob
 from actuators.wheels import WheelsMove
 
 
