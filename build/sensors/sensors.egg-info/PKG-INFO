@@ -1,8 +1,0 @@
-Metadata-Version: 2.1
-Name: sensors
-Version: 0.0.0
-Summary: Sensor nodes
-Maintainer: Ardith Ho
-Maintainer-email: ardithhowaiman@gmail.com
-License: Apache License 2.0
-Requires-Dist: setuptools

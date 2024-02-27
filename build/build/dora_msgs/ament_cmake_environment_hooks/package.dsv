@@ -1,4 +1,0 @@
-source;share/dora_msgs/local_setup.bash
-source;share/dora_msgs/local_setup.dsv
-source;share/dora_msgs/local_setup.sh
-source;share/dora_msgs/local_setup.zsh

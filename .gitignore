@@ -6,5 +6,7 @@ ToyDetector-2
 .idea/
 venv/
 log/
+build/
+install/
 *.jpg
 *.mp4
