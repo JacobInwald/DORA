@@ -6,6 +6,7 @@ from rclpy.node import Node
 from std_msgs.msg import Header
 from dora_msgs.msg import Toy, Pose, Toys
 from object_detection.detect import Detect
+from object_detection.demo import annotate
 from transformers import DPTFeatureExtractor, DPTForDepthEstimation
 
 
@@ -53,6 +54,12 @@ class CameraNode(Node):
             toy_arr.append(toy_msg)
         pub_msg.toys = toy_arr
         self.publisher_.publish(pub_msg)
+        self.display(frame, results)
+
+    def display(self, frame, results):
+        pred = annotate(results)
+        out = cv2.resize(cv2.vconcat([frame, pred]), dsize=(0, 0), fx=0.5, fy=0.5)
+        cv2.imshow('out', out)
 
     def estimate_position(self, img, xywh):
         """

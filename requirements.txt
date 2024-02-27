@@ -13,4 +13,3 @@ ultralytics
 torch
 RPi.GPIO
 transformers
-cv_bridge
