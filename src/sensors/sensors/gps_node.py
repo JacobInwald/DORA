@@ -1,16 +1,8 @@
-from dora_msgs.msg import Pose
-import queue
-import math
-from turtle import position
-from typing import Dict
-import sys
 import rclpy 
 from rclpy.node import Node
 import cv2
 import numpy as np
-import json
 from geometry_msgs.msg import Point
-from std_msgs.msg import Float64
 import copy
 
 
@@ -35,7 +27,7 @@ class GpsNode(Node):
     """
 
     def __init__(self):
-        super().__init__('GPSVideo_Processor')
+        super().__init__('gps')
         self.LAT_MIN = 0.0
         self.LAT_MAX = 1.2631578947
         self.LONG_MIN = 0.0
@@ -50,7 +42,7 @@ class GpsNode(Node):
         self.bench2_pub = self.create_publisher(Point, '/bench2_position_longlat', 10)
         self.bench3_pub = self.create_publisher(Point, '/bench3_position_longlat', 10)
         self.pos_pub_longlat = self.create_publisher(Point, '/robot_position_longlat', 10)
-
+        return 
         self.cap = cv2.VideoCapture(0)
         self.timer = self.create_timer(1/30, self.process_video)
 

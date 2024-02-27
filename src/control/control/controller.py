@@ -19,7 +19,6 @@ class Controller(Node):
     """
 
     def __init__(self):
-        rclpy.init()
         super().__init__('controller')
         self.service_ = self.create_service(JobCmd, 'job', self.switch)
         self.toy_sub_ = self.create_subscription(Toys, 'toys', self.toy_callback, 10)
