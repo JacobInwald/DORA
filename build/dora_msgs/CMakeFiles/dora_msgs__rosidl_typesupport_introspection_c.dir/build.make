@@ -80,7 +80,6 @@ rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h: rosidl_adapter/dora_msgs/msg/Pose.idl
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h: rosidl_adapter/dora_msgs/msg/Map.idl
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h: rosidl_adapter/dora_msgs/msg/Cloud.idl
-rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h: rosidl_adapter/dora_msgs/msg/Move.idl
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h: rosidl_adapter/dora_msgs/msg/Toy.idl
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h: rosidl_adapter/dora_msgs/msg/Toys.idl
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h: /opt/ros/humble/share/builtin_interfaces/msg/Duration.idl
@@ -181,9 +180,6 @@ rosidl_typesupport_introspection_c/dora_msgs/msg/detail/map__rosidl_typesupport_
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__rosidl_typesupport_introspection_c.h: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__rosidl_typesupport_introspection_c.h
 
-rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__rosidl_typesupport_introspection_c.h: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__rosidl_typesupport_introspection_c.h
-
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__rosidl_typesupport_introspection_c.h: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__rosidl_typesupport_introspection_c.h
 
@@ -198,9 +194,6 @@ rosidl_typesupport_introspection_c/dora_msgs/msg/detail/map__type_support.c: ros
 
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__type_support.c: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__type_support.c
-
-rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c
 
 rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c
@@ -250,24 +243,10 @@ CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__type_support.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__type_support.c -o CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__type_support.c.s
 
-CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/flags.make
-CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c
-CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o -MF CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o.d -o CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o -c /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c
-
-CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c > CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.i
-
-CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c -o CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.s
-
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/flags.make
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o -MF CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o.d -o CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o -c /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c
 
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.i: cmake_force
@@ -281,7 +260,7 @@ CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/flags.make
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o -MF CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o.d -o CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o -c /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c
 
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.i: cmake_force
@@ -297,7 +276,6 @@ dora_msgs__rosidl_typesupport_introspection_c_OBJECTS = \
 "CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__type_support.c.o" \
 "CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/map__type_support.c.o" \
 "CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__type_support.c.o" \
-"CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o" \
 "CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o" \
 "CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o"
 
@@ -307,7 +285,6 @@ dora_msgs__rosidl_typesupport_introspection_c_EXTERNAL_OBJECTS =
 libdora_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__type_support.c.o
 libdora_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/map__type_support.c.o
 libdora_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__type_support.c.o
-libdora_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c.o
 libdora_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__type_support.c.o
 libdora_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toys__type_support.c.o
 libdora_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/build.make
@@ -324,7 +301,7 @@ libdora_msgs__rosidl_typesupport_introspection_c.so: /opt/ros/humble/lib/libbuil
 libdora_msgs__rosidl_typesupport_introspection_c.so: /opt/ros/humble/lib/librosidl_runtime_c.so
 libdora_msgs__rosidl_typesupport_introspection_c.so: /opt/ros/humble/lib/librcutils.so
 libdora_msgs__rosidl_typesupport_introspection_c.so: CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking C shared library libdora_msgs__rosidl_typesupport_introspection_c.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking C shared library libdora_msgs__rosidl_typesupport_introspection_c.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -339,8 +316,6 @@ CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_type
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/cloud__type_support.c
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/map__rosidl_typesupport_introspection_c.h
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/map__type_support.c
-CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__rosidl_typesupport_introspection_c.h
-CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/move__type_support.c
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__rosidl_typesupport_introspection_c.h
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/pose__type_support.c
 CMakeFiles/dora_msgs__rosidl_typesupport_introspection_c.dir/depend: rosidl_typesupport_introspection_c/dora_msgs/msg/detail/toy__rosidl_typesupport_introspection_c.h

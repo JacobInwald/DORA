@@ -13,6 +13,7 @@
   <test_depend>python3-pytest</test_depend>
 
   <depend>rclpy</depend>
+  <depend>std_msgs</depend>
   <depend>dora_msgs</depend>
   <depend>dora_srvs</depend>
   <depend>object_detection</depend>

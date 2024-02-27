@@ -7,8 +7,6 @@ file(REMOVE_RECURSE
   "../rosidl_generator_py/dora_msgs/msg/_cloud_s.c"
   "../rosidl_generator_py/dora_msgs/msg/_map.py"
   "../rosidl_generator_py/dora_msgs/msg/_map_s.c"
-  "../rosidl_generator_py/dora_msgs/msg/_move.py"
-  "../rosidl_generator_py/dora_msgs/msg/_move_s.c"
   "../rosidl_generator_py/dora_msgs/msg/_pose.py"
   "../rosidl_generator_py/dora_msgs/msg/_pose_s.c"
   "../rosidl_generator_py/dora_msgs/msg/_toy.py"

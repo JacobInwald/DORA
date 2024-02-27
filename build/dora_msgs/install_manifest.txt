@@ -136,13 +136,11 @@
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Pose.idl
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Map.idl
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Cloud.idl
-/home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Move.idl
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Toy.idl
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Toys.idl
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Pose.msg
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Map.msg
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Cloud.msg
-/home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Move.msg
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Toy.msg
 /home/jacob/Desktop/DORA/install/dora_msgs/share/dora_msgs/msg/Toys.msg
 /home/jacob/Desktop/DORA/install/dora_msgs/share/ament_index/resource_index/package_run_dependencies/dora_msgs

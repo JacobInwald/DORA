@@ -368,10 +368,6 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dora_msgs/msg" TYPE FILE FILES "/home/jacob/Desktop/DORA/build/dora_msgs/rosidl_adapter/dora_msgs/msg/Move.idl")
-endif()
-
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dora_msgs/msg" TYPE FILE FILES "/home/jacob/Desktop/DORA/build/dora_msgs/rosidl_adapter/dora_msgs/msg/Toy.idl")
 endif()
 
@@ -389,10 +385,6 @@ endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dora_msgs/msg" TYPE FILE FILES "/home/jacob/Desktop/DORA/src/dora_msgs/msg/Cloud.msg")
-endif()
-
-if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/dora_msgs/msg" TYPE FILE FILES "/home/jacob/Desktop/DORA/src/dora_msgs/msg/Move.msg")
 endif()
 
 if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)

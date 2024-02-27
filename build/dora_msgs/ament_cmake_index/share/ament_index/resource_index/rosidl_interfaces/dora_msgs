@@ -2,8 +2,6 @@ msg/Cloud.idl
 msg/Cloud.msg
 msg/Map.idl
 msg/Map.msg
-msg/Move.idl
-msg/Move.msg
 msg/Pose.idl
 msg/Pose.msg
 msg/Toy.idl

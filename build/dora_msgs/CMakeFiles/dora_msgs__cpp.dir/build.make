@@ -78,10 +78,6 @@ CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/cloud.hpp
 CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/cloud__builder.hpp
 CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/cloud__struct.hpp
 CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/cloud__traits.hpp
-CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/move.hpp
-CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/move__builder.hpp
-CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/move__struct.hpp
-CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/move__traits.hpp
 CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/toy.hpp
 CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/toy__builder.hpp
 CMakeFiles/dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/toy__struct.hpp
@@ -109,7 +105,6 @@ rosidl_generator_cpp/dora_msgs/msg/pose.hpp: /opt/ros/humble/share/rosidl_genera
 rosidl_generator_cpp/dora_msgs/msg/pose.hpp: rosidl_adapter/dora_msgs/msg/Pose.idl
 rosidl_generator_cpp/dora_msgs/msg/pose.hpp: rosidl_adapter/dora_msgs/msg/Map.idl
 rosidl_generator_cpp/dora_msgs/msg/pose.hpp: rosidl_adapter/dora_msgs/msg/Cloud.idl
-rosidl_generator_cpp/dora_msgs/msg/pose.hpp: rosidl_adapter/dora_msgs/msg/Move.idl
 rosidl_generator_cpp/dora_msgs/msg/pose.hpp: rosidl_adapter/dora_msgs/msg/Toy.idl
 rosidl_generator_cpp/dora_msgs/msg/pose.hpp: rosidl_adapter/dora_msgs/msg/Toys.idl
 rosidl_generator_cpp/dora_msgs/msg/pose.hpp: /opt/ros/humble/share/builtin_interfaces/msg/Duration.idl
@@ -237,18 +232,6 @@ rosidl_generator_cpp/dora_msgs/msg/detail/cloud__struct.hpp: rosidl_generator_cp
 rosidl_generator_cpp/dora_msgs/msg/detail/cloud__traits.hpp: rosidl_generator_cpp/dora_msgs/msg/pose.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/dora_msgs/msg/detail/cloud__traits.hpp
 
-rosidl_generator_cpp/dora_msgs/msg/move.hpp: rosidl_generator_cpp/dora_msgs/msg/pose.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/dora_msgs/msg/move.hpp
-
-rosidl_generator_cpp/dora_msgs/msg/detail/move__builder.hpp: rosidl_generator_cpp/dora_msgs/msg/pose.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/dora_msgs/msg/detail/move__builder.hpp
-
-rosidl_generator_cpp/dora_msgs/msg/detail/move__struct.hpp: rosidl_generator_cpp/dora_msgs/msg/pose.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/dora_msgs/msg/detail/move__struct.hpp
-
-rosidl_generator_cpp/dora_msgs/msg/detail/move__traits.hpp: rosidl_generator_cpp/dora_msgs/msg/pose.hpp
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/dora_msgs/msg/detail/move__traits.hpp
-
 rosidl_generator_cpp/dora_msgs/msg/toy.hpp: rosidl_generator_cpp/dora_msgs/msg/pose.hpp
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_cpp/dora_msgs/msg/toy.hpp
 
@@ -281,9 +264,6 @@ dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/cloud__traits.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/map__builder.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/map__struct.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/map__traits.hpp
-dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/move__builder.hpp
-dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/move__struct.hpp
-dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/move__traits.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/pose__builder.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/pose__struct.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/pose__traits.hpp
@@ -294,7 +274,6 @@ dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/toys__builder.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/toys__struct.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/detail/toys__traits.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/map.hpp
-dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/move.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/pose.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/toy.hpp
 dora_msgs__cpp: rosidl_generator_cpp/dora_msgs/msg/toys.hpp

@@ -3,8 +3,6 @@ file(REMOVE_RECURSE
   "CMakeFiles/dora_msgs__rosidl_generator_py.dir/rosidl_generator_py/dora_msgs/msg/_cloud_s.c.o.d"
   "CMakeFiles/dora_msgs__rosidl_generator_py.dir/rosidl_generator_py/dora_msgs/msg/_map_s.c.o"
   "CMakeFiles/dora_msgs__rosidl_generator_py.dir/rosidl_generator_py/dora_msgs/msg/_map_s.c.o.d"
-  "CMakeFiles/dora_msgs__rosidl_generator_py.dir/rosidl_generator_py/dora_msgs/msg/_move_s.c.o"
-  "CMakeFiles/dora_msgs__rosidl_generator_py.dir/rosidl_generator_py/dora_msgs/msg/_move_s.c.o.d"
   "CMakeFiles/dora_msgs__rosidl_generator_py.dir/rosidl_generator_py/dora_msgs/msg/_pose_s.c.o"
   "CMakeFiles/dora_msgs__rosidl_generator_py.dir/rosidl_generator_py/dora_msgs/msg/_pose_s.c.o.d"
   "CMakeFiles/dora_msgs__rosidl_generator_py.dir/rosidl_generator_py/dora_msgs/msg/_toy_s.c.o"

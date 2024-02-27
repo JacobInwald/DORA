@@ -85,7 +85,6 @@ rosidl_generator_c/dora_msgs/msg/pose.h: /opt/ros/humble/share/rosidl_generator_
 rosidl_generator_c/dora_msgs/msg/pose.h: rosidl_adapter/dora_msgs/msg/Pose.idl
 rosidl_generator_c/dora_msgs/msg/pose.h: rosidl_adapter/dora_msgs/msg/Map.idl
 rosidl_generator_c/dora_msgs/msg/pose.h: rosidl_adapter/dora_msgs/msg/Cloud.idl
-rosidl_generator_c/dora_msgs/msg/pose.h: rosidl_adapter/dora_msgs/msg/Move.idl
 rosidl_generator_c/dora_msgs/msg/pose.h: rosidl_adapter/dora_msgs/msg/Toy.idl
 rosidl_generator_c/dora_msgs/msg/pose.h: rosidl_adapter/dora_msgs/msg/Toys.idl
 rosidl_generator_c/dora_msgs/msg/pose.h: /opt/ros/humble/share/builtin_interfaces/msg/Duration.idl
@@ -213,18 +212,6 @@ rosidl_generator_c/dora_msgs/msg/detail/cloud__struct.h: rosidl_generator_c/dora
 rosidl_generator_c/dora_msgs/msg/detail/cloud__type_support.h: rosidl_generator_c/dora_msgs/msg/pose.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/detail/cloud__type_support.h
 
-rosidl_generator_c/dora_msgs/msg/move.h: rosidl_generator_c/dora_msgs/msg/pose.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/move.h
-
-rosidl_generator_c/dora_msgs/msg/detail/move__functions.h: rosidl_generator_c/dora_msgs/msg/pose.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/detail/move__functions.h
-
-rosidl_generator_c/dora_msgs/msg/detail/move__struct.h: rosidl_generator_c/dora_msgs/msg/pose.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/detail/move__struct.h
-
-rosidl_generator_c/dora_msgs/msg/detail/move__type_support.h: rosidl_generator_c/dora_msgs/msg/pose.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/detail/move__type_support.h
-
 rosidl_generator_c/dora_msgs/msg/toy.h: rosidl_generator_c/dora_msgs/msg/pose.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/toy.h
 
@@ -257,9 +244,6 @@ rosidl_generator_c/dora_msgs/msg/detail/map__functions.c: rosidl_generator_c/dor
 
 rosidl_generator_c/dora_msgs/msg/detail/cloud__functions.c: rosidl_generator_c/dora_msgs/msg/pose.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/detail/cloud__functions.c
-
-rosidl_generator_c/dora_msgs/msg/detail/move__functions.c: rosidl_generator_c/dora_msgs/msg/pose.h
-	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/detail/move__functions.c
 
 rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c: rosidl_generator_c/dora_msgs/msg/pose.h
 	@$(CMAKE_COMMAND) -E touch_nocreate rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c
@@ -309,24 +293,10 @@ CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/de
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/cloud__functions.c.s"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_generator_c/dora_msgs/msg/detail/cloud__functions.c -o CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/cloud__functions.c.s
 
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o: CMakeFiles/dora_msgs__rosidl_generator_c.dir/flags.make
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o: rosidl_generator_c/dora_msgs/msg/detail/move__functions.c
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o: CMakeFiles/dora_msgs__rosidl_generator_c.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o -MF CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o.d -o CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o -c /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c
-
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.i"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c > CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.i
-
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.s"
-	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c -o CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.s
-
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o: CMakeFiles/dora_msgs__rosidl_generator_c.dir/flags.make
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o: rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o: CMakeFiles/dora_msgs__rosidl_generator_c.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building C object CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o -MF CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o.d -o CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o -c /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c
 
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.i: cmake_force
@@ -340,7 +310,7 @@ CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/de
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o: CMakeFiles/dora_msgs__rosidl_generator_c.dir/flags.make
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o: rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o: CMakeFiles/dora_msgs__rosidl_generator_c.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building C object CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building C object CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o -MF CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o.d -o CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o -c /home/jacob/Desktop/DORA/build/dora_msgs/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c
 
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.i: cmake_force
@@ -356,7 +326,6 @@ dora_msgs__rosidl_generator_c_OBJECTS = \
 "CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/pose__functions.c.o" \
 "CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/map__functions.c.o" \
 "CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/cloud__functions.c.o" \
-"CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o" \
 "CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o" \
 "CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o"
 
@@ -366,7 +335,6 @@ dora_msgs__rosidl_generator_c_EXTERNAL_OBJECTS =
 libdora_msgs__rosidl_generator_c.so: CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/pose__functions.c.o
 libdora_msgs__rosidl_generator_c.so: CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/map__functions.c.o
 libdora_msgs__rosidl_generator_c.so: CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/cloud__functions.c.o
-libdora_msgs__rosidl_generator_c.so: CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/move__functions.c.o
 libdora_msgs__rosidl_generator_c.so: CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toy__functions.c.o
 libdora_msgs__rosidl_generator_c.so: CMakeFiles/dora_msgs__rosidl_generator_c.dir/rosidl_generator_c/dora_msgs/msg/detail/toys__functions.c.o
 libdora_msgs__rosidl_generator_c.so: CMakeFiles/dora_msgs__rosidl_generator_c.dir/build.make
@@ -377,7 +345,7 @@ libdora_msgs__rosidl_generator_c.so: /opt/ros/humble/lib/libbuiltin_interfaces__
 libdora_msgs__rosidl_generator_c.so: /opt/ros/humble/lib/librosidl_runtime_c.so
 libdora_msgs__rosidl_generator_c.so: /opt/ros/humble/lib/librcutils.so
 libdora_msgs__rosidl_generator_c.so: CMakeFiles/dora_msgs__rosidl_generator_c.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking C shared library libdora_msgs__rosidl_generator_c.so"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jacob/Desktop/DORA/build/dora_msgs/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking C shared library libdora_msgs__rosidl_generator_c.so"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/dora_msgs__rosidl_generator_c.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -397,10 +365,6 @@ CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msg
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/map__functions.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/map__struct.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/map__type_support.h
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/move__functions.c
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/move__functions.h
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/move__struct.h
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/move__type_support.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/pose__functions.c
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/pose__functions.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/pose__struct.h
@@ -414,7 +378,6 @@ CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msg
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/toys__struct.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/detail/toys__type_support.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/map.h
-CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/move.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/pose.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/toy.h
 CMakeFiles/dora_msgs__rosidl_generator_c.dir/depend: rosidl_generator_c/dora_msgs/msg/toys.h
