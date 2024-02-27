@@ -3,6 +3,7 @@ from .point_cloud import PointCloud
 from .occupancy_map import OccupancyMap
 from dora_msgs.msg import Toy, Toys
 from queue import PriorityQueue
+from enum import Enum
 
 
 def man_fuzz(grid: np.ndarray) -> np.ndarray:
@@ -57,19 +58,20 @@ def bresenham(start: np.ndarray,
 
     return result
 
-
-
 class Router:
     """
     The Router class is responsible for calculating routes.
     (the original Router class but without the navigation part)
+    
+    Parameters:
+        unload_points: Key-value pair to store coodinate and type of the unload points.
+                       In form of (x, y): toy class
 
     TODO: Implement class (Keming)
     """
     
-
     def __init__(self):
-        self.unload_points = None
+        self.unload_points = {} # key-value pair should be (x, y): toy class(which represented by int)
 
     def route(self, start, end, map: OccupancyMap) -> np.ndarray:
         """
@@ -193,7 +195,7 @@ class Router:
                 
         return (closest_point, closest_toy)
 
-    def next_unload_pt(self, map: OccupancyMap, toy: Toy, cur: np.ndarray) -> np.ndarray:
+    def next_unload_pt(self, map: OccupancyMap, toy: Toy) -> np.ndarray:
         """
         Finds the next point to unload toy in the occupancy map. (Nearest unload point from start position)
 
@@ -210,8 +212,10 @@ class Router:
         closest_unload_point = None
         shortest_dist = None
         
-        for unload_point in self.unload_points:
-            this_dist = np.linalg.norm([unload_point.x, unload_point.y], cur)
+        for _, (unload_point, unload_point_class) in enumerate(self.unload_points):
+            if unload_point_class != Toy.cls:
+                continue
+            this_dist = np.linalg.norm([unload_point[0], unload_point[1]], [Toy.position.x, Toy.position.y])
             if closest_unload_point == None:
                 shortest_dist = this_dist
                 closest_unload_point = unload_point
