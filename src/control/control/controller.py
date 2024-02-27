@@ -1,10 +1,13 @@
+import math
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from dora_msgs.msg import Toy, Pose, Toys
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
-from .router import Router
-from .job import DoraJob
-import numpy as np
+from router import Router
+from occupancy_map import OccupancyMap
+from job import DoraJob
+from actuators.wheels import WheelsMove
 
 
 class Controller(Node):
@@ -26,7 +29,10 @@ class Controller(Node):
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, 'wheels')
         self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, 'sweeper')
         self.router = Router()
+        self.map = OccupancyMap()
         self.toy = None
+        self.pose = None
+        self.close_thres = 3
 
     def switch(self, msg):
         if msg.job == DoraJob.SCAN:
@@ -56,6 +62,7 @@ class Controller(Node):
         Args:
             msg: Pose message from GPS
         """
+        self.pose = Pose
 
     def scan_request(self):
         lds_cmd = LdsCmd()
@@ -90,13 +97,57 @@ class Controller(Node):
         Returns:
             job status
         """
-        pass
+        cur_pos = np.array([self.pose.x, self.pose.y])
+        next_retrieve_pt, self.toy = self.router.next_retrieve_pt(self.map, self.toy_sub_, cur_pos)
+        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        status = self.navigate(route)
+        return status
 
     def navigate_to_storage(self) -> bool:
-        pass
+        cur_pos = np.array([self.pose.x, self.pose.y])
+        next_unload_pt = self.router.next_unload_pt(self.map, self.toy, cur_pos)
+        route = self.router.route(cur_pos, next_unload_pt, self.map)
+        status = self.navigate(route)
+        return status
 
     def navigate(self, route: np.ndarray) -> bool:
-        pass
+        """
+        Navigate through route.
+        Translate route to robot (wheels) moves
+        Call wheels service for every move.
+
+        Returns:
+            job status
+        """
+        for aim_point in route:
+            while not self.close_to(aim_point, self.pose):
+                x_distance = aim_point[0] - self.pose.x
+                y_distance = aim_point[1] - self.pose.y
+                angle = math.atan2(y_distance, x_distance)
+
+                rotation = angle - self.pose.rot
+                wheels_rot_cmd = WheelsCmd.Request()
+                wheels_rot_cmd.type = WheelsMove.TURN
+                wheels_rot_cmd.magnitude = rotation
+                future = self.wheels_cli_.call_async(wheels_rot_cmd)
+                rclpy.spin_until_future_complete(self.cli_node_, future)
+
+                distance = math.sqrt(x_distance ^ 2 + y_distance ^ 2)
+                wheels_dist_cmd = WheelsCmd.Request()
+                wheels_dist_cmd.type = WheelsMove.FORWARD
+                wheels_dist_cmd.magnitude = distance
+                future = self.wheels_cli_.call_async(wheels_dist_cmd)
+                rclpy.spin_until_future_complete(self.cli_node_, future)
+        return self.close_to(route[-1], self.pose)
+
+    def close_to(self, src: np.ndarray, dst: Pose):
+        """
+        :param src: np.array([x,y]) represents coordinate
+        :param dst: Pose represent current coordinate
+        """
+        dx = dst.x - src[0]
+        dy = dst.y - src[1]
+        return math.sqrt(dx ^ 2 + dy ^ 2) < self.close_thres
 
 
 # Entry Point

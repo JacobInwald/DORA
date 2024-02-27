@@ -1,11 +1,11 @@
-import yaml
+import cv2
 import torch
+import yaml
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
+from std_msgs.msg import Header
 from dora_msgs.msg import Toy, Pose, Toys
 from object_detection.detect import Detect
-from cv_bridge import CvBridge
 from transformers import DPTFeatureExtractor, DPTForDepthEstimation
 
 
@@ -17,26 +17,35 @@ class CameraNode(Node):
     Publishes [Toy] with topic name 'toys'
     """
 
-    def __init__(self, camera_info='camera_info/camerav2_1280x960.yaml'):
+    def __init__(self, camera_info='data/camera_info/camerav2_1280x960.yaml'):
         super().__init__('camera_node')
-        self.cam_sub_ = self.create_subscription(Image, '/dev/video0', self.callback, 10)
         self.publisher_ = self.create_publisher(Toys, 'toys', 10)
-        self.bridge = CvBridge()
+        self.cap = cv2.VideoCapture('dev/video0')
+        if not self.cap.isOpened():
+            raise IOError('Cannot open webcam')
         self.model = Detect()
         self.feature_extractor = DPTFeatureExtractor.from_pretrained("Intel/dpt-large")
         self.depth_model = DPTForDepthEstimation.from_pretrained("Intel/dpt-large")
         with open(camera_info, 'r') as file:
             self.camera_info = yaml.safe_load(file)
 
-    def callback(self, msg):
-        frame = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+    def capture(self):
+        while self.cap.isOpened():
+            ret, frame = self.cap.read()
+            stamp = self.get_clock().now()
+            if ret:
+                self.callback(frame, stamp)
+
+    def callback(self, frame, stamp):
+        header = Header()
+        header.stamp = stamp
         results = self.model.predictions(frame)[0]  # detect toys
         boxes = results.boxes
         pub_msg = Toys()
         toy_arr = []
         for xywh, cls, conf in zip(boxes.xywh, boxes.cls, boxes.conf):
             toy_msg = Toy()
-            toy_msg.header = msg.header
+            toy_msg.header = header
             toy_msg.cls = cls
             toy_msg.conf = conf
             toy_msg.position = Pose()
@@ -92,5 +101,6 @@ def main():
     rclpy.init()
     camera_node = CameraNode()
     rclpy.spin(camera_node)
+    camera_node.capture()
     camera_node.destroy_node()
     rclpy.shutdown()

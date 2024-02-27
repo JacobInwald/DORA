@@ -27,7 +27,6 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/Pose.msg"
   "msg/Map.msg"
-  "msg/Move.msg"
   "msg/Toy.msg"
   "msg/Toys.msg"
   DEPENDENCIES builtin_interfaces std_msgs
