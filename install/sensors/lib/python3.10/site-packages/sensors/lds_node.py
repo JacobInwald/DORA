@@ -30,7 +30,9 @@ class LdsNode(Node):
     def __init__(self):
         super().__init__('lds_node')
         lds_qos = QoSProfile(
-            reliability=QoSReliabilityPolicy.BEST_EFFORT
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
         )
         self.lds_sub_ = self.create_subscription(LaserScan, '/scan', self.lds_callback, lds_qos)
         self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
