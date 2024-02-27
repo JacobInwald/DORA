@@ -45,3 +45,11 @@ class Sweeper(Node):
             status: whether the move was executed
         """
         return False
+
+
+def main():
+    rclpy.init()
+    sweeper = Sweeper()
+    rclpy.spin(sweeper)
+    sweeper.destroy_node()
+    rclpy.shutdown()
