@@ -1,0 +1,4 @@
+[console_scripts]
+stepper = actuators.stepper:Stepper
+sweeper = actuators.sweeper:Sweeper
+wheels = actuators.wheels:Wheels
