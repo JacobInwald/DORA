@@ -12,3 +12,6 @@ install/
 log/
 *.jpg
 *.mp4
+
+!data/camera_info
+!data/weights
