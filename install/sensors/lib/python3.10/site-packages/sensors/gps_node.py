@@ -42,7 +42,8 @@ class GpsNode(Node):
         self.bench2_pub = self.create_publisher(Point, '/bench2_position_longlat', 10)
         self.bench3_pub = self.create_publisher(Point, '/bench3_position_longlat', 10)
         self.pos_pub_longlat = self.create_publisher(Point, '/robot_position_longlat', 10)
-        return 
+
+        return
         self.cap = cv2.VideoCapture(0)
         self.timer = self.create_timer(1/30, self.process_video)
 
