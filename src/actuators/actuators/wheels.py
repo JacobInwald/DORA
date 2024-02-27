@@ -37,7 +37,7 @@ class Wheels(Node):
 
     def __init__(self):
         super().__init__('wheels')
-        self.service_ = self.create_service(WheelsCmd, 'wheels', self.callback)
+        self.service_ = self.create_service(WheelsCmd, '/wheels', self.callback)
 
         # initialize the stepper motors
         self.left_motor = Stepper(MOTOR_PINS["left"].values())

@@ -21,7 +21,7 @@ class CameraNode(Node):
 
     def __init__(self, camera_info='data/camera_info/camerav2_1280x960.yaml'):
         super().__init__('camera_node')
-        self.publisher_ = self.create_publisher(Toys, 'toys', 10)
+        self.publisher_ = self.create_publisher(Toys, '/toys', 10)
         self.cap = cv2.VideoCapture('dev/video0')
         if not self.cap.isOpened():
             raise IOError('Cannot open webcam')
