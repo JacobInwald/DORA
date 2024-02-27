@@ -171,7 +171,7 @@ class Router:
         Parameters:
         - map: OccupancyMap object representing the map.
         - toys: A list of Toy objects.
-        - cur: Current coordinate of np.array([x,y]).
+        - cur: The start point of DORA.
 
         Returns:
         - A tuple of coordinate and the Toy object.
@@ -200,7 +200,6 @@ class Router:
         Parameters:
         - map: OccupancyMap object representing the map.
         - toy: The toy to unload.
-        - cur: Current coordinate of np.array([x,y]).
 
         Returns:
         - The coordinate of the unload point
