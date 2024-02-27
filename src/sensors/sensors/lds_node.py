@@ -36,7 +36,6 @@ class LdsNode(Node):
         )
         self.lds_sub_ = self.create_subscription(LaserScan, '/scan', self.lds_callback, lds_qos)
         self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
-        # change where appropriate
         self.map_pub_ = self.create_publisher(Map, '/map', 10)
         self.scan_srv_ = self.create_service(LdsCmd, 'lds_service', self.scan_callback)
         self.max_range = 1.5
