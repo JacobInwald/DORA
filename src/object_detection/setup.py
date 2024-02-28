@@ -15,7 +15,7 @@ setup(
     zip_safe=True,
     maintainer='Ardith Ho',
     maintainer_email='ardithhowaiman@gmail.com',
-    description='TODO: Package description',
+    description='Object detection using YOLOv8',
     license='TODO: License declaration',
     tests_require=['pytest'],
     entry_points={

@@ -5,6 +5,7 @@ import numpy as np
 from dora_msgs.msg import Pose
 from .image_processor import ImageProcessor
 
+
 class GpsNode(Node):
     """
     Represents a GPS (Overhead camera).
@@ -37,7 +38,6 @@ class GpsNode(Node):
         self.robotPosition = None
         self._processor = ImageProcessor()
         self.pos_pub = self.create_publisher(Pose, "/gps", 10)
-
         self.cap = cv2.VideoCapture(0)
         self.timer = self.create_timer(1/30, self.process_video)
 

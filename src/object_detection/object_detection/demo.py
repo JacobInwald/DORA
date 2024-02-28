@@ -31,7 +31,7 @@ def annotate(results):
 def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=str, default='data/vid/20240201_dav_cut.mp4')
-    parser.add_argument('--weights', type=str, default='src/object_detection/weights/best_32.pt')
+    parser.add_argument('--weights', type=str, default='data/weights/yolo/best_32.pt')
     return parser.parse_args()
 
 

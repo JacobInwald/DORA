@@ -10,3 +10,10 @@ build/
 install/
 *.jpg
 *.mp4
+
+!data/camera_info
+!data/weights
+
+src/demo_perception.py
+src/utils.py
+src/midas/

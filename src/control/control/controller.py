@@ -2,7 +2,7 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from dora_msgs.msg import Toy, Pose, Toys, Map, Cloud
+from dora_msgs.msg import Toy, Pose, Toys, Map
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from .router import Router
 from .occupancy_map import OccupancyMap
@@ -15,24 +15,24 @@ class Controller(Node):
     """
     Controller for the robot movements (driving and SWEEPER).
 
-    Subscribes to sensor messages.
+    Subscribes to sensor messages and map messages.
     Publishes movement messages.
     """
 
     def __init__(self):
         super().__init__('controller')
-        self.service_ = self.create_service(JobCmd, 'job', self.switch)
-        self.toy_sub_ = self.create_subscription(Toys, 'toys', self.toy_callback, 10)
-        self.gps_sub_ = self.create_subscription(Pose, 'gps', self.gps_callback, 10)
-        self.map_sub = self.create_subscription(Pose, 'map', self.map_callback, 10)
+        self.service_ = self.create_service(JobCmd, '/job', self.switch)
+        self.toy_sub_ = self.create_subscription(Toys, '/toys', self.toy_callback, 10)
+        self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
+        self.map_sub_ = self.create_subscription(Map, '/map', self.map_callback, 10)
         self.cli_node_ = Node('control_client')
-        self.lds_cli_ = self.cli_node_.create_client(LdsCmd, 'lds_service')
-        self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, 'wheels')
-        self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, 'sweeper')
+        self.lds_cli_ = self.cli_node_.create_client(LdsCmd, '/lds_service')
+        self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, '/wheels')
+        self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, '/sweeper')
         self.router = Router()
-        self.map = None
         self.toy = None
         self.pose = None
+        self.map = None
         self.close_thres = 3
 
     def switch(self, msg):
@@ -67,51 +67,23 @@ class Controller(Node):
         """
         self.pose = Pose
 
-    def map_callback(self, msg: Map):
+    def map_callback(self, msg: Map): # Will work if corresponding publisher completes
         """
-        Update self map
+        receive map
 
         Args:
-            msg: OccupancyMap message
+            msg: Map message from Ids
         """
-        pos, rot = msg.offset
-        clouds = []
-        for c in msg.clouds:
-            res = c.scan.angle_increment
-            start = c.scan.angle_min
-            scan = []
-            a = start - rot
-            for i in range(len(c.scan.ranges)):
-                scan.append([a, c.scan.ranges[i]/1000])
-                a += res
-            new = PointCloud(scan, pos, 1.5)
-            clouds.append(new)
-        map = OccupancyMap(pos, clouds)
-        if self.map is None:
-            self.map = map
-        else:
-            self.map.merge(map)
-        
-    
-    def demo(self):
-        """
-        Run demo job
-        """
-        for i in range(10):
-            self.scan_request()
-            cv2.waitKey(1)
-            self.map.generate()
-            self.map.show()
-            cv2.waitKey(0)
-        return True
-    
+        self.map = OccupancyMap.from_msg(msg)
+        self.get_logger().info(f'receive map.')
+
     def scan_request(self):
         lds_cmd = LdsCmd()
         lds_cmd.scan = True
         future = self.lds_cli_.call_async(lds_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         return future.result()
-
+ 
     def retrieve_request(self) -> bool:
         """
         Send service request for retrieving toy, similar to scan_request
@@ -129,7 +101,19 @@ class Controller(Node):
             job status
         """
         pass
-
+      
+    def demo(self):
+        """
+        Run demo job
+        """
+        for i in range(10):
+            self.scan_request()
+            cv2.waitKey(1)
+            self.map.generate()
+            self.map.show()
+            cv2.waitKey(0)
+        return True
+      
     def navigate_to_toy(self) -> bool:
         """
         Calculate route to toy using router.

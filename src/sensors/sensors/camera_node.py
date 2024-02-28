@@ -1,12 +1,13 @@
 import cv2
-import torch
 import yaml
+import time
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Header
 from dora_msgs.msg import Toy, Pose, Toys
 from object_detection.detect import Detect
-from transformers import DPTFeatureExtractor, DPTForDepthEstimation
+from object_detection.demo import annotate
+from depth_estimation.estimator import Estimator
 
 
 class CameraNode(Node):
@@ -19,15 +20,15 @@ class CameraNode(Node):
 
     def __init__(self, camera_info='data/camera_info/camerav2_1280x960.yaml'):
         super().__init__('camera_node')
-        self.publisher_ = self.create_publisher(Toys, 'toys', 10)
+        self.publisher_ = self.create_publisher(Toys, '/toys', 10)
         self.cap = cv2.VideoCapture('dev/video0')
         if not self.cap.isOpened():
             raise IOError('Cannot open webcam')
         self.model = Detect()
-        self.feature_extractor = DPTFeatureExtractor.from_pretrained("Intel/dpt-large")
-        self.depth_model = DPTForDepthEstimation.from_pretrained("Intel/dpt-large")
+        self.depth_model = Estimator()
         with open(camera_info, 'r') as file:
             self.camera_info = yaml.safe_load(file)
+        self.frame_no = 1
 
     def capture(self):
         while self.cap.isOpened():
@@ -35,10 +36,14 @@ class CameraNode(Node):
             stamp = self.get_clock().now()
             if ret:
                 self.callback(frame, stamp)
+                self.frame_no += 1
 
     def callback(self, frame, stamp):
         header = Header()
         header.stamp = stamp
+        header.frame_id = str(self.frame_no)
+
+        start_time = time.time()
         results = self.model.predictions(frame)[0]  # detect toys
         boxes = results.boxes
         pub_msg = Toys()
@@ -51,8 +56,16 @@ class CameraNode(Node):
             toy_msg.position = Pose()
             toy_msg.x, toy_msg.y = self.estimate_position(frame, xywh)
             toy_arr.append(toy_msg)
+        end_time = time.time()
         pub_msg.toys = toy_arr
         self.publisher_.publish(pub_msg)
+        self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
+        self.display(frame, results)
+
+    def display(self, frame, results):
+        pred = annotate(results)
+        out = cv2.resize(cv2.vconcat([frame, pred]), dsize=(0, 0), fx=0.5, fy=0.5)
+        cv2.imshow('out', out)
 
     def estimate_position(self, img, xywh):
         """
@@ -67,34 +80,34 @@ class CameraNode(Node):
             x, y: position of the toy
         """
         bx, by = xywh.cpu().numpy()[:2]  # center of bbox
-        depth_map = self.estimate_depth(img)
+        depth_map = self.depth_model.predict(img)
         py = depth_map[by, bx]  # get depth at bbox center
         fx, _, cx = self.camera_info['camera_matrix'][:3]  # get camera focal length and center
         px = (bx - cx) / fx * py  # calculate x using similar triangles and estimated depth
         return px, py
 
-    def estimate_depth(self, img):
-        """
-        Estimates depth map of image
-
-        Args:
-            img: image for depth map estimation
-
-        Returns:
-            output: estimated depth map of image
-        """
-        pixel_values = self.feature_extractor(img, return_tensors="pt").pixel_values
-        with torch.no_grad():
-            outputs = self.depth_model(pixel_values)
-            predicted_depth = outputs.predicted_depth
-        prediction = torch.nn.functional.interpolate(
-            predicted_depth.unsqueeze(1),
-            size=img.size[::-1],
-            mode="bicubic",
-            align_corners=False,
-        ).squeeze()
-        output = prediction.cpu().numpy()
-        return output
+    # def estimate_depth(self, img):
+    #     """
+    #     Estimates depth map of image
+    #
+    #     Args:
+    #         img: image for depth map estimation
+    #
+    #     Returns:
+    #         output: estimated depth map of image
+    #     """
+    #     pixel_values = self.feature_extractor(img, return_tensors="pt").pixel_values
+    #     with torch.no_grad():
+    #         outputs = self.depth_model(pixel_values)
+    #         predicted_depth = outputs.predicted_depth
+    #     prediction = torch.nn.functional.interpolate(
+    #         predicted_depth.unsqueeze(1),
+    #         size=img.size[::-1],
+    #         mode="bicubic",
+    #         align_corners=False,
+    #     ).squeeze()
+    #     output = prediction.cpu().numpy()
+    #     return output
 
 
 def main():

@@ -19,7 +19,7 @@ class Sweeper(Node):
 
     def __init__(self):
         super().__init__('sweeper')
-        self.service_ = self.create_service(SweeperCmd, 'sweeper', self.callback)
+        self.service_ = self.create_service(SweeperCmd, '/sweeper', self.callback)
 
     def callback(self, msg: SweeperCmd):
         if msg.move == SweeperMove.RETRIEVE:
