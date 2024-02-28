@@ -1,3 +1,0 @@
-[console_scripts]
-dora = initialise.dora:Dora
-loop = initialise.loop:main

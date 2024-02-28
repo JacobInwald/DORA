@@ -1,6 +1,0 @@
-source;share/sensors/hook/pythonpath.ps1
-source;share/sensors/hook/pythonpath.dsv
-source;share/sensors/hook/pythonpath.sh
-source;share/sensors/hook/ament_prefix_path.ps1
-source;share/sensors/hook/ament_prefix_path.dsv
-source;share/sensors/hook/ament_prefix_path.sh
