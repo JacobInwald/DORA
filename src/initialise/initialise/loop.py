@@ -12,7 +12,7 @@ class Loop(Node):
     def __init__(self):
         super().__init__('loop')
         self.client_ = self.create_client(JobCmd, 'job')
-        self.job = DoraJob.SCAN
+        self.job = DoraJob.DEMO
         self.job_cmd = JobCmd.Request()
         self.service_ = self.create_service(LoopCmd, 'loop', self.run)
 
