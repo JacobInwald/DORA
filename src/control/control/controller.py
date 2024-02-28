@@ -20,14 +20,14 @@ class Controller(Node):
 
     def __init__(self):
         super().__init__('controller')
-        self.service_ = self.create_service(JobCmd, 'job', self.switch)
-        self.toy_sub_ = self.create_subscription(Toys, 'toys', self.toy_callback, 10)
-        self.gps_sub_ = self.create_subscription(Pose, 'gps', self.gps_callback, 10)
+        self.service_ = self.create_service(JobCmd, '/job', self.switch)
+        self.toy_sub_ = self.create_subscription(Toys, '/toys', self.toy_callback, 10)
+        self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
         self.map_sub_ = self.create_subscription(Map, '/map', self.map_callback, 10)
         self.cli_node_ = Node('control_client')
-        self.lds_cli_ = self.cli_node_.create_client(LdsCmd, 'lds_service')
-        self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, 'wheels')
-        self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, 'sweeper')
+        self.lds_cli_ = self.cli_node_.create_client(LdsCmd, '/lds_service')
+        self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, '/wheels')
+        self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, '/sweeper')
         self.router = Router()
         self.toy = None
         self.pose = None

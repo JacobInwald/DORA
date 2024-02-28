@@ -3,6 +3,7 @@ from rclpy.node import Node
 import cv2
 import numpy as np
 from geometry_msgs.msg import Point
+from dora_msgs.msg import Pose
 import copy
 
 
@@ -36,9 +37,10 @@ class GpsNode(Node):
         self.IMAGE_X = 1200
 
         self.robotPosition = None
-        self._processor = Image_processor()
+        self._processor = ImageProcessor()
 
-        self.pos_pub = self.create_publisher(Point, "/robot_position", 10)
+        self.gps_pub = self.create_publisher(Pose, '/gps', 10)
+        self.pos_pub = self.create_publisher(Point, '/robot_position', 10)
         self.bench2_pub = self.create_publisher(Point, '/bench2_position_longlat', 10)
         self.bench3_pub = self.create_publisher(Point, '/bench3_position_longlat', 10)
         self.pos_pub_longlat = self.create_publisher(Point, '/robot_position_longlat', 10)
@@ -156,9 +158,10 @@ class blob_detector:
         if m00 == 0:
             m00 = 0.000001
 
-        return ((int(m10 / m00), int(m01 / m00)), small_area)
+        return (int(m10 / m00), int(m01 / m00)), small_area
 
-class Image_processor:
+
+class ImageProcessor:
 
     def __init__(self):
         self.calibratred = False
@@ -190,8 +193,6 @@ class Image_processor:
         cropped_image4 = img[int(width / 2):width, int(height / 2):height]
         
         images = [cropped_image1, cropped_image2, cropped_image3, cropped_image4]
-        
-        
 
         vis = self.__imageStitch(images)
         # print(vis.shape)
@@ -202,11 +203,11 @@ class Image_processor:
         pos_green = self.position_estimator.detect_color(vis, 'green')
         angle = self.calculate_angle(pos, pos_blue)
 
-        if (pos[0] < 5 and pos[1] < 5):
+        if pos[0] < 5 and pos[1] < 5:
             angle = -999
             pos[0] = -999
             pos[1] = -999
-        elif (pos_blue[0] < 5 and pos_blue[1] < 5):
+        elif pos_blue[0] < 5 and pos_blue[1] < 5:
             angle = -999
 
         
