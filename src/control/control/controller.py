@@ -2,7 +2,7 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from dora_msgs.msg import Toy, Pose, Toys
+from dora_msgs.msg import Toy, Pose, Toys, Map
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from router import Router
 from occupancy_map import OccupancyMap
@@ -14,7 +14,7 @@ class Controller(Node):
     """
     Controller for the robot movements (driving and SWEEPER).
 
-    Subscribes to sensor messages.
+    Subscribes to sensor messages and map messages.
     Publishes movement messages.
     """
 
@@ -23,14 +23,15 @@ class Controller(Node):
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
         self.toy_sub_ = self.create_subscription(Toys, '/toys', self.toy_callback, 10)
         self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
+        self.map_sub_ = self.create_subscription(Map, '/map', self.map_callback, 10)
         self.cli_node_ = Node('control_client')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, '/lds_service')
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, '/wheels')
         self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, '/sweeper')
         self.router = Router()
-        self.map = OccupancyMap()
         self.toy = None
         self.pose = None
+        self.map = None
         self.close_thres = 3
 
     def switch(self, msg):
@@ -62,6 +63,16 @@ class Controller(Node):
             msg: Pose message from GPS
         """
         self.pose = Pose
+
+    def map_callback(self, msg: Map): # Will work if corresponding publisher completes
+        """
+        receive map
+
+        Args:
+            msg: Map message from Ids
+        """
+        self.map = OccupancyMap.from_msg(msg)
+        self.get_logger().info(f'receive map.')
 
     def scan_request(self):
         lds_cmd = LdsCmd()
