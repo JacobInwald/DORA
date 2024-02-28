@@ -19,5 +19,4 @@ install/
 src/demo_perception.py
 src/utils.py
 src/midas/
-
 sample.py
