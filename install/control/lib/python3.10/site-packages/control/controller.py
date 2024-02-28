@@ -2,13 +2,14 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
-from dora_msgs.msg import Toy, Pose, Toys
+from dora_msgs.msg import Toy, Pose, Toys, Map, Cloud
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from .router import Router
 from .occupancy_map import OccupancyMap
-from .job import DoraJob
+from .point_cloud import PointCloud
+from job import DoraJob
 from actuators.wheels import WheelsMove
-
+import cv2
 
 class Controller(Node):
     """
@@ -23,12 +24,13 @@ class Controller(Node):
         self.service_ = self.create_service(JobCmd, 'job', self.switch)
         self.toy_sub_ = self.create_subscription(Toys, 'toys', self.toy_callback, 10)
         self.gps_sub_ = self.create_subscription(Pose, 'gps', self.gps_callback, 10)
+        self.map_sub = self.create_subscription(Pose, 'map', self.map_callback, 10)
         self.cli_node_ = Node('control_client')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, 'lds_service')
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, 'wheels')
         self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, 'sweeper')
         self.router = Router()
-        self.map = OccupancyMap()
+        self.map = None
         self.toy = None
         self.pose = None
         self.close_thres = 3
@@ -44,6 +46,8 @@ class Controller(Node):
             return self.navigate_to_storage()
         elif msg.job == DoraJob.UNLOAD:
             return self.unload_request()
+        elif msg.job == DoraJob.DEMO:
+            return self.demo()
         return False
 
     def toy_callback(self, msg: Toys):
@@ -63,6 +67,44 @@ class Controller(Node):
         """
         self.pose = Pose
 
+    def map_callback(self, msg: Map):
+        """
+        Update self map
+
+        Args:
+            msg: OccupancyMap message
+        """
+        pos, rot = msg.offset
+        clouds = []
+        for c in msg.clouds:
+            res = c.scan.angle_increment
+            start = c.scan.angle_min
+            scan = []
+            a = start - rot
+            for i in range(len(c.scan.ranges)):
+                scan.append([a, c.scan.ranges[i]/1000])
+                a += res
+            new = PointCloud(scan, pos, 1.5)
+            clouds.append(new)
+        map = OccupancyMap(pos, clouds)
+        if self.map is None:
+            self.map = map
+        else:
+            self.map.merge(map)
+        
+    
+    def demo(self):
+        """
+        Run demo job
+        """
+        for i in range(10):
+            self.scan_request()
+            cv2.waitKey(1)
+            self.map.generate()
+            self.map.show()
+            cv2.waitKey(0)
+        return True
+    
     def scan_request(self):
         lds_cmd = LdsCmd()
         lds_cmd.scan = True

@@ -2,10 +2,14 @@
 /home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/__init__.py
 /home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/camera_node.py
 /home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/gps_node.py
+/home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/blob_detector.py
+/home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/image_processor.py
 /home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/__pycache__/lds_node.cpython-310.pyc
 /home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/__pycache__/__init__.cpython-310.pyc
 /home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/__pycache__/camera_node.cpython-310.pyc
 /home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/__pycache__/gps_node.cpython-310.pyc
+/home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/__pycache__/blob_detector.cpython-310.pyc
+/home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors/__pycache__/image_processor.cpython-310.pyc
 /home/jacob/Desktop/DORA/install/sensors/share/ament_index/resource_index/packages/sensors
 /home/jacob/Desktop/DORA/install/sensors/share/sensors/package.xml
 /home/jacob/Desktop/DORA/install/sensors/lib/python3.10/site-packages/sensors-0.0.0-py3.10.egg-info/entry_points.txt

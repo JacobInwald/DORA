@@ -10,8 +10,10 @@ setup.py
 ../../build/sensors/sensors.egg-info/zip-safe
 resource/sensors
 sensors/__init__.py
+sensors/blob_detector.py
 sensors/camera_node.py
 sensors/gps_node.py
+sensors/image_processor.py
 sensors/lds_node.py
 test/test_copyright.py
 test/test_flake8.py
