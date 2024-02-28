@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from dora_msgs.msg import Map
+from point_cloud import PointCloud
 
 
 def man_fuzz(grid: np.ndarray) -> np.ndarray:
@@ -248,7 +249,8 @@ class OccupancyMap:
         msg.resolution = self.resolution
         msg.clouds = [c.toMsg() for c in self.pointclouds]
         return msg
-    
+
+    @staticmethod
     def from_msg(msg: "Map") -> "OccupancyMap":
         """
         Converts a ROS message to an OccupancyMap.

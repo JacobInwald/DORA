@@ -11,6 +11,13 @@ build/
 install/
 *.jpg
 *.mp4
+*.avi
 
-!data/camera_info
-!data/weights
+!data/camera_info/
+!data/weights/yolo/
+
+src/demo_perception.py
+src/utils.py
+src/midas/
+
+sample.py

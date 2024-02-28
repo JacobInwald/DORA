@@ -5,8 +5,8 @@ class Detect:
     Detect toys in image using our pre-trained model.
     """
 
-    def __init__(self, model_file='data/weights/best_32.pt'):
-        self.model = YOLO(model_file)
+    def __init__(self, model_path='data/weights/yolo/best_32.pt'):
+        self.model = YOLO(model_path)
 
     def predict(self, file, conf=0.5, save=True):
         self.model.predict(file, conf=conf, save=save)
@@ -16,7 +16,7 @@ class Detect:
 
 
 if __name__ == '__main__':
-    path = 'weights/best_32.pt'
+    path = 'data/weights/yolo/best_32.pt'
     model = Detect(path)
-    vid_path = '../../data/vid/20240201_dav.mp4'
+    vid_path = 'data/vid/20240201_dav.mp4'
     model.predict(vid_path)
