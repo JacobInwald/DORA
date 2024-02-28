@@ -4,11 +4,12 @@ import rclpy
 from rclpy.node import Node
 from dora_msgs.msg import Toy, Pose, Toys, Map
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
-from router import Router
-from occupancy_map import OccupancyMap
+from .router import Router
+from .occupancy_map import OccupancyMap
+from .point_cloud import PointCloud
 from job import DoraJob
 from actuators.wheels import WheelsMove
-
+import cv2
 
 class Controller(Node):
     """
@@ -45,6 +46,8 @@ class Controller(Node):
             return self.navigate_to_storage()
         elif msg.job == DoraJob.UNLOAD:
             return self.unload_request()
+        elif msg.job == DoraJob.DEMO:
+            return self.demo()
         return False
 
     def toy_callback(self, msg: Toys):
@@ -80,7 +83,7 @@ class Controller(Node):
         future = self.lds_cli_.call_async(lds_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         return future.result()
-
+ 
     def retrieve_request(self) -> bool:
         """
         Send service request for retrieving toy, similar to scan_request
@@ -98,7 +101,19 @@ class Controller(Node):
             job status
         """
         pass
-
+      
+    def demo(self):
+        """
+        Run demo job
+        """
+        for i in range(10):
+            self.scan_request()
+            cv2.waitKey(1)
+            self.map.generate()
+            self.map.show()
+            cv2.waitKey(0)
+        return True
+      
     def navigate_to_toy(self) -> bool:
         """
         Calculate route to toy using router.
