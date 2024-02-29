@@ -36,25 +36,21 @@ class ImageProcessor:
         bl = self.undistort(bl, 2) # bottom-left
         br = self.undistort(br, 3) # bottom-right
 
-        top = cv2.hconcat([tl, tr])
-        bot = cv2.hconcat([bl, br])
-        img = cv2.vconcat([top, bot])
+        img = self.imageStitch([tl, tr, bl, br])
 
-        cv2.imshow("image", img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
         # TODO: remove when working
+        cv2.imshow("image", img)
+        cv2.waitKey(100)
 
-        try:
-            pos_red = self.position_estimator.detect_color(img, 'red')
-        except:
-            print("could not find red")
-        try:
-            pos_blue = self.position_estimator.detect_color(img, 'blue')
-        except:
-            print("could not find blue")
+
+        pos_red = self.position_estimator.detect_color(img, 'red')
+        pos_blue = self.position_estimator.detect_color(img, 'blue')
         angle = self.calculate_angle(pos_red, pos_blue)
 
+        if pos_red[0] == 0 and pos_red[1] == 0:
+            raise Exception("could not find red")
+        if pos_blue[0] == 0 and pos_blue[1] == 0:
+            raise Exception("could not find blue")
 
         return pos_red, np.deg2rad(angle)
     
@@ -134,88 +130,29 @@ class ImageProcessor:
     def robot_present(self, pos):
         return pos[0] != 0 or pos[1] != 0
     
-    def __imageStitch(self, images):
+    def imageStitch(self, images):
+        # Initialise
+        tl, tr, bl, br = images
+        tr_h, tr_w = tr.shape[:2]
+        br_h, br_w = br.shape[:2]
+        tl_h, tl_w = tl.shape[:2]
+        bl_h, bl_w = bl.shape[:2]
+        
+        # right
+        tr = tr[10:tr_h-20, 0:tr_w]
+        br = br[0:br_h-10, 0:br_w]
+        right = cv2.vconcat([tr, br])
+        # left
+        tl = tl[0:tl_h-30, 0:tl_w-10]
+        bl = bl[10:bl_h, 10:bl_w]
+        left = cv2.vconcat([tl, bl])
+        
+        l_h, l_w = left.shape[:2]
+        left = left[0:l_h, 0:l_w-40]
+        
+        img = cv2.hconcat([left, right])
+        h, w = img.shape[:2]
+        img = img[40:h-25, 150:w-30]
+        return img
 
-        #top two
-        h1, w1 = images[0].shape[:2]
-        h2, w2 = images[2].shape[:2]
-
-        #create empty matrix
-        vis = np.zeros((h1+h2, w1+w2,3), np.uint8)
-
-        #top left
-        vis[5:h1+5, 10:w1] = images[0][:600, 10:960]
-
-        #top right
-        vis[:h1, w1-70:w1+w2-160] = images[2][:600, 90:960]
-
-        #bottom left
-        vis[h1-70:h1+h2-110, :w1-30] = images[1][40:600, 30:960]
-
-        #bottom right
-        vis[h1-70:h1+h2-100, w1-140:w1+w2-150] = images[3][30:600, 10:960]
-
-        # cv2.imshow("combined4",vis)
-        # cv2.waitKey(0)
-
-        return vis[100:1050, 450:1650]
-
-    def __colourSpaceCoordinate(self, image):
-
-        red_u = (20, 20, 256)
-        red_l = (0, 0, 100)
-        climits = [[red_l, red_u]]
-
-        masks = [cv2.inRange(image, climit[0], climit[1]) for climit in climits]
-        maskJs = [cv2.cvtColor(mask, cv2.COLOR_BGR2RGB) for mask in masks]
-
-        frames = [(image & maskJ) for maskJ in maskJs]
-
-        gray_frames = [cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) for frame in frames]
-
-        jThreshes = [cv2.threshold(gray_frame, 1, 255, cv2.THRESH_BINARY) for gray_frame in gray_frames]
-
-        jcontours = [cv2.findContours(jthresh[1], cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE) for jthresh in jThreshes]
-
-        cords = []
-        radiuslist = []
-        for jcontour in jcontours:
-            # print(jcontour)
-            try:
-                Gradius = 0
-                (Gx, Gy), Gradius = cv2.minEnclosingCircle(self.mergeContors(jcontour[0]))
-                radiuslist.append(Gradius)
-                # print(Gradius)
-                if Gradius < 2:  # Filter out single pixel showing
-                    cords.append([-1, -1])
-                else:
-                    cords.append([Gx, Gy])
-
-            except:
-                cords.append([-1, -1])
-                radiuslist.append(0)
-
-        contourDic = {"Red": {'x': cords[3][0], 'y': cords[3][1]}}
-
-        im_copy = image.copy()
-
-        for i in range(len(cords)):
-            cv2.circle(im_copy, (int(cords[i][0]), int(cords[i][1])), 2, (255, 255, 255), -1)
-            cv2.putText(im_copy, list(contourDic.keys())[i], (int(cords[i][0]) - 50, int(cords[i][1]) - 25),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            cv2.circle(im_copy, (int(cords[i][0]), int(cords[i][1])), int(radiuslist[i]), (0, 255, 0), 1)
-
-        return contourDic, im_copy
-
-    def __mergeContors(self, ctrs):
-        list_of_pts = []
-        for c in ctrs:
-            for e in c:
-                list_of_pts.append(e)
-        ctr = np.array(list_of_pts).reshape((-1, 1, 2)).astype(np.int32)
-        ctr = cv2.convexHull(ctr)
-        return ctr
-
-    def sdpPixelToDegrees(self):
-        return
     

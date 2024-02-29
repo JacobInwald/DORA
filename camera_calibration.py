@@ -144,6 +144,6 @@ def take_photos(path, corner, i=0):
 PATH = "data/calibration/images/"
 corner = 'tr'
 path = PATH + corner
-take_photos(path, corner, 0)
+take_photos(path, corner, 1 )
 # calibrate(path, corner)
 undistort(path, corner)
