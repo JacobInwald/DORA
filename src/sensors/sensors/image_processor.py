@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import cv2
 from .blob_detector import BlobDetector
 
@@ -9,35 +10,40 @@ class ImageProcessor:
         self.position_estimator = BlobDetector()
         self.i = 0
         self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = None, None, None, None, None
-
-        return
+        
+        self.tl_mtx = np.load('data/calibration/top_left/tl_mtx.npy')
+        self.tl_dist = np.load('data/calibration/top_left/tl_dist.npy')
+        self.tr_mtx = np.load('data/calibration/top_right/tr_mtx.npy')
+        self.tr_dist = np.load('data/calibration/top_right/tr_dist.npy')
+        self.bl_mtx = np.load('data/calibration/bottom_left/bl_mtx.npy')
+        self.bl_dist = np.load('data/calibration/bottom_left/bl_dist.npy')
 
     def runProcessor(self, img):
 
         # get original feed dimentions
-        width, height = img.shape[:2]
+        w, h = img.shape[:2]
     
         # Cropping images
-        cropped_image1 = img[0:int(width / 2), 0:int(height / 2)]
-        cropped_image2 = img[int(width / 2):width, 0:int(height / 2)]
-        cropped_image3 = img[0:int(width / 2), int(height / 2):height]
-        cropped_image4 = img[int(width / 2):width, int(height / 2):height]
+        tl = img[0:int(w/2), 0:int(h/2)]
+        tr = img[0:int(w/2), int(h/2):h]
+        bl = img[int(w/2):w, 0:int(h/2)]
+        br = img[int(w/2):w, int(h/2):h]
         
         # undistort
         #  posiiton of cameras may be wrong check!!!
-        cropped_image1 = self.remove_fisheye(cropped_image1, 0) # top-left
-        cropped_image2 = self.remove_fisheye(cropped_image2, 1) # top-right
-        cropped_image3 = self.remove_fisheye(cropped_image3, 2) # bottom-left
-        cropped_image4 = self.remove_fisheye(cropped_image4, 3) # bottom-right
+        tl = self.undistort(tl, 0) # top-left
+        tr = self.undistort(tr, 1) # top-right
+        bl = self.undistort(bl, 2) # bottom-left
+        br = self.undistort(br, 3) # bottom-right
 
-        top = cv2.vconcat([cropped_image1, cropped_image2])
-        bot = cv2.vconcat([cropped_image3, cropped_image4])
-        img = cv2.hconcat([top, bot])
+        top = cv2.hconcat([tl, tr])
+        bot = cv2.hconcat([bl, br])
+        img = cv2.vconcat([top, bot])
 
+        cv2.imshow("image", img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         # TODO: remove when working
-        # cv2.imshow("image", img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
 
         try:
             pos_red = self.position_estimator.detect_color(img, 'red')
@@ -72,24 +78,48 @@ class ImageProcessor:
             angle = 2*np.pi - angle
         return np.rad2deg(angle)
  
-    def remove_fisheye(self, img, id):
-        # TODO: test different mtx1, dist1 value to get a better image output
-        h,  w = img.shape[:2]
-        mtx1 = np.array([[100, 0.000000, w/2], [0.000000, 100, h/2], [0.000000, 0.000000, 1.000000]], dtype=np.float32)
-        if id == 0: # top-left
-            dist1 = np.float32([-0.01, -0.02, -0.01, 0, 0])
-        elif id == 1: # top-right
-            dist1 = np.float32([-0.01, -0.02, -0.01, 0.02, 0])
-        elif id == 2: # bottom-left
-            dist1 = np.float32([-0.01, -0.02, 0.01, -0.01, 0])
-        else: # id = 3 #bottom-right
-            dist1 = np.float32([-0.01, -0.02, 0.01, 0, 0])    
-        dst = cv2.undistort(img, mtx1, dist1)
+    def undistort(self, img, id):
         
-        # TODO: work out best crop distance
-        crop = 20
-        x,y,w,h = (crop, 0, w - 2*crop, h)
-        dst = dst[y:y+h, x:x+w]
+        if id == 0:
+            matrix = self.tl_mtx
+            distortion = self.tl_dist
+        elif id == 1:
+            matrix = self.tr_mtx
+            distortion = self.tr_dist
+        elif id == 2:
+            matrix = self.bl_mtx
+            distortion = self.bl_dist
+        else: 
+            matrix = self.tl_mtx
+            distortion = self.tl_dist
+        matrix = self.tl_mtx
+        distortion = self.tl_dist    
+        w, h = img.shape[:2]
+        
+        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(matrix, distortion, (w,h), 1, (w,h))
+        dst = cv2.undistort(img, matrix, distortion, None, matrix)
+        # x, y, w, h = roi
+        # dst = dst[y:y+h, x:x+w]
+        
+        return dst
+        
+        # # TODO: test different mtx1, dist1 value to get a better image output
+        # h,  w = img.shape[:2]
+        # mtx1 = np.array([[100, 0.000000, w/2], [0.000000, 100, h/2], [0.000000, 0.000000, 1.000000]], dtype=np.float32)
+        # if id == 0: # top-left
+        #     dist1 = np.float32([-0.01, -0.02, -0.01, 0, 0])
+        # elif id == 1: # top-right
+        #     dist1 = np.float32([-0.01, -0.02, -0.01, 0.02, 0])
+        # elif id == 2: # bottom-left
+        #     dist1 = np.float32([-0.01, -0.02, 0.01, -0.01, 0])
+        # else: # id = 3 #bottom-right
+        #     dist1 = np.float32([-0.01, -0.02, 0.01, 0, 0])    
+        # dst = cv2.undistort(img, mtx1, dist1)
+        
+        # # TODO: work out best crop distance
+        # crop = 20
+        # x,y,w,h = (crop, 0, w - 2*crop, h)
+        # dst = dst[y:y+h, x:x+w]
 
         return dst
 
@@ -101,7 +131,6 @@ class ImageProcessor:
         image_with_centers = cv2.putText(image_with_centers, 'Position: ' + str(round(pos1[0], 2)) + ', ' + str(round(pos1[1], 2)), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
         cv2.imshow('image with centers', image_with_centers)
     
-
     def robot_present(self, pos):
         return pos[0] != 0 or pos[1] != 0
     

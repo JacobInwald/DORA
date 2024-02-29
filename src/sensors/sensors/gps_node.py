@@ -42,23 +42,23 @@ class GpsNode(Node):
         self.timer = self.create_timer(1/30, self.process_video)
 
     def process_video(self):
-        try:
+        # try:
             # get current frame
-            ret, frame = self.cap.read()
-            frame = cv2.resize(frame, None, fx=1, fy=1, interpolation=cv2.INTER_AREA)
-            pos, rot = self._processor.runProcessor(frame)
-            
-            pos = self.convert_to_longlat(pos)
-            
-            msg = Pose()
-            msg.x = float(pos[1])
-            msg.y = float(pos[0])
-            msg.rot = float(rot)
-            self.pos_pub.publish(msg)
+        ret, frame = self.cap.read()
+        frame = cv2.resize(frame, None, fx=1, fy=1, interpolation=cv2.INTER_AREA)
+        pos, rot = self._processor.runProcessor(frame)
+        
+        pos = self.convert_to_longlat(pos)
+        
+        msg = Pose()
+        msg.x = float(pos[1])
+        msg.y = float(pos[0])
+        msg.rot = float(rot)
+        self.pos_pub.publish(msg)
 
-            self.get_logger().info(f'Robot at {pos} with angle of {rot} to x-axis')
-        except:
-            self.get_logger().error('Failed to capture video frame')
+        self.get_logger().info(f'Robot at {pos} with angle of {rot} to x-axis')
+        # except:
+        #     self.get_logger().error('Failed to capture video frame')
 
 
     def convert_to_longlat(self, pos):
@@ -75,6 +75,7 @@ def main():
     rclpy.init()
     node = GpsNode()
     rclpy.spin(node)
+    node.cap.release()
     node.destroy_node()
     rclpy.shutdown()
 
