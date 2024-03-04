@@ -1,6 +1,5 @@
 import smbus2
 import time
-from .control import master_send, master_receive
 
 # Define constants
 START_BYTE = 15
