@@ -26,10 +26,10 @@ time.sleep(1)  # Wait for the bus to stabilize
 
 
 def loop():
-    global lmspeed, rmspeed, lmbrake, rmbrake, ldir, rdir
-
-    master_send(bus, I2C_ADDRESS, 0x00, lmspeed, rmspeed,
-                lmbrake, rmbrake, sv[0], sv[1], sv[2], sv[3], sv[4], sv[5], devibrate, sensitivity, lowbat, i2caddr, i2cfreq)
+    master_send(bus, b'\x00', 2, lmspeed,
+                lmbrake, rmspeed, rmbrake, sv[0], sv[1], sv[2], sv[3], sv[4], sv[5], devibrate, sensitivity, lowbat, i2caddr, i2cfreq)
+    time.sleep(0.05)
+    master_receive(bus, I2C_ADDRESS, START_BYTE)
     time.sleep(0.05)
 
     # Code to test motors and sweep servos
