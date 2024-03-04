@@ -2,7 +2,6 @@ from enum import Enum
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import WheelsCmd
-from .stepper import Stepper
 
 
 class WheelsMove(Enum):
@@ -37,11 +36,8 @@ class Wheels(Node):
 
     def __init__(self):
         super().__init__('wheels')
-        self.service_ = self.create_service(WheelsCmd, '/wheels', self.callback)
-
-        # initialize the stepper motors
-        self.left_motor = Stepper(MOTOR_PINS["left"].values())
-        self.right_motor = Stepper(MOTOR_PINS["right"].values())
+        self.service_ = self.create_service(
+            WheelsCmd, '/wheels', self.callback)
 
     def callback(self, msg: WheelsCmd):
         if msg.type == WheelsMove.FORWARD:
@@ -51,17 +47,10 @@ class Wheels(Node):
         return False
 
     def forward(self, dist: float):
-        self.left_motor.step(dist * STEPS_TO_DISTANCE, "right", SPEED)
-        self.right_motor.step(dist * STEPS_TO_DISTANCE, "left", SPEED)
+        pass
 
     def turn(self, angle: float):
-        if angle < 0:
-            self.left_motor.step(abs(angle) * STEPS_PER_DEGREE, "left", SPEED)
-            self.right_motor.step(abs(angle) * STEPS_PER_DEGREE, "left", SPEED)
-        else:
-            self.left_motor.step(angle * STEPS_PER_DEGREE, "right", SPEED)
-            self.right_motor.step(
-                angle * STEPS_PER_DEGREE, "right", SPEED)
+        pass
 
 
 def main():
