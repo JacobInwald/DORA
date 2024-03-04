@@ -43,7 +43,7 @@ class GpsNode(Node):
 
     def process_video(self):
         try:
-            # get current frame
+        # get current frame
             ret, frame = self.cap.read()
             frame = cv2.resize(frame, None, fx=1, fy=1, interpolation=cv2.INTER_AREA)
             pos, rot = self._processor.runProcessor(frame)
@@ -75,6 +75,7 @@ def main():
     rclpy.init()
     node = GpsNode()
     rclpy.spin(node)
+    node.cap.release()
     node.destroy_node()
     rclpy.shutdown()
 
