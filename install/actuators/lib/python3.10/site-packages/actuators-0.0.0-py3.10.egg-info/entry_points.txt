@@ -1,0 +1,3 @@
+[console_scripts]
+sweeper = actuators.sweeper:main
+wheels = actuators.wheels:main

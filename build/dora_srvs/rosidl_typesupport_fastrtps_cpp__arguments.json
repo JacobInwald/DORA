@@ -1,0 +1,27 @@
+{
+  "package_name": "dora_srvs",
+  "output_dir": "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_typesupport_fastrtps_cpp/dora_srvs",
+  "template_dir": "/opt/ros/humble/share/rosidl_typesupport_fastrtps_cpp/resource",
+  "idl_tuples": [
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs:srv/JobCmd.idl",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs:srv/LdsCmd.idl",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs:srv/LoopCmd.idl",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs:srv/SweeperCmd.idl",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs:srv/WheelsCmd.idl"
+  ],
+  "target_dependencies": [
+    "/opt/ros/humble/lib/rosidl_typesupport_fastrtps_cpp/rosidl_typesupport_fastrtps_cpp",
+    "/opt/ros/humble/local/lib/python3.10/dist-packages/rosidl_typesupport_fastrtps_cpp/__init__.py",
+    "/opt/ros/humble/share/rosidl_typesupport_fastrtps_cpp/resource/idl__rosidl_typesupport_fastrtps_cpp.hpp.em",
+    "/opt/ros/humble/share/rosidl_typesupport_fastrtps_cpp/resource/idl__type_support.cpp.em",
+    "/opt/ros/humble/share/rosidl_typesupport_fastrtps_cpp/resource/msg__rosidl_typesupport_fastrtps_cpp.hpp.em",
+    "/opt/ros/humble/share/rosidl_typesupport_fastrtps_cpp/resource/msg__type_support.cpp.em",
+    "/opt/ros/humble/share/rosidl_typesupport_fastrtps_cpp/resource/srv__rosidl_typesupport_fastrtps_cpp.hpp.em",
+    "/opt/ros/humble/share/rosidl_typesupport_fastrtps_cpp/resource/srv__type_support.cpp.em",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs/srv/JobCmd.idl",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs/srv/LdsCmd.idl",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs/srv/LoopCmd.idl",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs/srv/SweeperCmd.idl",
+    "/home/jacob/Desktop/DORA/build/dora_srvs/rosidl_adapter/dora_srvs/srv/WheelsCmd.idl"
+  ]
+}

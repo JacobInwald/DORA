@@ -1,0 +1,10 @@
+{
+  "package_name": "dora_msgs",
+  "non_idl_tuples": [
+    "/home/jacob/Desktop/DORA/src/dora_msgs:msg/Pose.msg",
+    "/home/jacob/Desktop/DORA/src/dora_msgs:msg/Map.msg",
+    "/home/jacob/Desktop/DORA/src/dora_msgs:msg/Cloud.msg",
+    "/home/jacob/Desktop/DORA/src/dora_msgs:msg/Toy.msg",
+    "/home/jacob/Desktop/DORA/src/dora_msgs:msg/Toys.msg"
+  ]
+}

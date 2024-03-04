@@ -1,0 +1,8 @@
+Metadata-Version: 2.1
+Name: depth_estimation
+Version: 0.0.0
+Summary: Depth estimation using MiDaS developed by Intel
+Maintainer: Ardith Ho
+Maintainer-email: ardithhowaiman@gmail.com
+License: MIT License
+Requires-Dist: setuptools

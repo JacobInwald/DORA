@@ -1,0 +1,15 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from dora_srvs/srv/JobCmd.srv
+// generated code does not contain a copyright notice
+
+
+module dora_srvs {
+  module srv {
+    struct JobCmd_Request {
+      uint8 job;
+    };
+    struct JobCmd_Response {
+      boolean status;
+    };
+  };
+};

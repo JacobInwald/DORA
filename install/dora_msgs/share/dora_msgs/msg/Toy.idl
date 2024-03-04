@@ -1,0 +1,28 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from dora_msgs/msg/Toy.msg
+// generated code does not contain a copyright notice
+
+#include "dora_msgs/msg/Pose.idl"
+#include "std_msgs/msg/Header.idl"
+
+module dora_msgs {
+  module msg {
+    struct Toy {
+      @verbatim (language="comment", text=
+        "Acquisition time of image")
+      std_msgs::msg::Header header;
+
+      @verbatim (language="comment", text=
+        "Toy class")
+      uint8 cls;
+
+      @verbatim (language="comment", text=
+        "Prediction confidence")
+      double conf;
+
+      @verbatim (language="comment", text=
+        "position of toy on plane")
+      dora_msgs::msg::Pose position;
+    };
+  };
+};
