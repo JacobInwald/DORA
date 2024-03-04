@@ -1,4 +1,4 @@
-import smbus
+import smbus2
 import time
 from .control import master_send, master_receive
 
@@ -21,12 +21,12 @@ i2caddr = 7  # default I2C address of T'REX is 7. If this is changed, the T'REX 
 i2cfreq = 0  # I2C clock frequency. Default is 0=100kHz. Set to 1 for 400kHz
 
 # Initialize I2C bus
-bus = smbus.SMBus()  # Use the appropriate I2C bus number
+bus = smbus2.SMBus(I2C_ADDRESS)  # Use the appropriate I2C bus number
 time.sleep(1)  # Wait for the bus to stabilize
 
 
 def loop():
-    global lmspeed, rmspeed, lmbrake, rmbrake, sv, sd, ldir, rdir
+    global bus, lmspeed, rmspeed, lmbrake, rmbrake, sv, sd, ldir, rdir
 
     master_send(bus, 0, 2, lmspeed,
                 lmbrake, rmspeed, rmbrake, sv[0], sv[1], sv[2], sv[3], sv[4], sv[5], devibrate, sensitivity, lowbat, i2caddr, i2cfreq)
