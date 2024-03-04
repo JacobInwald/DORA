@@ -3,8 +3,8 @@ import time
 from .control import master_send, master_receive
 
 # Define constants
-START_BYTE = 0x0F
-I2C_ADDRESS = 0x07
+START_BYTE = 15
+I2C_ADDRESS = 7
 
 # Initial parameters
 sv = [1500, 1500, 1500, 1500, 0, 0]  # servo positions: 0 = Not Used
@@ -26,7 +26,9 @@ time.sleep(1)  # Wait for the bus to stabilize
 
 
 def loop():
-    master_send(bus, b'\x00', 2, lmspeed,
+    global lmspeed, rmspeed, lmbrake, rmbrake, sv, sd, ldir, rdir
+
+    master_send(bus, 0, 2, lmspeed,
                 lmbrake, rmspeed, rmbrake, sv[0], sv[1], sv[2], sv[3], sv[4], sv[5], devibrate, sensitivity, lowbat, i2caddr, i2cfreq)
     time.sleep(0.05)
     master_receive(bus, I2C_ADDRESS, START_BYTE)

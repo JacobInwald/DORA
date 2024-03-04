@@ -1,11 +1,6 @@
 # Ported from original Arduino code: https://cdn.sparkfun.com/datasheets/Robotics/T_REX_I2C_tester.zip
 
-import smbus
-
-
 def master_send(bus, sbyte, pfreq, lspeed, lbrake, rspeed, rbrake, sv0, sv1, sv2, sv3, sv4, sv5, dev, sens, lowbat, i2caddr, i2cfreq):
-    bus = smbus.SMBus(1)  # Use the appropriate I2C bus number
-
     bus.write_byte(i2caddr, sbyte)  # start byte
     bus.write_byte(i2caddr, pfreq)  # pwm frequency
 
