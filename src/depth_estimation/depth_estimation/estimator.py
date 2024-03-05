@@ -3,7 +3,7 @@ import time
 import cv2
 import torch
 import numpy as np
-from midas.model_loader import  load_model
+from .midas.model_loader import  load_model
 
 
 class Estimator:
