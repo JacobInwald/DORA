@@ -6,7 +6,7 @@ from dora_msgs.msg import Toy, Pose, Toys, Map
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from .router import Router
 from .occupancy_map import OccupancyMap
-from .point_cloud import PointCloud
+
 from job import DoraJob
 from actuators.wheels import WheelsMove
 import cv2
