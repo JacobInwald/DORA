@@ -2,7 +2,7 @@ from enum import Enum
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import WheelsCmd
-
+import serial
 
 class WheelsMove(Enum):
     FORWARD = 0
@@ -38,6 +38,7 @@ class Wheels(Node):
         super().__init__('wheels')
         self.service_ = self.create_service(
             WheelsCmd, '/wheels', self.callback)
+        self.serial1 = serial.Serial('/dev/ttyACM0', 9600)
 
     def callback(self, msg: WheelsCmd):
         if msg.type == WheelsMove.FORWARD:
@@ -47,10 +48,13 @@ class Wheels(Node):
         return False
 
     def forward(self, dist: float):
-        pass
+        self.serial1.write(b'forward ')
+        self.serial1.write(bytes(dist))
+    
 
     def turn(self, angle: float):
-        pass
+        self.serial1.write(b'turn ')
+        self.serial1.write(bytes(angle))
 
 
 def main():
