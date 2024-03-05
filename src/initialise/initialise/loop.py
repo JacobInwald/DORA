@@ -16,13 +16,14 @@ class Loop(Node):
         self.job_cmd = JobCmd.Request()
         self.service_ = self.create_service(LoopCmd, '/loop', self.run)
 
-    def run(self):
-        while True:
-            self.job_cmd.job = self.job
-            future = self.lds_cli_.call_async(self.job_cmd)
-            rclpy.spin_until_future_complete(self.cli_node_, future)
-            if future.result():
-                self.job = (self.job + 1) % len(DoraJob)
+    def run(self, msg, response):
+        if msg.start:
+            while True:
+                self.job_cmd.job = self.job
+                future = self.lds_cli_.call_async(self.job_cmd)
+                rclpy.spin_until_future_complete(self.cli_node_, future)
+                if future.result():
+                    self.job = (self.job + 1) % len(DoraJob)
 
 # Entry Point
 def main():
