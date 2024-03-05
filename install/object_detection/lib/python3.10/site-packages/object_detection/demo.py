@@ -1,6 +1,6 @@
 import cv2
 import argparse
-from detect import Detect
+from .detect import Detect
 
 
 def main(source, weights):

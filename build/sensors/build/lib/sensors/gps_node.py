@@ -1,5 +1,6 @@
 import rclpy 
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 import cv2
 import numpy as np
 from dora_msgs.msg import Pose
@@ -34,10 +35,14 @@ class GpsNode(Node):
         self.LONG_MAX = 1.0
         self.IMAGE_Y = 950
         self.IMAGE_X = 1200
-
+        gps_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
+        )
         self.robotPosition = None
         self._processor = ImageProcessor()
-        self.pos_pub = self.create_publisher(Pose, "/gps", 10)
+        self.pos_pub = self.create_publisher(Pose, "/gps", gps_qos)
         self.cap = cv2.VideoCapture(0)
         self.timer = self.create_timer(1/30, self.process_video)
 
