@@ -38,11 +38,6 @@ def generate_launch_description():
             executable='camera_node'
         ),
         Node(
-            namespace='gps',
-            package='sensors',
-            executable='gps_node'
-        ),
-        Node(
             namespace='lds',
             package='sensors',
             executable='lds_node'
