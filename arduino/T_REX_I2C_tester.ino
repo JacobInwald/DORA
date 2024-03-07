@@ -15,38 +15,21 @@ int lowbat=550;                                      // adjust to suit your batt
 byte i2caddr=7;                                      // default I2C address of T'REX is 7. If this is changed, the T'REX will automatically store new address in EEPROM
 byte i2cfreq=0;                                      // I2C clock frequency. Default is 0=100kHz. Set to 1 for 400kHz
 
+
 void setup()
 {
   Serial.begin(9600);
   Wire.begin();                                      // no address - join the bus as master
-  pinMode(LED_BUILTIN, OUTPUT);
 }
 
-void forward(int motor_time)
-{
-  // move
-  int i = motor_time;
-  
-  while (i > 0) {
-    MasterSend(startbyte,2,200,0,200,0,sv[0],sv[1],sv[2],sv[3],sv[4],sv[5],devibrate,sensitivity,lowbat,i2caddr,i2cfreq);
-    delay(50);
-    MasterReceive();                                   // receive data packet from T'REX controller
-    delay(50);
-    
-    for(byte i=0;i<6;i++)                              // sweep servos
-    {
-      if(sv[i]!=0)                                     // a value of 0 indicates no servo attached
-      {
-        sv[i]+=sd[i];                                  // update servo position to create sweeping motion
-        if(sv[i]>2000 || sv[i]<1000) sd[i]=-sd[i];     // reverse direction of servo if limit reached
-      }
-    }
-
-    i -= 100;
-  }
+void go(int motor_time, int lmspeed, int rmspeed) {  
+  MasterSend(startbyte,2,lmspeed,0,rmspeed,0,sv[0],sv[1],sv[2],sv[3],sv[4],sv[5],devibrate,sensitivity,lowbat,i2caddr,i2cfreq);
+  delay(50);
+  MasterReceive();                                   // receive data packet from T'REX controller
+  delay(motor_time);
 
   // brake
-  MasterSend(startbyte,2,200,1,200,1,sv[0],sv[1],sv[2],sv[3],sv[4],sv[5],devibrate,sensitivity,lowbat,i2caddr,i2cfreq);
+  MasterSend(startbyte,2,0,1,0,1,sv[0],sv[1],sv[2],sv[3],sv[4],sv[5],devibrate,sensitivity,lowbat,i2caddr,i2cfreq);
   delay(50);
   MasterReceive();                                   // receive data packet from T'REX controller
   delay(50);
@@ -56,41 +39,25 @@ void forward(int motor_time)
 void loop()
 {
   if (Serial.available() > 1) {
-
-    int first = Serial.read(1);
-    int second = Serial.parseInt();
-
-    if (first == '0') {
-      digitalWrite(LED_BUILTIN, HIGH);
-      forward(secondd);
-      digitalWrite(LED_BUILTIN, LOW);
-    }
     
+    String first = Serial.readStringUntil('.');
+    String second = Serial.readStringUntil('-');
+    int move_time = second.toInt();
 
+    switch(first) {
+      case "forward":
+        go(move_time, 200, -200);
+        break;
+      case "backward":
+        go(move_time, -200, 200);
+        break;
+      case "left":
+        go(move_time, -200, -200);
+      case "right":
+        go(move_time, 200, 200);
+        break;
+      default:
+        // Do nothing
+    }
   }
-  
-                                                     // send data packet to T'REX controller 
-//  MasterSend(startbyte,2,lmspeed,lmbrake,rmspeed,rmbrake,sv[0],sv[1],sv[2],sv[3],sv[4],sv[5],devibrate,sensitivity,lowbat,i2caddr,i2cfreq);
-//  delay(50);
-//  MasterReceive();                                   // receive data packet from T'REX controller
-//  delay(50);
-//  
-//  //=================================================== Code to test motors and sweep servos =============================================  
-//  lmspeed+=ldir;
-//  if(lmspeed>240 or lmspeed<-240) ldir=-ldir;        // increase / decrease left motor speed and direction (negative values = reverse direction)
-//  
-//  rmspeed+=rdir;
-//  if(rmspeed>240 or rmspeed<-240) rdir=-rdir;        // increase / decrease left motor speed and direction (negative values = reverse direction)
-//                                                                                                                          
-//  lmbrake=(abs(lmspeed)>235);                         // test left  motor brake 
-//  rmbrake=(abs(rmspeed)>235);                        // test right motor brake 
-//  
-//  for(byte i=0;i<6;i++)                              // sweep servos
-//  {
-//    if(sv[i]!=0)                                     // a value of 0 indicates no servo attached
-//    {
-//      sv[i]+=sd[i];                                  // update servo position to create sweeping motion
-//      if(sv[i]>2000 || sv[i]<1000) sd[i]=-sd[i];     // reverse direction of servo if limit reached
-//    }
-//  }
 }
