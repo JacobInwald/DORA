@@ -107,10 +107,10 @@ class Controller(Node):
         """
         for i in range(10):
             self.scan_request()
-            cv2.waitKey(1)
+            cv2.waitKey(100)
             self.map.generate()
             self.map.show()
-            cv2.waitKey(0)
+            cv2.waitKey(10000)
         return True
       
     def navigate_to_toy(self) -> bool:
