@@ -11,12 +11,14 @@ class ImageProcessor:
         self.i = 0
         self.ret, self.mtx, self.dist, self.rvecs, self.tvecs = None, None, None, None, None
         
-        self.tl_mtx = np.load('data/calibration/top_left/tl_mtx.npy')
-        self.tl_dist = np.load('data/calibration/top_left/tl_dist.npy')
-        self.tr_mtx = np.load('data/calibration/top_right/tr_mtx.npy')
-        self.tr_dist = np.load('data/calibration/top_right/tr_dist.npy')
-        self.bl_mtx = np.load('data/calibration/bottom_left/bl_mtx.npy')
-        self.bl_dist = np.load('data/calibration/bottom_left/bl_dist.npy')
+        self.tl_mtx = np.load('data/calibration/tl/tl_mtx.npy')
+        self.tl_dist = np.load('data/calibration/tl/tl_dist.npy')
+        self.tr_mtx = np.load('data/calibration/tr/tr_mtx.npy')
+        self.tr_dist = np.load('data/calibration/tr/tr_dist.npy')
+        self.bl_mtx = np.load('data/calibration/bl/bl_mtx.npy')
+        self.bl_dist = np.load('data/calibration/bl/bl_dist.npy')
+        self.br_mtx = np.load('data/calibration/br/br_mtx.npy')
+        self.br_dist = np.load('data/calibration/br/br_dist.npy')
 
     def runProcessor(self, img):
 
@@ -36,7 +38,7 @@ class ImageProcessor:
         bl = self.undistort(bl, 2) # bottom-left
         br = self.undistort(br, 3) # bottom-right
 
-        img = self.imageStitch([tl, tr, bl, br])
+        img = self.image_stitch([tl, tr, bl, br])
 
         # TODO: remove when working
         cv2.imshow("image", img)
@@ -86,10 +88,9 @@ class ImageProcessor:
             matrix = self.bl_mtx
             distortion = self.bl_dist
         else: 
-            matrix = self.tl_mtx
-            distortion = self.tl_dist
-        matrix = self.tl_mtx
-        distortion = self.tl_dist    
+            matrix = self.br_mtx
+            distortion = self.br_dist
+        
         w, h = img.shape[:2]
         
         newcameramtx, roi = cv2.getOptimalNewCameraMatrix(matrix, distortion, (w,h), 1, (w,h))
@@ -99,26 +100,6 @@ class ImageProcessor:
         
         return dst
         
-        # # TODO: test different mtx1, dist1 value to get a better image output
-        # h,  w = img.shape[:2]
-        # mtx1 = np.array([[100, 0.000000, w/2], [0.000000, 100, h/2], [0.000000, 0.000000, 1.000000]], dtype=np.float32)
-        # if id == 0: # top-left
-        #     dist1 = np.float32([-0.01, -0.02, -0.01, 0, 0])
-        # elif id == 1: # top-right
-        #     dist1 = np.float32([-0.01, -0.02, -0.01, 0.02, 0])
-        # elif id == 2: # bottom-left
-        #     dist1 = np.float32([-0.01, -0.02, 0.01, -0.01, 0])
-        # else: # id = 3 #bottom-right
-        #     dist1 = np.float32([-0.01, -0.02, 0.01, 0, 0])    
-        # dst = cv2.undistort(img, mtx1, dist1)
-        
-        # # TODO: work out best crop distance
-        # crop = 20
-        # x,y,w,h = (crop, 0, w - 2*crop, h)
-        # dst = dst[y:y+h, x:x+w]
-
-        return dst
-
     def draw_robot_pos(self, img, pos1, pos2, angle):
         image_with_centers = cv2.circle(img, (int(pos1[0]), int(pos1[1])), 10, (255, 255, 255), cv2.FILLED)
         image_with_centers = cv2.circle(image_with_centers, (int(pos2[0]), int(pos2[1])), 10, (255, 255, 255), cv2.FILLED)
@@ -130,7 +111,7 @@ class ImageProcessor:
     def robot_present(self, pos):
         return pos[0] != 0 or pos[1] != 0
     
-    def imageStitch(self, images):
+    def image_stitch(self, images):
         # Initialise
         tl, tr, bl, br = images
         tr_h, tr_w = tr.shape[:2]
@@ -138,21 +119,22 @@ class ImageProcessor:
         tl_h, tl_w = tl.shape[:2]
         bl_h, bl_w = bl.shape[:2]
         
-        # right
-        tr = tr[10:tr_h-20, 0:tr_w]
-        br = br[0:br_h-10, 0:br_w]
-        right = cv2.vconcat([tr, br])
-        # left
-        tl = tl[0:tl_h-30, 0:tl_w-10]
-        bl = bl[10:bl_h, 10:bl_w]
-        left = cv2.vconcat([tl, bl])
-        
-        l_h, l_w = left.shape[:2]
-        left = left[0:l_h, 0:l_w-40]
-        
-        img = cv2.hconcat([left, right])
-        h, w = img.shape[:2]
-        img = img[40:h-25, 150:w-30]
-        return img
+        # top
+        tl = tl[0:tl_h-20, 0:tl_w]
+        tr = tr[20:tr_h, 10:tr_w]
+        top = cv2.hconcat([tl, tr])
 
-    
+        # bottom
+        bl = bl[5:bl_h, 0:bl_w]
+        br = br[0:br_h-5, 0:br_w-10]
+        bottom = cv2.hconcat([bl, br])
+        
+        top_h, top_w = top.shape[:2]
+        bottom_h, bottom_w = bottom.shape[:2]
+        
+        top = top[0:top_h, 0:top_w-10]
+        bottom = bottom[0:bottom_h, 10:bottom_w]
+        img = cv2.vconcat([top, bottom])
+        h, w = img.shape[:2]
+        # img = img[40:h-25, 150:w-30]
+        return img
