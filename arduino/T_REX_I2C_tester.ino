@@ -44,20 +44,16 @@ void loop()
     String second = Serial.readStringUntil('-');
     int move_time = second.toInt();
 
-    switch(first) {
-      case "forward":
-        go(move_time, 200, -200);
-        break;
-      case "backward":
-        go(move_time, -200, 200);
-        break;
-      case "left":
-        go(move_time, -200, -200);
-      case "right":
-        go(move_time, 200, 200);
-        break;
-      default:
-        // Do nothing
+    int speed = 100;
+
+    if (first == "forward") {
+      go(move_time, speed, -speed);
+    } else if (first == "backward") {
+      go(move_time, -speed, speed);
+    } else if (first == "left") {
+      go(move_time, -speed, -speed);
+    } else if (first == "right") {
+      go(move_time, speed, speed);
     }
   }
 }
