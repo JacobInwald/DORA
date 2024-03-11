@@ -40,11 +40,11 @@ class Wheels(Node):
 
     def forward(self, dist: float):
         self.arduino.write(
-            f"{'foward' if dist > 0 else 'backward'} {abs(dist)}".encode())
+            f"{'foward' if dist > 0 else 'backward'}.{abs(dist)}-".encode())
 
     def turn(self, angle: float):
         self.arduino.write(
-            f"{'right' if angle > 0 else 'left'} {abs(angle)}".encode())
+            f"{'right' if angle > 0 else 'left'}.{abs(angle)}-".encode())
 
 
 def main():
