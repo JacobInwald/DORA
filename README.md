@@ -10,4 +10,4 @@ source install/setup.bash
 ```
 before running the python files in your terminal
 
-Alterantive just run `source setup.bash`
+Alternative just run `source setup.bash`
