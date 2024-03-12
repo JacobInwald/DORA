@@ -65,8 +65,8 @@ class GpuNode(Node):
         toy_arr = []
         for xywh, cls, conf in zip(boxes.xywh, boxes.cls, boxes.conf):
             toy_msg = Toy()
-            toy_msg.cls = cls
-            toy_msg.conf = conf
+            toy_msg.cls = int(cls)
+            toy_msg.conf = float(conf)
             toy_msg.position = Pose()
             toy_msg.x, toy_msg.y = self.estimate_position(frame, xywh)
             toy_arr.append(toy_msg)
