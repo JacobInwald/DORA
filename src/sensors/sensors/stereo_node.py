@@ -98,7 +98,6 @@ class StereoNode(Node):
         bx, by = xywh.cpu().numpy()[:2]  # center of bbox
         disparity = self.stereo.compute(cv2.cvtColor(frameL, cv2.COLOR_BGR2GRAY), 
                                         cv2.cvtColor(frameR, cv2.COLOR_BGR2GRAY))
-        disparity = disparity.astype(np.float32)
         py = self.f * self.b / (disparity.at(by, bx)/16)
         px = (bx - self.cx) / self.fx * py - (self.b / 2)
         return px, py
