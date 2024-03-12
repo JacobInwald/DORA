@@ -8,89 +8,72 @@ import glob
 CHECKERBOARD = (7, 7     ) 
 
 
-def split_images(save=False, corner_spec=None):
-    images = glob.glob(PATH + '*.png') 
-    print(images)
-    i = 0
-    for filename in images: 
-        image = cv2.imread(filename) 
-        h, w = image.shape[:2]
-        tl = image[0:int(h/2), 0:int(w/2)]
-        tr = image[0:int(h/2), int(w/2):w]
-        bl = image[int(h/2):h, 0:int(w/2)]
-        br = image[int(h/2):h, int(w/2):w]
-        if save:
-            if not corner_spec:
-                cv2.imwrite(filename + 'tl/' + f'{i}.png', tl)
-                cv2.imwrite(filename + 'tr/' + f'{i}.png', tr)
-                cv2.imwrite(filename + 'bl/' + f'{i}.png', bl)
-                cv2.imwrite(filename + 'br/' + f'{i}.png', br)
-            elif corner_spec == 'tl':
-                cv2.imwrite(filename, tl)
-            elif corner_spec == 'tr':
-                cv2.imwrite(filename, tr)
-            elif corner_spec == 'bl':
-                cv2.imwrite(filename, bl)
-            elif corner_spec == 'br':
-                cv2.imwrite(filename, br)
-        i += 1
-
 def calibrate(path, corner='tl', save=True):
     # termination criteria
-    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
-    # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
-    objp = np.zeros((CHECKERBOARD[0] * CHECKERBOARD[1],3), np.float32)
-    objp[:,:2] = np.mgrid[0:CHECKERBOARD[1],0:CHECKERBOARD[0]].T.reshape(-1,2)
-    # Arrays to store object points and image points from all the images.
+    criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.1)
+    calibration_flags = cv2.fisheye.CALIB_FIX_SKEW + cv2.fisheye.CALIB_RECOMPUTE_EXTRINSIC 
+    # + cv2.fisheye.CALIB_CHECK_COND
+
+    objp = np.zeros((1, CHECKERBOARD[0]*CHECKERBOARD[1], 3), np.float32)
+    objp[0,:,:2] = np.mgrid[0:CHECKERBOARD[0], 0:CHECKERBOARD[1]].T.reshape(-1, 2)
+
+    _img_shape = None
     objpoints = [] # 3d point in real world space
     imgpoints = [] # 2d points in image plane.
+    images = []
+    N_OK = 0
     images = glob.glob(path + '/*.png')
     for fname in images:
-        if 'corners' in fname:
-            continue
         img = cv2.imread(fname)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if img is None:
+            continue
+        if _img_shape == None:
+            _img_shape = img.shape[:2]
+        gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         # Find the chess board corners
-        ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, None)
+        ret, corners = cv2.findChessboardCorners(gray, CHECKERBOARD, cv2.CALIB_CB_ADAPTIVE_THRESH+cv2.CALIB_CB_FAST_CHECK+cv2.CALIB_CB_NORMALIZE_IMAGE)
         # If found, add object points, image points (after refining them)
         if ret == True:
             objpoints.append(objp)
-            corners2 = cv2.cornerSubPix(gray,corners, (11,11), (-1,-1), criteria)
-            imgpoints.append(corners2)
-            # Draw and display the corners
-            cv2.imwrite(f'{fname[:-4]}_corners.png', img)
-            cv2.drawChessboardCorners(img, CHECKERBOARD, corners2, ret)
-            cv2.imshow('img', img)
-            cv2.waitKey(500)
-        
-        os.remove(fname)
+            cv2.cornerSubPix(gray,corners,(3,3),(-1,-1),criteria)
+            imgpoints.append(corners)
+            N_OK = len(objpoints)
+            
+            if 'corners' not in fname:
+                cv2.imwrite(f'{fname[:-4]}_corners.png', img)
+                
+        if 'corners' not in fname:
+            os.remove(fname)
+            
     cv2.destroyAllWindows()
-
-
-    # Perform camera calibration by 
-    # passing the value of above found out 3D points (threedpoints) 
-    # and its corresponding pixel coordinates of the 
-    # detected corners (twodpoints) 
+    print(f'Found {N_OK} valid images for calibration')
+    K = np.zeros((3, 3))
+    D = np.zeros((4, 1))
+    rvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
+    tvecs = [np.zeros((1, 1, 3), dtype=np.float64) for i in range(N_OK)]
+    rms, _, _, _, _ = \
+        cv2.fisheye.calibrate(
+            objpoints,
+            imgpoints,
+            gray.shape[::-1],
+            K,
+            D,
+            rvecs,
+            tvecs,
+            calibration_flags,
+            (cv2.TERM_CRITERIA_EPS+cv2.TERM_CRITERIA_MAX_ITER, 30, 1e-6)
+        )
+        
+    print("K=np.array(" + str(K.tolist()) + ")")
+    print("D=np.array(" + str(D.tolist()) + ")")
+    print("DIM=" + str(img[::-1]))
     ret, matrix, distortion, r_vecs, t_vecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
-
-
-    # Displaying required output 
-    print(" Camera matrix:") 
-    print(matrix) 
-
-    print("\n Distortion coefficient:") 
-    print(distortion) 
-
-    print("\n Rotation Vectors:") 
-    print(r_vecs) 
-
-    print("\n Translation Vectors:") 
-    print(t_vecs) 
+    
     if save:
         np.save(f'data/calibration/{corner}/{corner}_mtx', matrix)
         np.save(f'data/calibration/{corner}/{corner}_dist', distortion)
-    # np.save('r_vecs', r_vecs)
-    # np.save('t_vecs', t_vecs)
+        np.save(f'data/calibration/{corner}/{corner}_K', K)
+        np.save(f'data/calibration/{corner}/{corner}_D', D)
     
     mean_error = 0
     for i in range(len(objpoints)):
@@ -100,19 +83,6 @@ def calibrate(path, corner='tl', save=True):
     print( "total error: {}".format(mean_error/len(objpoints)) )
     return matrix, distortion, r_vecs, t_vecs
 
-def undistort(path, corner, save=True):
-    matrix, distortion, r_vecs, t_vecs = calibrate(path, corner, save)
-    images = glob.glob(path + '/*.png') 
-    for filename in images: 
-        image = cv2.imread(filename)
-        h, w = image.shape[:2]
-        newcameramtx, roi = cv2.getOptimalNewCameraMatrix(matrix, distortion, (w,h), 1, (w,h))
-        dst = cv2.undistort(image, matrix, distortion, None, matrix)
-        # x, y, w, h = roi
-        # dst = dst[y:y+h, x:x+w]
-        cv2.imshow('img', dst)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
 
 def take_photos(path, corner, i=0, save=False):
     cap = cv2.VideoCapture(0)
@@ -139,7 +109,7 @@ def take_photos(path, corner, i=0, save=False):
             elif k == ord('q'):
                 break
         else:
-            k = cv2.waitKey(500)
+            k = cv2.waitKey(1)
             if k == ord('q'):
                 break
             cv2.imwrite(path + f'/{i}.png', frame)
@@ -150,27 +120,34 @@ def take_photos(path, corner, i=0, save=False):
 
 def test():
     cap = cv2.VideoCapture(0)
-    tl_mtx = np.load('data/calibration/tl/tl_mtx.npy')
-    tl_dist = np.load('data/calibration/tl/tl_dist.npy')
-    tr_mtx = np.load('data/calibration/tr/tr_mtx.npy')
-    tr_dist = np.load('data/calibration/tr/tr_dist.npy')
-    bl_mtx = np.load('data/calibration/bl/bl_mtx.npy')
-    bl_dist = np.load('data/calibration/bl/bl_dist.npy')
-    br_mtx = np.load('data/calibration/br/br_mtx.npy')
-    br_dist = np.load('data/calibration/br/br_dist.npy')
-
-    while True:
+    
+    
+    
+    tl_K = np.load('data/calibration/tl/tl_K.npy')
+    tl_D = np.load('data/calibration/tl/tl_D.npy')
+    tr_K = np.load('data/calibration/tr/tr_K.npy')
+    tr_D = np.load('data/calibration/tr/tr_D.npy')
+    bl_K = np.load('data/calibration/bl/bl_K.npy')
+    bl_D = np.load('data/calibration/bl/bl_D.npy')
+    br_K = np.load('data/calibration/br/br_K.npy')
+    br_D = np.load('data/calibration/br/br_D.npy')
+    
+    # h_tl = np.load('data/calibration/tl/tl_h.npy')
+    
+    k = 0
+    while k != ord('q'):
         ret, image = cap.read()
         h, w = image.shape[:2]
-        tl = test_undistort(image[0:int(h/2), 0:int(w/2)], tl_mtx, tl_dist)
-        tr = test_undistort(image[0:int(h/2), int(w/2):w], tr_mtx, tr_dist)
-        bl = test_undistort(image[int(h/2):h, 0:int(w/2)], bl_mtx, bl_dist)
-        br = test_undistort(image[int(h/2):h, int(w/2):w], br_mtx, br_dist)
+        tl = test_undistort(image[0:int(h/2), 0:int(w/2)], tl_K, tl_D)
+        tr = test_undistort(image[0:int(h/2), int(w/2):w], tr_K, tr_D)
+        bl = test_undistort(image[int(h/2):h, 0:int(w/2)], bl_K, bl_D)
+        br = test_undistort(image[int(h/2):h, int(w/2):w], br_K, br_D)
+        
         img = image_stitch([tl, tr, bl, br])
         cv2.imshow('img', img)
-        k = cv2.waitKey(100)
-        if k == ord('q'):
-            break
+        k = cv2.waitKey(50)
+        
+        
     cap.release()
     cv2.destroyAllWindows()
         
@@ -184,35 +161,37 @@ def image_stitch(images):
     bl_h, bl_w = bl.shape[:2]
     
     # top
-    tl = tl[0:tl_h-20, 0:tl_w]
-    tr = tr[20:tr_h, 10:tr_w]
+    tl = tl[0:tl_h, 0:tl_w]
+    tr = tr[0:tr_h, 0:tr_w]
     top = cv2.hconcat([tl, tr])
 
     # bottom
-    bl = bl[5:bl_h, 0:bl_w]
-    br = br[0:br_h-5, 0:br_w-10]
+    bl = bl[0:bl_h, 0:bl_w]
+    br = br[0:br_h, 0:br_w]
     bottom = cv2.hconcat([bl, br])
     
     top_h, top_w = top.shape[:2]
     bottom_h, bottom_w = bottom.shape[:2]
     
-    top = top[0:top_h, 0:top_w-10]
-    bottom = bottom[0:bottom_h, 10:bottom_w]
+    top = top[0:top_h, 0:top_w]
+    bottom = bottom[0:bottom_h, 0:bottom_w]
     img = cv2.vconcat([top, bottom])
     h, w = img.shape[:2]
     # img = img[40:h-25, 150:w-30]
     return img
 
-def test_undistort(img, mtx, dist):
-    # w, h = img.shape[:2]
-    # newcameramtx, roi = cv2.getOptimalNewCameraMatrix(matrix, distortion, (w,h), 1, (w,h))
-    dst = cv2.undistort(img, mtx, dist, None, mtx)
-    
+def test_undistort(img, K, D, balance=0.0, dim2=(960, 600), dim3=(960, 600)):    
+    dim1 = img.shape[:2][::-1]  #dim1 is the dimension of input image to un-distort  
+    new_K = cv2.fisheye.estimateNewCameraMatrixForUndistortRectify(K, D, dim1, np.eye(3), balance=balance)
+    dst = cv2.fisheye.undistortImage(img, K, D, K, new_K, dim1)
     return dst
 
-# PATH = "data/calibration/images/"
-# corner = 'br'
-# path = PATH + corner
-# take_photos(path, corner, 1, True)
-# undistort(path, corner, save=False)
+
+corners = ['bl']
+# , 'tr', 'bl', 'br']
+for corner in corners:
+    path = f"data/calibration/images/{corner}"
+    # take_photos(path, corner, 1, True)
+    calibrate(path, corner, save=True)
+
 test()
