@@ -12,9 +12,7 @@ install/
 *.jpg
 *.mp4
 *.avi
-
-!data/camera_info/
-!data/weights/yolo/
+*.ipynb
 
 src/demo_perception.py
 src/utils.py

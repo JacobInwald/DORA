@@ -18,11 +18,11 @@ class StereoNode(Node):
     Publishes Toys with topic name 'toys'.
     """
 
-    def __init__(self, camera_info='data/camera_info/logitechC270.yaml'):
-        super().__init__('camera_node')
+    def __init__(self, camera_info='data/camera_info/logitechC270_640x480.yaml'):
+        super().__init__('stereo_node')
         self.publisher_ = self.create_publisher(Toys, '/toys', 10)
         self.capL = cv2.VideoCapture('/dev/video0')
-        self.capR = cv2.VideoCapture('/dev/video1')
+        self.capR = cv2.VideoCapture('/dev/video2')
         if not self.capL.isOpened() or not self.capR.isOpened():
             raise IOError('Cannot open webcam')
         
