@@ -7,10 +7,8 @@ pytest
 PyYAML
 roboflow
 roslibpy
-RPi.GPIO
 setuptools
 ultralytics
 timm==0.6.12
 torch==2.0.1
 torchvision==0.15.2
-smbus
