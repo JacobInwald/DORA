@@ -33,9 +33,9 @@ def generate_launch_description():
                               'frame_id': 'base_scan'}.items(),
         ),
         Node(
-            namespace='camera',
+            namespace='stereo',
             package='sensors',
-            executable='camera_node'
+            executable='stereo_node'
         ),
         Node(
             namespace='gps',

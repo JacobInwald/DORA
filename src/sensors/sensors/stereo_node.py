@@ -10,6 +10,12 @@ from object_detection.detect import Detect
 from object_detection.demo import annotate
 
 
+def display(frame, results):
+    pred = annotate(results)
+    out = cv2.resize(cv2.vconcat([frame, pred]), dsize=(0, 0), fx=0.5, fy=0.5)
+    cv2.imshow('out', out)
+
+
 class StereoNode(Node):
     """
     Represents the front-facing stereo camera.
@@ -69,13 +75,8 @@ class StereoNode(Node):
         pub_msg.toys = toy_arr
         self.publisher_.publish(pub_msg)
         self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
-        self.display(frameL, results)
+        display(frameL, results)
 
-    def display(self, frame, results):
-        pred = annotate(results)
-        out = cv2.resize(cv2.vconcat([frame, pred]), dsize=(0, 0), fx=0.5, fy=0.5)
-        cv2.imshow('out', out)
-    
     def calculate_position(self, frameL, frameR, xywh):
         """
         Calculates position of toy given xywh bbox prediction.
