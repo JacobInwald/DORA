@@ -46,11 +46,13 @@ class StereoNode(Node):
         self.f = self.camera_info['focal_length'] # focal length
         self.fx, _, self.cx = self.camera_info['camera_matrix']['data'][:3]
 
+        self.capture()
+
     def capture(self):
         while self.capL.isOpened() and self.capR.isOpened():
             retL, frameL = self.capL.read()
             retR, frameR = self.capR.read()
-            stamp = self.get_clock().now()
+            stamp = self.get_clock().now().to_msg()
             if retL and retR:
                 self.callback(frameL, frameR, stamp)
                 self.frame_no += 1
@@ -67,7 +69,7 @@ class StereoNode(Node):
         toy_arr = []
         for xywh, cls, conf in zip(boxes.xywh, boxes.cls, boxes.conf):
             toy_msg = Toy()
-            toy_msg.cls = cls
+            toy_msg.cls = int(cls)
             toy_msg.conf = conf
             toy_msg.position = Pose()
             toy_msg.x, toy_msg.y = self.calculate_position(frameL, frameR, xywh)
@@ -105,6 +107,5 @@ def main():
     rclpy.init()
     stereo_node = StereoNode()
     rclpy.spin(stereo_node)
-    stereo_node.capture()
     stereo_node.destroy_node()
     rclpy.shutdown()

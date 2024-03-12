@@ -23,10 +23,12 @@ class CameraNode(Node):
         self.cap.set(cv2.CAP_PROP_FPS, rate)
         self.frame_no = 1
 
+        self.capture()
+
     def capture(self):
         while self.cap.isOpened():
             ret, frame = self.cap.read()
-            stamp = self.get_clock().now()
+            stamp = self.get_clock().now().to_msg()
             if ret:
                 self.callback(frame, stamp)
                 self.frame_no += 1
@@ -52,6 +54,5 @@ def main():
     rclpy.init()
     camera_node = CameraNode()
     rclpy.spin(camera_node)
-    camera_node.capture()
     camera_node.destroy_node()
     rclpy.shutdown()
