@@ -1,3 +1,4 @@
+data
 .DS_STORE
 datasets
 runs
@@ -10,10 +11,10 @@ build/
 install/
 *.jpg
 *.mp4
-
-!data/camera_info
-!data/weights
+*.avi
+*.ipynb
 
 src/demo_perception.py
 src/utils.py
 src/midas/
+sample.py

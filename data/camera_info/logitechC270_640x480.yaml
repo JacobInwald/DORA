@@ -1,0 +1,13 @@
+image_width: 640
+image_height: 480
+sensor_width: 3.58
+sensor_height: 2.02
+camera_width: 72.91
+camera_height: 31.91
+camera_depth: 66.64
+focal_length: 4
+camera_name: logitechC270_640x480
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [715.08, 0, 320, 0, 950.50, 240, 0, 0, 1]
