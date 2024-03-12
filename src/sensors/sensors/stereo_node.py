@@ -10,6 +10,12 @@ from object_detection.detect import Detect
 from object_detection.demo import annotate
 
 
+def display(frame, results):
+    pred = annotate(results)
+    out = cv2.resize(cv2.vconcat([frame, pred]), dsize=(0, 0), fx=0.5, fy=0.5)
+    cv2.imshow('out', out)
+
+
 class StereoNode(Node):
     """
     Represents the front-facing stereo camera.
@@ -18,13 +24,15 @@ class StereoNode(Node):
     Publishes Toys with topic name 'toys'.
     """
 
-    def __init__(self, camera_info='data/camera_info/logitechC270.yaml'):
-        super().__init__('camera_node')
-        self.publisher_ = self.create_publisher(Toys, '/toys', 10)
+    def __init__(self, rate=10, camera_info='data/camera_info/logitechC270_640x480.yaml'):
+        super().__init__('stereo_node')
+        self.publisher_ = self.create_publisher(Toys, '/toys', rate)
         self.capL = cv2.VideoCapture('/dev/video0')
-        self.capR = cv2.VideoCapture('/dev/video1')
+        self.capR = cv2.VideoCapture('/dev/video2')
         if not self.capL.isOpened() or not self.capR.isOpened():
             raise IOError('Cannot open webcam')
+        self.capL.set(cv2.CAP_PROP_FPS, rate)
+        self.capR.set(cv2.CAP_PROP_FPS, rate)
         
         self.frame_no = 1
         self.model = Detect()
@@ -59,23 +67,18 @@ class StereoNode(Node):
         toy_arr = []
         for xywh, cls, conf in zip(boxes.xywh, boxes.cls, boxes.conf):
             toy_msg = Toy()
-            toy_msg.header = header
             toy_msg.cls = cls
             toy_msg.conf = conf
             toy_msg.position = Pose()
             toy_msg.x, toy_msg.y = self.calculate_position(frameL, frameR, xywh)
             toy_arr.append(toy_msg)
         end_time = time.time()
+        pub_msg.header = header
         pub_msg.toys = toy_arr
         self.publisher_.publish(pub_msg)
         self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
-        self.display(frameL, results)
+        display(frameL, results)
 
-    def display(self, frame, results):
-        pred = annotate(results)
-        out = cv2.resize(cv2.vconcat([frame, pred]), dsize=(0, 0), fx=0.5, fy=0.5)
-        cv2.imshow('out', out)
-    
     def calculate_position(self, frameL, frameR, xywh):
         """
         Calculates position of toy given xywh bbox prediction.

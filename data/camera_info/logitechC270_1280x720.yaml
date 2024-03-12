@@ -6,7 +6,7 @@ camera_width: 72.91
 camera_height: 31.91
 camera_depth: 66.64
 focal_length: 4
-camera_name: logitechC270
+camera_name: logitechC270_1280x720
 camera_matrix:
   rows: 3
   cols: 3

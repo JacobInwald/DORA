@@ -8,9 +8,9 @@ from midas.model_loader import  load_model
 
 class Estimator:
 
-    def __init__(self, model_path='data/weights/midas/midas_v21_small_256.pt'):
+    def __init__(self, device='cpu', model_path='data/weights/midas/midas_v21_small_256.pt'):
         model_name = os.path.basename(model_path).split('.')[0]
-        self.device = 'cpu'
+        self.device = device
         self.model, self.transform, self.net_w, self.net_h = load_model(
             self.device, model_path, model_name, optimize=False, square=True)
 

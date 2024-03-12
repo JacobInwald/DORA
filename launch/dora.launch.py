@@ -1,4 +1,5 @@
 import os
+import sys
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -8,6 +9,18 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
+    if len(sys.argv) > 1 and sys.argv[1] == "--mono":
+        camera_node = Node(
+            namespace='camera',
+            package='sensors',
+            executable='camera_node'
+        )
+    else:
+        camera_node = Node(
+            namespace='stereo',
+            package='sensors',
+            executable='stereo_node'
+        )
 
     LDS_MODEL = os.environ['LDS_MODEL']
     LDS_LAUNCH_FILE = '/hlds_laser.launch.py'
@@ -32,11 +45,7 @@ def generate_launch_description():
             launch_arguments={'port': '/dev/ttyUSB0',
                               'frame_id': 'base_scan'}.items(),
         ),
-        Node(
-            namespace='camera',
-            package='sensors',
-            executable='camera_node'
-        ),
+        camera_node,
         Node(
             namespace='gps',
             package='sensors',
