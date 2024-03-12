@@ -2,7 +2,6 @@ matplotlib
 natsort
 numpy
 opencv_python
-opencv_python_headless
 Pillow
 pytest
 PyYAML
