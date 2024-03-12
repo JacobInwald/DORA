@@ -57,7 +57,6 @@ def bresenham(start: np.ndarray,
     return result
 
 
-
 class OccupancyMap:
     """
     Represents an occupancy map based on obstacle coordinates and resolution.
@@ -188,6 +187,20 @@ class OccupancyMap:
         self.__init__(self.offset, newPointcloud)
         return self
 
+    # Sampling
+
+    def localise_cloud(self, cloud: "PointCloud") -> "PointCloud":
+        """
+        Localise a pointcloud to the occupancy map.
+
+        Params:
+            cloud (PointCloud): The pointcloud to be localised.
+
+        Returns:
+            PointCloud: The localised pointcloud.
+        """
+        pass
+
     def sampleCoord(self,
                     coord: np.ndarray,
                     yx=False,
@@ -221,12 +234,12 @@ class OccupancyMap:
 
         Params:
             coord (float): The coordinate value to be translated.
-            
+
         Returns:
             int: The grid index corresponding to the translated coordinate.
         """
         return np.round(((coord - self.offset) - self.min) /
-                            self.resolution).astype(int)
+                        self.resolution).astype(int)
 
     def normalise(self) -> None:
         """
@@ -235,6 +248,8 @@ class OccupancyMap:
         for c in self.pointclouds:
             c.transform(self.offset)
         self.offset = np.array([0, 0])
+
+    # Saving
 
     def to_msg(self) -> "Map":
         """
@@ -249,6 +264,25 @@ class OccupancyMap:
         msg.resolution = self.resolution
         msg.clouds = [c.toMsg() for c in self.pointclouds]
         return msg
+
+    def save(self, path: str) -> None:
+        """
+        Save the occupancy map to a file.
+
+        Params:
+            path (str): The path to save the occupancy map to.
+        """
+        np.save(f'data/maps/{hash(self)}.npy', self.map)
+
+    @staticmethod
+    def load(path: str):
+        """
+        Save the occupancy map to a file.
+
+        Params:
+            path (str): The path to save the occupancy map to.
+        """
+        return np.load(path)
 
     @staticmethod
     def from_msg(msg: "Map") -> "OccupancyMap":
@@ -266,8 +300,9 @@ class OccupancyMap:
         clouds = [PointCloud.fromMsg(c) for c in msg.clouds]
         res = msg.resolution
         return OccupancyMap(pos, clouds, res)
-    
-    
+
+    # Displaying
+
     def show(
         self,
         raycast: bool = False,
