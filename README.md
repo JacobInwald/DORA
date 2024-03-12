@@ -1,3 +1,7 @@
+# DORA
+
+![logo](misc/logo.png)
+
 To make work, run 
 ```
 source /opt/ros/<distro>/setup.bash
