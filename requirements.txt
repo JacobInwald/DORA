@@ -2,13 +2,11 @@ matplotlib
 natsort
 numpy
 opencv_python
-opencv_python_headless
 Pillow
 pytest
 PyYAML
 roboflow
 roslibpy
-RPi.GPIO
 setuptools
 ultralytics
 timm==0.6.12
