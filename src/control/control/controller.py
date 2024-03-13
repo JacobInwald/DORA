@@ -2,11 +2,11 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from dora_msgs.msg import Toy, Pose, Toys, Map
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from .router import Router
 from .occupancy_map import OccupancyMap
-from .point_cloud import PointCloud
 from job import DoraJob
 from actuators.wheels import WheelsMove
 import cv2
@@ -22,7 +22,12 @@ class Controller(Node):
     def __init__(self):
         super().__init__('controller')
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
-        self.toy_sub_ = self.create_subscription(Toys, '/toys', self.toy_callback, 10)
+        toy_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
+        )
+        self.toy_sub_ = self.create_subscription(Toys, '/toys', self.toy_callback, toy_qos)
         self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
         self.map_sub_ = self.create_subscription(Map, '/map', self.map_callback, 10)
         self.cli_node_ = Node('control_client')
@@ -65,7 +70,7 @@ class Controller(Node):
         Args:
             msg: Pose message from GPS
         """
-        self.pose = Pose
+        self.pose = msg
 
     def map_callback(self, msg: Map): # Will work if corresponding publisher completes
         """

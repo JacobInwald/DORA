@@ -24,7 +24,7 @@ class StereoNode(Node):
     Publishes Toys with topic name 'toys'.
     """
 
-    def __init__(self, rate=10, camera_info='data/camera_info/logitechC270_640x480.yaml'):
+    def __init__(self, rate=2, display=False, camera_info='data/camera_info/logitechC270_640x480.yaml'):
         super().__init__('stereo_node')
         self.publisher_ = self.create_publisher(Toys, '/toys', rate)
         self.capL = cv2.VideoCapture('/dev/video0')
@@ -35,6 +35,7 @@ class StereoNode(Node):
         self.capR.set(cv2.CAP_PROP_FPS, rate)
         
         self.frame_no = 1
+        self.display = display
         self.model = Detect()
         self.stereo = cv2.StereoBM_create()
         self.stereo.setMinDisparity(0)
@@ -46,11 +47,13 @@ class StereoNode(Node):
         self.f = self.camera_info['focal_length'] # focal length
         self.fx, _, self.cx = self.camera_info['camera_matrix']['data'][:3]
 
+        self.capture()
+
     def capture(self):
         while self.capL.isOpened() and self.capR.isOpened():
             retL, frameL = self.capL.read()
             retR, frameR = self.capR.read()
-            stamp = self.get_clock().now()
+            stamp = self.get_clock().now().to_msg()
             if retL and retR:
                 self.callback(frameL, frameR, stamp)
                 self.frame_no += 1
@@ -67,17 +70,17 @@ class StereoNode(Node):
         toy_arr = []
         for xywh, cls, conf in zip(boxes.xywh, boxes.cls, boxes.conf):
             toy_msg = Toy()
-            toy_msg.cls = cls
-            toy_msg.conf = conf
+            toy_msg.cls = int(cls)
+            toy_msg.conf = float(conf)
             toy_msg.position = Pose()
-            toy_msg.x, toy_msg.y = self.calculate_position(frameL, frameR, xywh)
+            toy_msg.position.x, toy_msg.position.y = self.calculate_position(frameL, frameR, xywh)
             toy_arr.append(toy_msg)
         end_time = time.time()
         pub_msg.header = header
         pub_msg.toys = toy_arr
         self.publisher_.publish(pub_msg)
         self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
-        display(frameL, results)
+        if self.display: display(frameL, results)
 
     def calculate_position(self, frameL, frameR, xywh):
         """
@@ -96,7 +99,7 @@ class StereoNode(Node):
         disparity = self.stereo.compute(cv2.cvtColor(frameL, cv2.COLOR_BGR2GRAY), 
                                         cv2.cvtColor(frameR, cv2.COLOR_BGR2GRAY))
         disparity = disparity.astype(np.float32)
-        py = self.f * self.b / (disparity.at(by, bx)/16)
+        py = self.f * self.b / (disparity[round(by), round(bx)]/16)
         px = (bx - self.cx) / self.fx * py - (self.b / 2)
         return px, py
 
@@ -105,6 +108,5 @@ def main():
     rclpy.init()
     stereo_node = StereoNode()
     rclpy.spin(stereo_node)
-    stereo_node.capture()
     stereo_node.destroy_node()
     rclpy.shutdown()
