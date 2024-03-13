@@ -43,7 +43,8 @@ class OccupancyMap:
             self.map = np.zeros((1, 1))
         else:
             self.map = self.generate()
-        
+     
+    # Generation
 
     def generate(self, fuzz: bool = True) -> "OccupancyMap":
         """
@@ -68,8 +69,6 @@ class OccupancyMap:
         self.map = man_fuzz(img)
         return self.map      
     
-    # Merging
-
     def merge_cloud_into_map(self, cloud: "PointCloud", fuzz=True, overwrite=False, set_map=True) -> "OccupancyMap":
                 
         # Init Vars
@@ -112,8 +111,6 @@ class OccupancyMap:
             
         return img
 
-    # Point Sampling
-
     def localise_cloud(self, cloud: "PointCloud") -> "PointCloud":
         """
         Localise a pointcloud to the occupancy map.
@@ -125,16 +122,21 @@ class OccupancyMap:
             PointCloud: The localised pointcloud.
         """
         # Normalise reference map
-        padding = int(cloud.maxScanDist / 0.05)
+        padding = int(cloud.maxScanDist / self.resolution)
         ref = np.copy(self.map).astype(np.float32).T
         ref = np.pad(ref, padding, mode='constant', constant_values=0.5)
         
         # INIT
         min_loss = np.inf
         best_pose = np.array([0, 0, 0])
+        loss = 1
+        next_r = 0
+        
+        # takes 3.7 secs
         template = cloud.generate(rot=0, res=self.resolution).astype(np.float32).T
-        #  TODO: increase resolution for low loss values ...
-        for r in [np.deg2rad(i) for i in np.arange(0, 360, 1)]:
+        
+        for i in range(50):
+            r=next_r
             # Generate the rotated template
             _template = rotate_image(template, np.rad2deg(r))
             w, h = _template.shape
@@ -147,7 +149,7 @@ class OccupancyMap:
             center = np.array([max_loc[0] + (w / 2), max_loc[1] + (h / 2)])
             center -= padding * np.array([1, 1])
             x, y = self.translate(center, False)
-            r = 2*np.pi - r
+            r = (2*np.pi - r) % (2*np.pi)
             pose = np.array([x, y, r])
             
             # Evaluate Match Quality
@@ -162,21 +164,35 @@ class OccupancyMap:
             mask = dist_from_center <= (cloud.maxScanDist / self.resolution)
             res[~mask] = 0.5
             
-            loss = np.sum((res-_template) ** 2) / (res.shape[0] * res.shape[1])
+            
+            # Gradient descent(ish)
+            diff = np.abs(res-_template)
+            diff[_template <= 0.55] = 0  # Ignore the 0.5s
+            diff[diff > 0.55] = 5 * diff[diff > 0.55] # Penalize the edges
+            
+            # max_loss = 0.14
+            loss = np.sum(diff) / (res.shape[0] * res.shape[1])
+            delta_r = np.deg2rad(1*loss*50) 
+            next_r = next_r + delta_r
             
             if loss < min_loss:
                 min_loss = loss
                 best_pose = pose
                 best_temp = _template
                 best_res = res
+                best_diff = diff
                 
-        # plt.imshow(np.hstack([best_res, best_temp, np.abs(best_res-best_temp)]))
-        # plt.show()
+            if loss < 0.003:
+                break
+                  
+        plt.imshow(np.hstack([best_res, best_temp, best_diff / 5]))
+        plt.show()
         return best_pose
+    
+    #  Helpers
 
-    def sampleCoord(self,
+    def sample_coord(self,
                     coord: np.ndarray,
-                    yx=False,
                     mean=False,
                     n=3) -> np.ndarray:
         """
@@ -184,7 +200,8 @@ class OccupancyMap:
 
         Params:
             coord (np.ndarray): The coordinate to sample.
-            yx (bool, optional): If True, the coordinate is treated as (y, x) instead of (x, y). Defaults to False.
+            mean (bool, optional): If True, return the mean value of the surrounding area instead of the sampled value. Defaults to False.
+            n (int, optional): The size of the surrounding area to consider when calculating the mean value. Defaults to 3.
 
         Returns:
             np.ndarray: The sampled value, nan if the coordinate is out of bounds.
@@ -301,247 +318,34 @@ class OccupancyMap:
         occ.map = map
         return occ
 
-    # Displaying
 
-    def show(
-        self,
-        raycast: bool = False,
-        region: np.ndarray = None,
-        save: bool = False,
-        path: str = "",
-    ) -> None:
-        """
-        Display the occupancy map using matplotlib.
-
-        Params:
-            raycast (bool, optional): If True, displays the occupancy map with raycast visualization. Defaults to False.
-            region (np.ndarray, optional): The region to be plotted in the raycast visualization. Defaults to None.
-        """
-        plt.figure(1, figsize=(4, 4))
-        if not raycast:
-            plt.imshow(self.map, cmap="PiYG_r")
-            plt.clim(0, 1)
-            plt.gca().set_xticks(np.arange(-0.5, self.shape[1], 1), minor=True)
-            plt.gca().set_yticks(np.arange(-0.5, self.shape[0], 1), minor=True)
-            plt.grid(True, which="minor", color="w", linewidth=0.6, alpha=0.5)
-            plt.colorbar()
-        else:
-            if not region is None:
-                plt.plot(region[:, 0], region[:, 1], "bo-")
-
-            for cloud in self.pointclouds:
-                if len(cloud.objectCloud) == 0:
-                    continue
-
-                c = cloud.objectCloud + self.offset
-                plt.plot(
-                    [c[:, 0], self.offset[0] + np.zeros(np.size(c[:, 0]))],
-                    [c[:, 1], self.offset[1] + np.zeros(np.size(c[:, 1]))],
-                    "ro-",
-                )
-            plt.axis("equal")
-            plt.plot(self.offset[1], self.offset[0], "ob")
-            plt.gca().set_aspect("equal", "box")
-            bottom, top = plt.ylim()  # return the current y-lim
-            # rescale y axis, to match the grid orientation
-            plt.ylim((top, bottom))
-            plt.grid(True)
-        if save:
-            plt.savefig(path)
-            plt.close()
-        else:
-            plt.show()
-
-
-class Map:
-    
-    def __init__(self, regions) -> None:
-        self.regions = regions
-    
-    
-    def line_intersects_region(self, p1, p2):
-        """
-        Check if a line intersects with any of the regions in the map.
-        """
-        return lineIntersectPolygon(p1, p2, self.regions)
-    
-    def cast_ray(self,
-        start: np.ndarray,
-        angle: float,
-        noise=True,
-        max_dist=np.inf,
-    ) -> float:
-        """
-        Calculates the minimum distance from a starting point to a boundary region
-        along a given angle using LiDAR.
-
-        Params:
-            start (np.ndarray): The starting point coordinates.
-            angle (float): The angle in radians.
-            bounds (np.ndarray): The boundary region coordinates.
-
-        Returns:
-            float: The minimum distance from the starting point to the boundary region.
-            nb: return inf if there is no intersection
-        """
-
-        dir_lidar = np.round(np.array([np.cos(angle), np.sin(angle)]), 3)
-        min_dist = np.inf
-
-        for bound in self.regions:
-            for i in range(len(bound)):
-                # Get a bounding line of the boundary region
-                p1 = bound[i]
-                dir = np.round(
-                    bound[i + 1] - p1 if i < len(bound) - 1 else bound[0] - p1, 3
-                )
-
-                #  Get intersection point between the LiDAR ray and the bounding line
-                p = pointIntersect(start, dir_lidar, p1, dir)
-
-                # Checks if the intersection point is valid (pointing right way, not nan, not too far away,...)
-                if (
-                    np.isnan(p).any()
-                    or not isBetween(p1, p1 + dir, p)
-                    or np.dot(dir_lidar, p - start) < 0
-                    or np.linalg.norm(p - start) >= min_dist
-                ):
-                    continue
-
-                # Update minimum distance
-                min_dist = np.linalg.norm(p - start)
-
-        noise = np.random.normal(0, 0.01) if noise else 0
-        return min_dist + noise if min_dist < max_dist else np.inf
-
-def isBetween(a: np.ndarray, b: np.ndarray, c: np.ndarray) -> bool:
-    """
-    Check if point c lies between points a and b.
-
-    Params:
-    a (numpy.ndarray): The first point.
-    b (numpy.ndarray): The second point.
-    c (numpy.ndarray): The point to check.
-
-    Returns:
-    bool: True if c lies between a and b, False otherwise.
-    """
-    return (
-        np.linalg.norm(a - c) + np.linalg.norm(b - c) -
-        np.linalg.norm(a - b) < 0.0001
-    )
-
-def pointIntersect(
-    p1: np.ndarray, d1: np.ndarray, p2: np.ndarray, d2: np.ndarray
-) -> np.ndarray:
-    """
-    Calculate the intersection point between two lines defined by a point and a direction vector.
-
-    Params:
-    p1 (numpy.ndarray): The starting point of the first line.
-    d1 (numpy.ndarray): The direction vector of the first line.
-    p2 (numpy.ndarray): The starting point of the second line.
-    d2 (numpy.ndarray): The direction vector of the second line.
-
-    Returns:
-    numpy.ndarray: The intersection point of the two lines.
-    nb: this return nan if the lines are parallel
-    """
-    if d2[0] == 0:
-        t = (p2[0] - p1[0]) / d1[0]
-    else:
-        t = ((p2[1] - p1[1]) + (d2[1] / d2[0]) * (p1[0] - p2[0])) / (
-            d1[1] - (d2[1] * d1[0]) / d2[0]
-        )
-
-    p = p1 + t * d1
-
-    if any(np.isnan(p)) or any(np.isinf(p)):
-        return np.array([np.nan, np.nan])
-
-    return p
-
-def lineIntersectPolygon(
-    p: np.ndarray, d: np.ndarray, bounds: np.ndarray
-) -> np.ndarray:
-    """
-    Calculate the intersection point between a line and a polygon.
-
-    Params:
-    p (numpy.ndarray): The starting point of the line.
-    d (numpy.ndarray): The direction vector of the line.
-    bounds (numpy.ndarray): The polygon to check for intersection.
-
-    Returns:
-    numpy.ndarray: The intersection point of the line and the polygon.
-    """
-    intersects = []
-
-    for bound in bounds:
-        for i in range(len(bound)):
-            # Get a bounding line of the boundary region
-            p_bound = bound[i]
-            d_bound = np.round(
-                bound[i + 1] -
-                p_bound if i < len(bound) - 1 else bound[0] - p_bound, 3
-            )
-
-            #  Get intersection point between the LiDAR ray and the bounding line
-            intersect = pointIntersect(p, d, p_bound, d_bound)
-
-            # Checks if the intersection point is valid (pointing right way, not nan, not too far away,...)
-            if (
-                np.isnan(intersect).any()
-                or not isBetween(p_bound, p_bound + d_bound, intersect)
-                or np.dot(d, intersect - p) < 0
-                or np.linalg.norm(intersect - p) > np.linalg.norm(d)
-            ):
-                continue
-
-            # Update minimum distance
-            intersects.append(intersect)
-
-    return intersects
-
-def getLiDARScan(pos, map,  rot=0, noise=0.01, max_scan_dist=1.5, scan_res=1) -> np.ndarray:
-        """
-        Perform a circular LiDAR scan around a given start point within the specified bounds.
-
-        Returns:
-            np.ndarray: An array containing the LiDAR scan results.
-        """
-        angles = [np.deg2rad(i) for i in np.arange(0, 360, scan_res)]
-        scan = [
-                [a-rot, map.cast_ray(pos, a, noise, max_scan_dist)]
-            for a in angles
-        ]
-        return scan
-
-
-def gen_map(res=0.05):
+def gen_map(res=0.01):
     region = [np.array([[-2, 4], [3, 4], [2,2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]), \
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
     
     m = Map(region)
     r = 0
     max_dist = 5
+    scan_res = 0.5
     
     p = np.array([1.5, 2])
-    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist)
+    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist, scan_res=scan_res)
     cloud = PointCloud(scan, np.array([1.5, 2]), max_dist, rot=r)
-    occ = OccupancyMap(p, cloud, resolution=0.05)
+    occ = OccupancyMap(p, cloud, resolution=res)
     
     p = np.array([0, 0])
-    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist)
+    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist, scan_res=scan_res)
     cloud = PointCloud(scan, np.array([0, 0]), max_dist, rot=r)
     occ.merge_cloud_into_map(cloud)
     
     p = np.array([1.5, 3.5])
-    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist)
+    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist, scan_res=scan_res)
     cloud = PointCloud(scan, np.array([1.5, 3.5]), max_dist, rot=r)
     occ.merge_cloud_into_map(cloud)
     
-    occ.change_res(0.05)
+    # plt.imshow(occ.map)
+    # plt.show()
+    
     occ.save('test')
     
 def test():
@@ -549,8 +353,8 @@ def test():
                     np.array([[-1,3],[-1,2.5],[-1.5,3]])]
     
     m = Map(region)
-    p = np.array([1, 0])
-    r = np.pi / 2
+    p = np.array([2, 3.5])
+    r = 1.333 * np.pi
     scan_res = 0.1
     max_dist = 3
     # Error in the scale of the image
@@ -558,9 +362,12 @@ def test():
     scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist,scan_res=scan_res)
     cloud = PointCloud(scan, np.array([0, 0]), max_dist, rot=r)
     occ = OccupancyMap.load('data/maps/test.npz')
-    
+    occ.change_res(0.05)
+    # plt.imshow(occ.map)
+    # plt.show()
     pose = occ.localise_cloud(cloud)
     
+    print(p, r)
     print(pose)
     
     

@@ -58,12 +58,12 @@ class Router:
                 strNext = str(n)
             
                 
-                if map.sampleCoord(n) > 0.5:
+                if map.sample_coord(n) > 0.5:
                     g[strNext] = g[strCur] + np.inf
                     continue
                 
                 # penalize for obstacles in 3 move_dist
-                penalty = map.sampleCoord(n, mean=True)
+                penalty = map.sample_coord(n, mean=True)
                 
                 try:
                     if g[strCur] + self.controller.move_dist < g[strNext]:
@@ -105,8 +105,8 @@ class Router:
                 d = ((p - cloud.origin) / np.linalg.norm(p - cloud.origin) *
                      map.resolution)
                 if (any(np.linalg.norm(p - c.origin) < 0.75 for c in clouds)
-                        or map.sampleCoord(p + d, yx=True, mean=True) <= 1e-3
-                        or map.sampleCoord(p + d, yx=True, mean=True) >= 0.55):
+                        or map.sample_coord(p + d, yx=True, mean=True) <= 1e-3
+                        or map.sample_coord(p + d, yx=True, mean=True) >= 0.55):
                     continue
                 return p - d
 

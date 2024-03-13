@@ -22,86 +22,84 @@ class PointCloud:
     def __init__(self, lidar: np.ndarray, origin: np.ndarray, maxScanDist: float, rot:float = 0, res:float = 0.05):
         self.lidar = lidar
         self.origin = np.copy(origin)
-        self.rot = rot
         self.maxScanDist = maxScanDist
+        self.rot = rot
         self.res = res
         
+        self.emptyCloud = np.array([])
+        self.objectCloud = np.array([])
         self.initClouds()
-        
 
     def initClouds(self, lidar=None, pose=None) -> np.ndarray:
         """
         Initializes the object cloud and empty cloud based on the lidar data.
-        TODO: use x, y not y, x
         """
+        # Defaults
         if lidar is None:
             lidar = self.lidar
         if pose is None:
-            pose = [self.origin[0], self.origin[1], self.rot]    
+            pose = [self.origin[0], self.origin[1], self.rot] 
         rot = pose[2]
         
+        # Split the data into object and empty clouds
         oScan = np.array([p for p in lidar if np.isfinite(p).all()])
         eScan = np.array([p for p in lidar if not np.isfinite(p).all()])
 
+        # Initialize the object cloud
         try:
             ox = oScan[:, 1] * np.cos((oScan[:, 0] + rot))
             oy = oScan[:, 1] * np.sin((oScan[:, 0] + rot))
             self.objectCloud = np.array([ox, oy]).T
         except Exception:
-            self.objectCloud = np.array([])
+            pass
 
+        # Initialize the empty cloud
         try:
             ex = (self.maxScanDist - 0.2) * np.cos((eScan[:, 0] + rot))
             ey = (self.maxScanDist - 0.2) * np.sin((eScan[:, 0] + rot))
             self.emptyCloud = np.array([ex, ey]).T
         except Exception:
-            self.emptyCloud = np.array([])
-
-    # Generation:
-    def generate(self, rot=None, res=None) -> None:
+            pass
         
+    # Generation
+    
+    def generate(self, rot=None, res=None, fuzz=True) -> None:
+        # Defaults
         if rot is None:
             rot = self.rot
         if res is None:
             res = self.res
             
+        # initializing
         self.initClouds(pose=[self.origin[0], self.origin[1], rot])
+        width = int(self.maxScanDist * 2) # image width
+        w = h = int(width / res) # image size
+        img = np.ones((h, w)) * 0.5 # create image
+        center = (h // 2, w // 2)
         
-        width = int(self.maxScanDist * 2)
-        w = h = int(width / res)
-        
-        img = np.ones((h, w)) * 0.5
-        
-        # Draw Empty Space
-        o = (h // 2, w // 2)
+        # # Draw Empty Space
         for p in self.cloud():
             p = ((p + (width / 2))/ res).astype(int)
             # Draw ray between origin and point
-            line = bresenham(o, p)
-            for pl in line:
+            for pl in bresenham(center, p):
                 try:
                     img[int(pl[0])][int(pl[1])] = 0  # free area 0.0
                 except IndexError:
                     pass
 
         # Draw on Obstacles
-        wallThickness = max(1, int(0.15 / res))
+        wall_thickness = max(1, int(0.15 / res))
         for p in self.objectCloud:
             p = ((p + (width / 2))/ res).astype(int)
-            for w in range(wallThickness):
-                try:
-                    prob = 1
-                    # extend the occupied area
-                    img[p[0] + w][p[1]] = prob
-                    # extend the occupied area
-                    img[p[0]][p[1] + w] = prob
-                    # extend the occupied area
-                    img[p[0] + w][p[1] + w] = prob
-                except IndexError:
-                    pass
+            for w_x in range(-wall_thickness//2, wall_thickness//2, 1):
+                for w_y in range(-wall_thickness//2, wall_thickness//2, 1):
+                    try:
+                        img[p[0] + w_x][p[1]+w_y] = 1
+                    except IndexError:
+                        pass
         
         # Apply Fuzzy Filter
-        return man_fuzz(img)
+        return man_fuzz(img) if fuzz else img
 
     # Quality of Life
     
@@ -123,11 +121,7 @@ class PointCloud:
         Parameters:
         - offset: numpy.ndarray - The offset to be added to the point cloud.
         """
-        if len(self.objectCloud) > 0:
-            self.objectCloud += offset
-        if len(self.emptyCloud) > 0:
-            self.emptyCloud += offset
-        # self.initMinMax()
+        self.origin += offset
         self.initClouds()
 
     def rotate(self, angle: float) -> None:
@@ -138,7 +132,6 @@ class PointCloud:
         - angle: float - The angle to rotate the point cloud.
         """
         self.rot = angle
-        # self.initMinMax()
         self.initClouds(self.lidar)
     
     def isEmpty(self, n=5):
@@ -179,15 +172,15 @@ class PointCloud:
     #     return msg
     
     # def from_msg(msg: Cloud):
-        # offset = np.array([msg.pose.x, msg.pose.y])
-        # rot = msg.pose.rot
-        # maxScanDist = msg.max_range
-        # res = msg.angle_increment
-        # start = msg.angle_min
-        # scan = []
-        # a = start
-        # for i in range(len(msg.ranges)):
-        #     scan.append([a, msg.ranges[i]])
-        #     a += res
+    #     offset = np.array([msg.pose.x, msg.pose.y])
+    #     rot = msg.pose.rot
+    #     maxScanDist = msg.max_range
+    #     res = msg.angle_increment
+    #     start = msg.angle_min
+    #     scan = []
+    #     a = start
+    #     for i in range(len(msg.ranges)):
+    #         scan.append([a, msg.ranges[i]])
+    #         a += res
 
-        # return PointCloud(np.array(scan), offset, maxScanDist)
+    #     return PointCloud(np.array(scan), offset, maxScanDist)
