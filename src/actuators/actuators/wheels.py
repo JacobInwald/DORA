@@ -39,12 +39,30 @@ class Wheels(Node):
         return False
 
     def forward(self, dist: float):
+        forward = dist > 0
+        time = self.convert_dist_to_time(abs(dist))
         self.arduino.write(
-            f"{'foward' if dist > 0 else 'backward'}.{abs(dist)}-".encode())
+            f"{'forward' if forward else 'backward'}.{time}-".encode())
 
     def turn(self, angle: float):
+        right = angle > 0
+        time = self.convert_angle_to_time(abs(angle))
         self.arduino.write(
-            f"{'right' if angle > 0 else 'left'}.{abs(angle)}-".encode())
+            f"{'right' if right else 'left'}.{time}-".encode())
+
+    def convert_dist_to_time(self, dist: float) -> int:
+        """
+        Convert distance to time for the Arduino (in integer milliseconds).
+        1 meter = ~1000 milliseconds.
+        """
+        return int(dist)
+
+    def convert_angle_to_time(self, angle: float) -> int:
+        """
+        Convert angle to time for the Arduino (in integer milliseconds).
+        360 degrees = ~1300 milliseconds.
+        """
+        return int(angle / 360 * 1300)
 
 
 def main():
