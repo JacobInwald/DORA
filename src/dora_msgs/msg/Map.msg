@@ -1,2 +1,2 @@
 Pose offset
-Cloud[] clouds
+float64[][] map
