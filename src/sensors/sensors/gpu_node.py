@@ -68,7 +68,7 @@ class GpuNode(Node):
             toy_msg.cls = int(cls)
             toy_msg.conf = float(conf)
             toy_msg.position = Pose()
-            toy_msg.x, toy_msg.y = self.estimate_position(frame, xywh)
+            toy_msg.position.x, toy_msg.position.y = self.estimate_position(frame, xywh)
             toy_arr.append(toy_msg)
         end_time = time.time()
         pub_msg.header = msg.header
@@ -91,7 +91,7 @@ class GpuNode(Node):
         """
         bx, by = xywh.cpu().numpy()[:2]  # center of bbox
         depth_map = self.depth_model.predict(img)
-        py = depth_map[by, bx]  # get depth at bbox center
+        py = depth_map[round(by), round(bx)]  # get depth at bbox center
         fx, _, cx = self.camera_info['camera_matrix']['data'][:3]  # get camera focal length and center
         px = (bx - cx) / fx * py  # calculate x using similar triangles and estimated depth
         return px, py

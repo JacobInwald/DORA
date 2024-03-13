@@ -73,7 +73,7 @@ class StereoNode(Node):
             toy_msg.cls = int(cls)
             toy_msg.conf = float(conf)
             toy_msg.position = Pose()
-            toy_msg.x, toy_msg.y = self.calculate_position(frameL, frameR, xywh)
+            toy_msg.position.x, toy_msg.position.y = self.calculate_position(frameL, frameR, xywh)
             toy_arr.append(toy_msg)
         end_time = time.time()
         pub_msg.header = header
@@ -98,7 +98,8 @@ class StereoNode(Node):
         bx, by = xywh.cpu().numpy()[:2]  # center of bbox
         disparity = self.stereo.compute(cv2.cvtColor(frameL, cv2.COLOR_BGR2GRAY), 
                                         cv2.cvtColor(frameR, cv2.COLOR_BGR2GRAY))
-        py = self.f * self.b / (disparity.at(by, bx)/16)
+        disparity = disparity.astype(np.float32)
+        py = self.f * self.b / (disparity[round(by), round(bx)]/16)
         px = (bx - self.cx) / self.fx * py - (self.b / 2)
         return px, py
 
