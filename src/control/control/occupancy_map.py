@@ -34,7 +34,7 @@ class OccupancyMap:
             None
         """
         # explanatory
-        self.offset = offset
+        self.offset = np.copy(offset)
         self.resolution = resolution
         self.pointclouds = (pointclouds
                             if not isinstance(pointclouds, PointCloud) else
@@ -93,12 +93,21 @@ class OccupancyMap:
         # Combine the cloud
         subsample = img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)]
         
+        # img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)] += cloud_img
         img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)] = np.maximum(subsample, cloud_img)
 
         # Reset 0s
         if not overwrite:
+            
+            img_highs = img > 0.65
+            img_zeros = np.logical_and(img_zeros, np.logical_not(img_highs))
+            
+            cloud_highs = cloud_img > 0.65
+            cloud_zeros = np.logical_and(cloud_zeros, np.logical_not(cloud_highs))
             img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)][cloud_zeros] = 0
+            
             img[img_zeros] = 0
+            
         
         # Crop back to original sizes
         x, y = self.translate(self.offset) + pad_size
@@ -362,11 +371,13 @@ def test():
     scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist,scan_res=scan_res)
     cloud = PointCloud(scan, np.array([0, 0]), max_dist, rot=r)
     occ = OccupancyMap.load('data/maps/test.npz')
-    occ.change_res(0.05)
-    # plt.imshow(occ.map)
-    # plt.show()
-    pose = occ.localise_cloud(cloud)
     
+    occ.change_res(0.01)
+    plt.imshow(occ.map)
+    plt.show()
+    plt.imshow(cloud.generate(res=0.05))
+    plt.show()
+    pose = occ.localise_cloud(cloud)
     print(p, r)
     print(pose)
     

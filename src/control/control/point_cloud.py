@@ -21,7 +21,7 @@ class PointCloud:
 
     def __init__(self, lidar: np.ndarray, origin: np.ndarray, maxScanDist: float, rot:float = 0, res:float = 0.05):
         self.lidar = lidar
-        self.origin = np.copy(origin)
+        self.origin = np.copy(np.array(origin))
         self.maxScanDist = maxScanDist
         self.rot = rot
         self.res = res
@@ -88,7 +88,7 @@ class PointCloud:
                     pass
 
         # Draw on Obstacles
-        wall_thickness = max(1, int(0.15 / res))
+        wall_thickness = max(1, int(0.1 / res))
         for p in self.objectCloud:
             p = ((p + (width / 2))/ res).astype(int)
             for w_x in range(-wall_thickness//2, wall_thickness//2, 1):
