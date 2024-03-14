@@ -1,6 +1,6 @@
 import numpy as np
 # from dora_msgs.msg import Cloud
-from utils import *
+from .utils import *
 import matplotlib.pyplot as plt
 class PointCloud:
     """

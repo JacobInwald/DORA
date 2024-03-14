@@ -170,7 +170,7 @@ def getLiDARScan(pos, map,  rot=0, noise=0.01, max_scan_dist=1.5, scan_res=1) ->
 
 
 
-def man_fuzz(grid: np.ndarray) -> np.ndarray:
+def man_fuzz(grid: np.ndarray, dim: int=1) -> np.ndarray:
     """
     Applies the Manhattan Fuzz algorithm to the given grid.
 
@@ -183,17 +183,17 @@ def man_fuzz(grid: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: The grid with the Manhattan Fuzz algorithm applied.
     """
+    half_dim = int(dim // 2)
     for i in range(grid.shape[0]):
         for j in range(grid.shape[1]):
-            if grid[i, j] >= 0.95 or grid[i, j] == 0:
-                continue
-            try:
-                grid[i, j] = np.mean([
-                    grid[i + x, j + y] for x in range(-1, 2)
-                    for y in range(-1, 2)
-                ])
-            except IndexError:
-                pass
+            # if grid[i, j] >= 0.95 or grid[i, j] == 0:
+            #     continue
+            l = max(0, i-half_dim)
+            r = min(grid.shape[0], i+half_dim)
+            u = max(0, j-half_dim)
+            d = min(grid.shape[1], j+half_dim)
+            grid[l:r, u:d] = np.mean(grid[l:r, u:d])
+            
     return grid
 
 

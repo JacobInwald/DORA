@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 # from dora_msgs.msg import Map
-from point_cloud import PointCloud
-from utils import *
+from .point_cloud import PointCloud
+from .utils import *
 import cv2 
 
 class OccupancyMap:
@@ -46,7 +46,7 @@ class OccupancyMap:
      
     # Generation
 
-    def generate(self, fuzz: bool = True) -> "OccupancyMap":
+    def generate(self, fuzz: bool = False) -> "OccupancyMap":
         """
         Generates an occupancy map based on the given obstacle coordinates.
 
@@ -56,20 +56,19 @@ class OccupancyMap:
         Returns:
             map (numpy.ndarray): Occupancy map representing the environment, where 0.0 represents free area and 1.0 represents occupied area.
         """
-        
         pad_size = int(self.pointclouds[0].maxScanDist / self.resolution) * 2
-        self.map = np.zeros((int(pad_size/2), int(pad_size/2)))
+        self.map = np.zeros((int(pad_size), int(pad_size)))
         img = np.pad(self.map, pad_size, mode='constant', constant_values=0)
         first = True
         
         for cloud in self.pointclouds:
-            img = self.merge_cloud_into_map(cloud, fuzz=False, overwrite=first, set_map=False)
+            img = self.merge_cloud_into_map(cloud, fuzz=fuzz, overwrite=first, set_map=False)
             first = False
         
-        self.map = man_fuzz(img)
+        self.map = man_fuzz(img, 1) if fuzz else img  
         return self.map      
     
-    def merge_cloud_into_map(self, cloud: "PointCloud", fuzz=True, overwrite=False, set_map=True) -> "OccupancyMap":
+    def merge_cloud_into_map(self, cloud: "PointCloud", fuzz=False, overwrite=False, set_map=True) -> "OccupancyMap":
                 
         # Init Vars
         img = np.zeros_like(self.map)
@@ -79,22 +78,28 @@ class OccupancyMap:
         # Paste previous map
         ox, oy = self.translate(self.offset) + pad_size
         oh, ow = self.map.shape
-        img[ox-ow//2:ox+ow//2, oy-oh//2:oy+oh//2] = self.map
-        
+        img[oy-oh//2:oy+oh//2, ox-ow//2:ox+ow//2] = self.map
+
         # Generate and norm cloud image
         cloud_img = cloud.generate(res=self.resolution)
         h, w = cloud_img.shape
         x, y = self.translate(cloud.origin) + pad_size
-
+        
         # Init Masks
         img_zeros = img <= 0.05
         cloud_zeros = cloud_img <= 0.05
         
         # Combine the cloud
-        subsample = img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)]
+        subsample = img[y-(h//2):y+(h//2), x-(w//2):x+(w//2)]
         
-        # img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)] += cloud_img
-        img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)] = np.maximum(subsample, cloud_img)
+        # if overwrite:
+        #     img[y-(h//2):y+(h//2), x-(w//2):x+(w//2)] = cloud_img
+        #     img[img <= 0.6] = 0
+        # else:
+        #     img[y-(h//2):y+(h//2), x-(w//2):x+(w//2)]  += cloud_img
+        #     img[img <= 0.6] = 0
+        
+        img[y-(h//2):y+(h//2), x-(w//2):x+(w//2)] = np.maximum(subsample, cloud_img)
 
         # Reset 0s
         if not overwrite:
@@ -104,16 +109,25 @@ class OccupancyMap:
             
             cloud_highs = cloud_img > 0.65
             cloud_zeros = np.logical_and(cloud_zeros, np.logical_not(cloud_highs))
-            img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)][cloud_zeros] = 0
+            img[y-(h//2):y+(h//2), x-(w//2):x+(w//2)][cloud_zeros] = 0
             
             img[img_zeros] = 0
-            
-        
+        print(ox-pad_size, oy-pad_size, x-pad_size, y-pad_size)
+        plt.imshow(img)
+        plt.show()
         # Crop back to original sizes
-        x, y = self.translate(self.offset) + pad_size
-        w, h = pad_size, pad_size
-        img = img[x-(w//2):x+(w//2), y-(h//2):y+(w//2)]
-        img = man_fuzz(img) if fuzz else img
+        ox, oy = self.translate(self.offset) + pad_size
+        h, w = self.map.shape
+        cx, cy = self.translate(cloud.origin) + pad_size
+        w += np.abs(cx - ox)
+        h += np.abs(cy - oy)
+        if w % 2 != 0:
+            w += 1
+        if h % 2 != 0:
+            h += 1
+            
+        img = img[oy-(h//2):oy+(h//2), ox-(w//2):ox+(w//2)]
+        img = man_fuzz(img, 1) if fuzz else img
         
         if set_map:
             self.map = img
@@ -132,7 +146,7 @@ class OccupancyMap:
         """
         # Normalise reference map
         padding = int(cloud.maxScanDist / self.resolution)
-        ref = np.copy(self.map).astype(np.float32).T
+        ref = np.copy(self.map).astype(np.float32)
         ref = np.pad(ref, padding, mode='constant', constant_values=0.5)
         
         # INIT
@@ -142,7 +156,7 @@ class OccupancyMap:
         next_r = 0
         
         # takes 3.7 secs
-        template = cloud.generate(rot=0, res=self.resolution).astype(np.float32).T
+        template = cloud.generate(rot=0, res=self.resolution).astype(np.float32)
         
         for i in range(50):
             r=next_r
@@ -254,8 +268,12 @@ class OccupancyMap:
         """
         old_res = self.resolution
         self.resolution = new_res
+        
         new_shape = np.array(self.map.shape) * (old_res / new_res)
-
+        if new_shape[0] % 2 != 0:
+            new_shape[0] += 1
+        if new_shape[1] % 2 != 0:
+            new_shape[1] += 1
         self.map = cv2.resize(self.map, (int(new_shape[1]), int(new_shape[0])), cv2.INTER_NEAREST)
         
         return self
@@ -383,4 +401,4 @@ def test():
     
     
 # gen_map()
-test()
+# test()

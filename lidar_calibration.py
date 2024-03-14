@@ -4,6 +4,7 @@
 # from sensor_msgs.msg import LaserScan 
 from src.control.control.point_cloud import PointCloud
 from src.control.control.occupancy_map import OccupancyMap
+from src.control.control.utils import *
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -102,39 +103,55 @@ def stitch_scans():
         index = i+1
         scans.append(np.load(f'data/maps/lds_scan_{index}.npy'))
     
+    # cloud_2 = PointCloud(scans[1], (4.37, -2.3), 4.5, rot= 9*((2*np.pi)/360), res=0.05)
+    # occ.merge_cloud_into_map(cloud_2)
     
-    cloud_1 = PointCloud(scans[0], (-0.97, -0.35), 4.5, rot=0, res=0.05)
-    occ = OccupancyMap((0, 0), cloud_1, resolution=0.01)
     
-    cloud_2 = PointCloud(scans[1], (-2.3, -0.35), 4.5, rot= 9*((2*np.pi)/360), res=0.05)
+    # cloud_1 = PointCloud(scans[0], (4.37, -0.97), 4.5, rot=-np.deg2rad(2))
+    # occ = OccupancyMap((2.35, -1.60), cloud_1, resolution=0.01)
 
-    occ.merge_cloud_into_map(cloud_2)
+    # cloud_3 = PointCloud(scans[2], (3.1, -2.7), 4.5, rot=np.deg2rad(0))
+    # occ.merge_cloud_into_map(cloud_3)
     
-    cloud_3 = PointCloud(scans[2], (-2.79, -1.59), 4.5, rot=0, res=0.01)
-    occ.merge_cloud_into_map(cloud_3)
+    # cloud_4 = PointCloud(scans[3], (1.84, -2.81), 4.5, rot=np.deg2rad(0))
+    # occ.merge_cloud_into_map(cloud_4)
     
-    cloud_4 = PointCloud(scans[3], (-2.81, -2.86), 4.5, rot=0, res=0.01)
-    occ.merge_cloud_into_map(cloud_4)
+    # cloud_7 = PointCloud(scans[6], (0.58, -1.86), 4.5, rot=-np.deg2rad(2))
+    # occ.merge_cloud_into_map(cloud_7)
     
-    cloud_7 = PointCloud(scans[6], (-1.86, -4.04), 4.5, rot=0, res=0.01)
-    occ.merge_cloud_into_map(cloud_7)
+    # cloud_8 = PointCloud(scans[7], (0.68, -0.36), 4.5, rot=np.deg2rad(3))
+    # occ.merge_cloud_into_map(cloud_8)
     
-    cloud_8 = PointCloud(scans[7], (-0.36, -3.96), 4.5, rot=0, res=0.01)
-    occ.merge_cloud_into_map(cloud_8)
+    # cloud_9 = PointCloud(scans[8], (1.98, -0.36), 4.5, rot=0)
+    # occ.merge_cloud_into_map(cloud_9)
     
-    cloud_9 = PointCloud(scans[8], (-0.36, -2.67), 4.5, rot=0, res=0.01)
-    occ.merge_cloud_into_map(cloud_9)
+    # cloud_10 = PointCloud(scans[9], (3.4, -0.36), 4.5, rot=0)
+    # occ.merge_cloud_into_map(cloud_10)
     
-    cloud_10 = PointCloud(scans[9], (-0.36, -1.39), 4.5, rot=0, res=0.01)
-    occ.merge_cloud_into_map(cloud_10)
     
-    cloud_11 = PointCloud(scans[10], (-1.47, -1.7), 4.5, rot=0, res=0.01)
-    occ.merge_cloud_into_map(cloud_11)
+    # cloud_11 = PointCloud(scans[10], (2.63, -0.98), 4.5, rot=0)
+    # occ.merge_cloud_into_map(cloud_11)
     
-    cloud_12 = PointCloud(scans[11], (-1.53, -2.91), 4.5, rot=0, res=0.01)
-    occ.merge_cloud_into_map(cloud_12)
+    occ = OccupancyMap.load('data/maps/reference_map.npz')
+    occ.change_res(0.01)
+    print(occ.translate([793, 804], False))
+    print(occ.translate(occ.offset))
+    print(occ.translate((2.33, -2.1)))
     
+    cloud_12 = PointCloud(scans[11], (2.33, -2.1), 4.5, rot=0, res = 0.01)
+    # img = cloud_12.generate()
+    # plt.imshow(img)
+    
+    # plt.plot(img.shape[0]/2, img.shape[1]/2, 'ro')
+    # plt.show()
+    # occ.merge_cloud_into_map(cloud_12)
+
+    plt.plot(793, 804, 'ro')
+    plt.plot(occ.translate(occ.offset)[0], occ.translate(occ.offset)[1], 'bo')
+    plt.plot(occ.translate((0, 0))[0], occ.translate((0, 0))[1], 'go')
     plt.imshow(occ.map)
     plt.show()
+    pose = occ.localise_cloud(cloud_12)
+    print(pose)
     
 stitch_scans()
