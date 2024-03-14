@@ -17,6 +17,7 @@
   <depend>dora_msgs</depend>
   <depend>dora_srvs</depend>
   <depend>object_detection</depend>
+  <depend>depth_estimation</depend>
   
   <export>
     <build_type>ament_python</build_type>
