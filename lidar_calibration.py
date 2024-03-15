@@ -1,7 +1,7 @@
 # import rclpy
 # from rclpy.node import Node
 # from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-# from sensor_msgs.msg import LaserScan 
+# from sensor_msgs.msg import LaserScan
 from src.control.control.point_cloud import PointCloud
 from src.control.control.occupancy_map import OccupancyMap
 from src.control.control.utils import *
@@ -40,7 +40,7 @@ import cv2
 #         self.running = False
 #         self.timer = self.create_timer(2, self.timer_callback)
 #         self.i = 1
-        
+
 #     def timer_callback(self):
 #         if self.running:
 #             return
@@ -67,7 +67,7 @@ import cv2
 #             angles.append(a)
 #             a += res
 #         scan = [i for i in zip(angles, ranges)]
-        
+
 #         cloud = PointCloud(scan, (0, 0), max_range, rot=0, res=0.01)
 #         cv2.imshow('LDS', cloud.generate())
 #         k = cv2.waitKey(1000)
@@ -76,7 +76,7 @@ import cv2
 #             self.i+=1
 #         self.running=False
 #         self.get_logger().info(f'Timer callback: scan received with max_range: {max_range}')
-        
+
 #     def lds_callback(self, msg: 'LaserScan'):
 #         """
 #         Store last laser scan
@@ -98,60 +98,56 @@ import cv2
 #     rclpy.shutdown()
 
 def stitch_scans():
-    scans= []
+    scans = []
     for i in range(12):
         index = i+1
         scans.append(np.load(f'data/maps/lds_scan_{index}.npy'))
-    
-    # cloud_2 = PointCloud(scans[1], (4.37, -2.3), 4.5, rot= 9*((2*np.pi)/360), res=0.05)
-    # occ.merge_cloud_into_map(cloud_2)
-    
-    
-    # cloud_1 = PointCloud(scans[0], (4.37, -0.97), 4.5, rot=-np.deg2rad(2))
-    # occ = OccupancyMap((2.35, -1.60), cloud_1, resolution=0.01)
 
-    # cloud_3 = PointCloud(scans[2], (3.1, -2.7), 4.5, rot=np.deg2rad(0))
+    cloud_1 = PointCloud(scans[0], (4.98, -1.6), 4.5, rot=0)
+    cloud_2 = PointCloud(scans[1], (4.37, -2.3), 4.5, rot=0)
+    cloud_3 = PointCloud(scans[2], (3.68, -3.31), 4.5, rot=0)
+    cloud_4 = PointCloud(scans[3], (2.42, -3.41), 4.5, rot=0)
+    cloud_7 = PointCloud(scans[6], (1.19, -2.43), 4.5, rot=0)
+    cloud_8 = PointCloud(scans[7], (1.32, -0.94), 4.5, rot=6.23980867)
+    cloud_9 = PointCloud(scans[8], (2.61, -0.94), 4.5, rot=0)
+    cloud_10 = PointCloud(scans[9], (3.95, -0.95), 4.5, rot=0)
+    cloud_11 = PointCloud(scans[10], (3.6, -1.96), 4.5, rot=6.22587704)
+    cloud_12 = PointCloud(scans[11], (2.35, -2.1), 4.5, rot=6.25692942)
+
+    # occ = OccupancyMap((0, 0), cloud_1, resolution=0.01)
     # occ.merge_cloud_into_map(cloud_3)
-    
-    # cloud_4 = PointCloud(scans[3], (1.84, -2.81), 4.5, rot=np.deg2rad(0))
     # occ.merge_cloud_into_map(cloud_4)
-    
-    # cloud_7 = PointCloud(scans[6], (0.58, -1.86), 4.5, rot=-np.deg2rad(2))
     # occ.merge_cloud_into_map(cloud_7)
-    
-    # cloud_8 = PointCloud(scans[7], (0.68, -0.36), 4.5, rot=np.deg2rad(3))
-    # occ.merge_cloud_into_map(cloud_8)
-    
-    # cloud_9 = PointCloud(scans[8], (1.98, -0.36), 4.5, rot=0)
     # occ.merge_cloud_into_map(cloud_9)
-    
-    # cloud_10 = PointCloud(scans[9], (3.4, -0.36), 4.5, rot=0)
     # occ.merge_cloud_into_map(cloud_10)
-    
-    
-    # cloud_11 = PointCloud(scans[10], (2.63, -0.98), 4.5, rot=0)
-    # occ.merge_cloud_into_map(cloud_11)
-    
-    occ = OccupancyMap.load('data/maps/reference_map.npz')
-    occ.change_res(0.01)
-    print(occ.translate([793, 804], False))
-    print(occ.translate(occ.offset))
-    print(occ.translate((2.33, -2.1)))
-    
-    cloud_12 = PointCloud(scans[11], (2.33, -2.1), 4.5, rot=0, res = 0.01)
-    # img = cloud_12.generate()
-    # plt.imshow(img)
-    
-    # plt.plot(img.shape[0]/2, img.shape[1]/2, 'ro')
-    # plt.show()
     # occ.merge_cloud_into_map(cloud_12)
+    # occ.save('new_ref')
+    # plt.imshow(occ.map)
+    # plt.show()
 
-    plt.plot(793, 804, 'ro')
-    plt.plot(occ.translate(occ.offset)[0], occ.translate(occ.offset)[1], 'bo')
-    plt.plot(occ.translate((0, 0))[0], occ.translate((0, 0))[1], 'go')
-    plt.imshow(occ.map)
-    plt.show()
-    pose = occ.localise_cloud(cloud_12)
-    print(pose)
-    
+    occ = OccupancyMap.load('data/maps/new_ref.npz')
+    occ.change_res(0.01)
+
+    pose1 = occ.localise_cloud(cloud_1)
+    print(f'Pose 1: {pose1}')
+    pose2 = occ.localise_cloud(cloud_2)
+    print(f'Pose 2: {pose2}')
+    pose3 = occ.localise_cloud(cloud_3)
+    print(f'Pose 3: {pose3}')
+    pose4 = occ.localise_cloud(cloud_4)
+    print(f'Pose 4: {pose4}')
+    pose7 = occ.localise_cloud(cloud_7)
+    print(f'Pose 7: {pose7}')
+    pose8 = occ.localise_cloud(cloud_8)
+    print(f'Pose 8: {pose8}')
+    pose9 = occ.localise_cloud(cloud_9)
+    print(f'Pose 9: {pose9}')
+    pose10 = occ.localise_cloud(cloud_10)
+    print(f'Pose 10: {pose10}')
+    pose11 = occ.localise_cloud(cloud_11)
+    print(f'Pose 11: {pose11}')
+    pose12 = occ.localise_cloud(cloud_12)
+    print(f'Pose 12: {pose12}')
+
+
 stitch_scans()
