@@ -1,7 +1,9 @@
 import numpy as np
-# from dora_msgs.msg import Cloud
+from dora_msgs.msg import Cloud
 from .utils import *
 import matplotlib.pyplot as plt
+
+
 class PointCloud:
     """
     Represents a point cloud generated from lidar data.
@@ -19,13 +21,13 @@ class PointCloud:
 
     # Initialization
 
-    def __init__(self, lidar: np.ndarray, origin: np.ndarray, maxScanDist: float, rot:float = 0, res:float = 0.05):
+    def __init__(self, lidar: np.ndarray, origin: np.ndarray, maxScanDist: float, rot: float = 0, res: float = 0.05):
         self.lidar = lidar
         self.origin = np.copy(np.array(origin))
         self.maxScanDist = maxScanDist
         self.rot = rot
         self.res = res
-        
+
         self.emptyCloud = np.array([])
         self.objectCloud = np.array([])
         self.initClouds()
@@ -38,9 +40,9 @@ class PointCloud:
         if lidar is None:
             lidar = self.lidar
         if pose is None:
-            pose = [self.origin[0], self.origin[1], self.rot] 
+            pose = [self.origin[0], self.origin[1], self.rot]
         rot = pose[2]
-        
+
         # Split the data into object and empty clouds
         oScan = np.array([p for p in lidar if np.isfinite(p).all()])
         eScan = np.array([p for p in lidar if not np.isfinite(p).all()])
@@ -60,26 +62,26 @@ class PointCloud:
             self.emptyCloud = np.array([ex, ey]).T
         except Exception:
             pass
-        
+
     # Generation
-    
+
     def generate(self, rot=None, res=None, fuzz=True) -> None:
         # Defaults
         if rot is None:
             rot = self.rot
         if res is None:
             res = self.res
-            
+
         # initializing
         self.initClouds(pose=[self.origin[0], self.origin[1], rot])
-        width = int(self.maxScanDist * 2) # image width
-        w = h = int(width / res) # image size
-        img = np.ones((h, w)) * 0.5 # create image
+        width = int(self.maxScanDist * 2)  # image width
+        w = h = int(width / res)  # image size
+        img = np.ones((h, w)) * 0.5  # create image
         center = (h // 2, w // 2)
-        
+
         # # Draw Empty Space
         for p in self.cloud():
-            p = ((p + (width / 2))/ res).astype(int)
+            p = ((p + (width / 2)) / res).astype(int)
             # Draw ray between origin and point
             for pl in bresenham(center, p):
                 try:
@@ -90,19 +92,19 @@ class PointCloud:
         # Draw on Obstacles
         wall_thickness = max(1, int(0.1 / res))
         for p in self.objectCloud:
-            p = ((p + (width / 2))/ res).astype(int)
+            p = ((p + (width / 2)) / res).astype(int)
             for w_x in range(-wall_thickness//2, wall_thickness//2, 1):
                 for w_y in range(-wall_thickness//2, wall_thickness//2, 1):
                     try:
                         img[p[0] + w_x][p[1]+w_y] = 1
                     except IndexError:
                         pass
-        
+
         # Apply Fuzzy Filter
         return man_fuzz(img) if fuzz else img
 
     # Quality of Life
-    
+
     def cloud(self):
         """
         Returns the combined point cloud.
@@ -133,7 +135,7 @@ class PointCloud:
         """
         self.rot = angle
         self.initClouds(self.lidar)
-    
+
     def isEmpty(self, n=5):
         """
         Checks if the point cloud is empty.
@@ -156,13 +158,13 @@ class PointCloud:
     #     - sensor_msgs.msg.PointCloud2 - The ROS message representing the point cloud.
     #     """
     #     msg = Cloud()
-        
+
     #     msg.pose.x = self.origin[0]
     #     msg.pose.y = self.origin[1]
     #     msg.pose.rot = self.rot
 
     #     msg.max_range = self.maxScanDist
-        
+
     #     msg.scan.header.stamp = self.get_clock().now().to_msg()
     #     msg.scan.header.frame_id = "lidar"
     #     msg.scan.angle_min = float(self.rot)
@@ -170,7 +172,7 @@ class PointCloud:
     #     msg.scan.angle_increment = float(np.deg2rad(self.lidar.shape[0] / 360))
     #     msg.scan.ranges = [float(reading[1]) for reading in self.lidar]
     #     return msg
-    
+
     # def from_msg(msg: Cloud):
     #     offset = np.array([msg.pose.x, msg.pose.y])
     #     rot = msg.pose.rot

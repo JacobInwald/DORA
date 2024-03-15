@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# from dora_msgs.msg import Map
+from dora_msgs.msg import Map
 from .point_cloud import PointCloud
 from .utils import *
 import cv2
@@ -149,7 +149,7 @@ class OccupancyMap:
         template = cloud.generate(
             rot=0, res=self.resolution).astype(np.float32)
 
-        for i in range(50):
+        for i in range(20):
             r = next_r
             # Generate the rotated template
             _template = rotate_image(template, np.rad2deg(r))
@@ -326,62 +326,3 @@ class OccupancyMap:
         occ = OccupancyMap(pos, [], res)
         occ.map = map
         return occ
-
-
-def gen_map(res=0.01):
-    region = [np.array([[-2, 4], [3, 4], [2, 2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]),
-              np.array([[-1, 3], [-1, 2.5], [-1.5, 3]])]
-
-    m = Map(region)
-    r = 0
-    max_dist = 5
-    scan_res = 0.5
-
-    p = np.array([1.5, 2])
-    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist, scan_res=scan_res)
-    cloud = PointCloud(scan, np.array([1.5, 2]), max_dist, rot=r)
-    occ = OccupancyMap(p, cloud, resolution=res)
-
-    p = np.array([0, 0])
-    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist, scan_res=scan_res)
-    cloud = PointCloud(scan, np.array([0, 0]), max_dist, rot=r)
-    occ.merge_cloud_into_map(cloud)
-
-    p = np.array([1.5, 3.5])
-    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist, scan_res=scan_res)
-    cloud = PointCloud(scan, np.array([1.5, 3.5]), max_dist, rot=r)
-    occ.merge_cloud_into_map(cloud)
-
-    # plt.imshow(occ.map)
-    # plt.show()
-
-    occ.save('test')
-
-
-def test():
-    region = [np.array([[-2, 4], [3, 4], [2, 2], [4, 3], [4, 0], [4, 0], [2, -1], [-2, 0]]),
-              np.array([[-1, 3], [-1, 2.5], [-1.5, 3]])]
-
-    m = Map(region)
-    p = np.array([2, 3.5])
-    r = 1.333 * np.pi
-    scan_res = 0.1
-    max_dist = 3
-    # Error in the scale of the image
-
-    scan = getLiDARScan(p, m, rot=r, max_scan_dist=max_dist, scan_res=scan_res)
-    cloud = PointCloud(scan, np.array([0, 0]), max_dist, rot=r)
-    occ = OccupancyMap.load('data/maps/test.npz')
-
-    occ.change_res(0.01)
-    plt.imshow(occ.map)
-    plt.show()
-    plt.imshow(cloud.generate(res=0.05))
-    plt.show()
-    pose = occ.localise_cloud(cloud)
-    print(p, r)
-    print(pose)
-
-
-# gen_map()
-# test()
