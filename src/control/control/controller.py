@@ -2,11 +2,11 @@ import math
 import numpy as np
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from dora_msgs.msg import Toy, Pose, Toys, Map
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from .router import Router
 from .occupancy_map import OccupancyMap
-from .point_cloud import PointCloud
 from job import DoraJob
 from actuators.wheels import WheelsMove
 import cv2
@@ -22,11 +22,15 @@ class Controller(Node):
 
     def __init__(self):
         super().__init__('controller')
+        
+        toy_qos = QoSProfile(
+            reliability=QoSReliabilityPolicy.BEST_EFFORT,
+            history=QoSHistoryPolicy.KEEP_LAST,
+            depth=1
+        )
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
-        self.toy_sub_ = self.create_subscription(
-            Toys, '/toys', self.toy_callback, 10)
-        self.pose_sub_ = self.create_subscription(
-            Pose, '/pose', self.pose_callback, 10)
+        self.toy_sub_ = self.create_subscription(Toys, '/toys', self.toy_callback, toy_qos)
+        self.pose_sub_ = self.create_subscription(Pose, '/pose', self.pose_callback, 10)
         self.cli_node_ = Node('control_client')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, '/lds_service')
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, '/wheels')
@@ -69,7 +73,7 @@ class Controller(Node):
             msg: Pose message from GPS
         """
         self.pose = (msg.x, msg.y, msg.rot)
-        self.get_logger().info(f'Hear pose: {self.pose}')
+        self.get_logger().info(f'Heard pose: {self.pose}')
 
     def scan_request(self):
         lds_cmd = LdsCmd()
