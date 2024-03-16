@@ -1,7 +1,6 @@
 import numpy as np
 from dora_msgs.msg import Cloud
 from .utils import *
-import matplotlib.pyplot as plt
 
 
 class PointCloud:
@@ -12,16 +11,30 @@ class PointCloud:
     - lidar: numpy.ndarray - The lidar data.
     - origin: numpy.ndarray - The origin of the point cloud.
     - maxScanDist: float - The maximum scan distance.
-    - objectCloud: list - The cloud containing points representing objects.
-    - emptyCloud: list - The cloud containing points representing empty space.
-    - min: numpy.ndarray - The minimum values of the point cloud.
-    - max: numpy.ndarray - The maximum values of the point cloud.
-    - center: numpy.ndarray - The center point of the point cloud.
+    - rot: float - The rotation angle of the point cloud.
+    - res: float - The resolution of the point cloud.
+
+    Methods:
+    - __init__(self, lidar: np.ndarray, origin: np.ndarray, maxScanDist: float, rot: float = 0, res: float = 0.05): Initializes a PointCloud object.
+    - initClouds(self, lidar=None, pose=None) -> np.ndarray: Initializes the object cloud and empty cloud based on the lidar data.
+    - generate(self, rot=None, res=None, fuzz=True) -> None: Generates an image representation of the point cloud.
+    - cloud(self): Returns the combined point cloud.
+    - transform(self, offset: np.ndarray) -> None: Transforms the object cloud and empty cloud by adding the given offset.
+    - rotate(self, angle: float) -> None: Rotates the object cloud and empty cloud by the given angle.
+    - isEmpty(self, n=5): Checks if the point cloud is empty.
     """
 
-    # Initialization
-
     def __init__(self, lidar: np.ndarray, origin: np.ndarray, maxScanDist: float, rot: float = 0, res: float = 0.05):
+        """
+        Initializes a PointCloud object.
+
+        Parameters:
+        - lidar: numpy.ndarray - The lidar data.
+        - origin: numpy.ndarray - The origin of the point cloud.
+        - maxScanDist: float - The maximum scan distance.
+        - rot: float - The rotation angle of the point cloud. (default: 0)
+        - res: float - The resolution of the point cloud. (default: 0.05)
+        """
         self.lidar = lidar
         self.origin = np.copy(np.array(origin))
         self.maxScanDist = maxScanDist
@@ -35,6 +48,17 @@ class PointCloud:
     def initClouds(self, lidar=None, pose=None) -> np.ndarray:
         """
         Initializes the object cloud and empty cloud based on the lidar data.
+
+        Args:
+            lidar (np.ndarray, optional): Lidar data. Defaults to None.
+            pose (list, optional): Pose information. Defaults to None.
+
+        Returns:
+            np.ndarray: The initialized object cloud.
+
+        Raises:
+            None
+
         """
         # Defaults
         if lidar is None:
@@ -63,9 +87,18 @@ class PointCloud:
         except Exception:
             pass
 
-    # Generation
-
     def generate(self, rot=None, res=None, fuzz=True) -> None:
+        """
+        Generate a point cloud image.
+
+        Args:
+            rot (float, optional): Rotation angle. Defaults to None.
+            res (float, optional): Resolution. Defaults to None.
+            fuzz (bool, optional): Flag to apply fuzzy filter. Defaults to True.
+
+        Returns:
+            numpy.ndarray: Generated point cloud image.
+        """
         # Defaults
         if rot is None:
             rot = self.rot
@@ -79,29 +112,22 @@ class PointCloud:
         img = np.ones((h, w)) * 0.5  # create image
         center = (h // 2, w // 2)
 
-        # # Draw Empty Space
+        # Draw Empty Space
         for p in self.cloud():
             p = ((p + (width / 2)) / res).astype(int)
-            # Draw ray between origin and point
-            for pl in bresenham(center, p):
-                try:
-                    img[int(pl[0])][int(pl[1])] = 0  # free area 0.0
-                except IndexError:
-                    pass
+            img = cv2.line(img, center, (p[1], p[0]), 0, 1)
 
         # Draw on Obstacles
         wall_thickness = max(1, int(0.1 / res))
         for p in self.objectCloud:
             p = ((p + (width / 2)) / res).astype(int)
-            for w_x in range(-wall_thickness//2, wall_thickness//2, 1):
-                for w_y in range(-wall_thickness//2, wall_thickness//2, 1):
-                    try:
-                        img[p[0] + w_x][p[1]+w_y] = 1
-                    except IndexError:
-                        pass
+            cv2.circle(img, (p[1], p[0]), wall_thickness//2, 1, -1)
+
+        if True:
+            img = cv2.blur(img, (3, 3))
 
         # Apply Fuzzy Filter
-        return man_fuzz(img) if fuzz else img
+        return img
 
     # Quality of Life
 
