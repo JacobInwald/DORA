@@ -11,6 +11,7 @@ from job import DoraJob
 from actuators.wheels import WheelsMove
 import cv2
 
+
 class Controller(Node):
     """
     Controller for the robot movements (driving and SWEEPER).
@@ -22,17 +23,19 @@ class Controller(Node):
     def __init__(self):
         super().__init__('controller')
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
-        self.toy_sub_ = self.create_subscription(Toys, '/toys', self.toy_callback, 10)
-        self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
-        self.map_sub_ = self.create_subscription(Map, '/map', self.map_callback, 10)
+        self.toy_sub_ = self.create_subscription(
+            Toys, '/toys', self.toy_callback, 10)
+        self.pose_sub_ = self.create_subscription(
+            Pose, '/pose', self.pose_callback, 10)
         self.cli_node_ = Node('control_client')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, '/lds_service')
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, '/wheels')
-        self.sweeper_cli_ = self.cli_node_.create_client(SweeperCmd, '/sweeper')
+        self.sweeper_cli_ = self.cli_node_.create_client(
+            SweeperCmd, '/sweeper')
         self.router = Router()
         self.toy = None
         self.pose = None
-        self.map = None
+        self.map = OccupancyMap.load('reference_map.npy')
         self.close_thres = 3
 
     def switch(self, msg):
@@ -58,24 +61,15 @@ class Controller(Node):
             msg: list of Toy message
         """
 
-    def gps_callback(self, msg: Pose):
+    def pose_callback(self, msg: Pose):
         """
         Update self pose
 
         Args:
             msg: Pose message from GPS
         """
-        self.pose = Pose
-
-    def map_callback(self, msg: Map): # Will work if corresponding publisher completes
-        """
-        receive map
-
-        Args:
-            msg: Map message from Ids
-        """
-        self.map = OccupancyMap.from_msg(msg)
-        self.get_logger().info(f'receive map.')
+        self.pose = (msg.x, msg.y, msg.rot)
+        self.get_logger().info(f'Hear pose: {self.pose}')
 
     def scan_request(self):
         lds_cmd = LdsCmd()
@@ -83,7 +77,7 @@ class Controller(Node):
         future = self.lds_cli_.call_async(lds_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         return future.result()
- 
+
     def retrieve_request(self) -> bool:
         """
         Send service request for retrieving toy, similar to scan_request
@@ -101,19 +95,13 @@ class Controller(Node):
             job status
         """
         pass
-      
+
     def demo(self):
         """
         Run demo job
         """
-        for i in range(10):
-            self.scan_request()
-            cv2.waitKey(1)
-            self.map.generate()
-            self.map.show()
-            cv2.waitKey(0)
         return True
-      
+
     def navigate_to_toy(self) -> bool:
         """
         Calculate route to toy using router.
@@ -123,14 +111,16 @@ class Controller(Node):
             job status
         """
         cur_pos = np.array([self.pose.x, self.pose.y])
-        next_retrieve_pt, self.toy = self.router.next_retrieve_pt(self.map, self.toy_sub_, cur_pos)
+        next_retrieve_pt, self.toy = self.router.next_retrieve_pt(
+            self.map, self.toy_sub_, cur_pos)
         route = self.router.route(cur_pos, next_retrieve_pt, self.map)
         status = self.navigate(route)
         return status
 
     def navigate_to_storage(self) -> bool:
         cur_pos = np.array([self.pose.x, self.pose.y])
-        next_unload_pt = self.router.next_unload_pt(self.map, self.toy, cur_pos)
+        next_unload_pt = self.router.next_unload_pt(
+            self.map, self.toy, cur_pos)
         route = self.router.route(cur_pos, next_unload_pt, self.map)
         status = self.navigate(route)
         return status

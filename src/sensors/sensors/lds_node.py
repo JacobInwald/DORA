@@ -1,11 +1,13 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-from sensor_msgs.msg import LaserScan  # https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
+# https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
+from sensor_msgs.msg import LaserScan
 from dora_msgs.msg import Map, Pose
 from dora_srvs.srv import LdsCmd
 from control.occupancy_map import OccupancyMap
 from control.point_cloud import PointCloud
+
 
 class LdsNode(Node):
     """
@@ -26,38 +28,55 @@ class LdsNode(Node):
     - last_scan: numpy.ndarray - The most recent laser scan
     """
 
-    def __init__(self):
+    def __init__(self, reference_map: OccupancyMap = None):
         super().__init__('lds_node')
         lds_qos = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
-        self.lds_sub_ = self.create_subscription(LaserScan, '/scan', self.lds_callback, lds_qos)
-        self.gps_sub_ = self.create_subscription(Pose, '/gps', self.gps_callback, 10)
-        self.map_pub_ = self.create_publisher(Map, '/map', 10)
-        self.scan_srv_ = self.create_service(LdsCmd, '/lds_service', self.scan_callback)
-        self.max_range = 1.5
+        self.lds_sub_ = self.create_subscription(
+            LaserScan, '/scan', self.lds_callback, lds_qos)
+        self.gps_pub_ = self.create_publisher(Pose, '/pose', 10)
+        self.gps_timer = self.create_timer(1, self.pose_publish)
+        self.scan_srv_ = self.create_service(
+            LdsCmd, '/lds_service', self.scan_callback)
+
+        # Variables
+        self.max_range = 4.5
         self.last_scan = None
+        self.last_cloud = None
+        if reference_map is None:
+            self.reference_map = OccupancyMap.load('reference_map.npy')
+        else:
+            self.reference_map = reference_map
+        self.pose = None
+        self.processing_pose = False
 
-    def gps_callback(self, msg: Pose):
-        """
-        Store last GPS message
+    def pose_publish(self):
+        # Localise Cloud and Publish Pose
+        self.processing_pose = True
+        pose, acc = self.reference_map.localise(self.last_cloud)
+        if acc > 0.75:
+            self.get_logger().info(f'DORA pose: {pose}, Certainty: {100*acc}%')
+            self.pose = pose
+            self.gps_pub_.publish(pose.to_msg())
+            self.processing_pose = False
+            return True
+        else:
+            self.get_logger().error(
+                f'Localisation accuracy of {100*acc}% too low, not publishing pose.')
+            self.processing_pose = False
+            return False
 
-        Args:
-            msg: message received
-        """
-        self.pos = (msg.x, msg.y)
-        self.rot = msg.rot
-        self.get_logger().info(f'Heard: GPS {msg.x} {msg.y} {msg.rot}')
-    
     def scan_callback(self, msg: LdsCmd) -> bool:
         """
         Calculate occupancy map from last scan and publish map
         """
         if self.last_scan is None:
             return False
-        
+
+        # Read Scan
         res = msg.angle_increment
         start = msg.angle_min
         scan = []
@@ -65,13 +84,10 @@ class LdsNode(Node):
         for i in range(len(msg.ranges)):
             scan.append([a, msg.ranges[i]])
             a += res
-            
-        # Calculate occupancy map (TODO: add rotation)
-        cloud = PointCloud(scan, self.pos, self.max_range)
-        occupancy_map = OccupancyMap(self.pos, cloud)
-        
-        self.map_pub_.publish(occupancy_map.to_msg())
-        return True
+
+        # Create PointCloud
+        self.last_scan = scan
+        self.last_cloud = PointCloud(scan, self.pos, self.max_range)
 
     def lds_callback(self, msg: 'LaserScan'):
         """
@@ -80,13 +96,26 @@ class LdsNode(Node):
         Args:
             msg: message received
         """
+        if self.last_scan is None:
+            return False
 
-        self.last_scan = msg
-        header = msg.header
-        self.get_logger().info(f'Heard: LDS scan {header.frame_id} at {header.stamp.sec}s{header.stamp.nanosec}')
+        # Read Scan
+        res = msg.angle_increment
+        start = msg.angle_min
+        scan = []
+        a = start
+        for i in range(len(msg.ranges)):
+            scan.append([a, msg.ranges[i]])
+            a += res
 
+        # Create PointCloud
+        self.last_scan = scan
+        self.last_cloud = PointCloud(scan, self.pos, self.max_range)
+        return True
 
 # Entry Point
+
+
 def main():
     rclpy.init()
     lds_node = LdsNode()
