@@ -51,6 +51,8 @@ class LdsNode(Node):
         self.processing_pose = False
 
     def pose_publish(self):
+        self.get_logger().error(
+            f'Start localisation')
         if self.last_cloud is None:
             return False
         # Localise Cloud and Publish Pose
@@ -87,9 +89,9 @@ class LdsNode(Node):
 
         # Create PointCloud
         self.last_scan = scan
-        # self.get_logger().info(f'Heard scan: {self.pose[0:2]}')
         self.last_cloud = PointCloud(
             scan, self.pose[0:2], self.max_range, rot=self.pose[2])
+        self.get_logger().info(f'Heard scan')
         return True
 
 # Entry Point
