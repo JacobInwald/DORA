@@ -46,16 +46,18 @@ class LdsNode(Node):
         self.last_scan = None
         self.last_cloud = None
         if reference_map is None:
-            self.reference_map = OccupancyMap.load('reference_map.npy')
+            self.reference_map = OccupancyMap.load('reference_map.npz')
         else:
             self.reference_map = reference_map
         self.pose = None
         self.processing_pose = False
 
     def pose_publish(self):
-        # Localise Cloud and Publish Pose
+        if self.last_cloud is None:
+            return False
+	# Localise Cloud and Publish Pose
         self.processing_pose = True
-        pose, acc = self.reference_map.localise(self.last_cloud)
+        pose, acc = self.reference_map.localise_cloud(self.last_cloud)
         if acc > 0.75:
             self.get_logger().info(f'DORA pose: {pose}, Certainty: {100*acc}%')
             self.pose = pose
@@ -72,8 +74,6 @@ class LdsNode(Node):
         """
         Calculate occupancy map from last scan and publish map
         """
-        if self.last_scan is None:
-            return False
 
         # Read Scan
         res = msg.angle_increment
@@ -87,6 +87,7 @@ class LdsNode(Node):
         # Create PointCloud
         self.last_scan = scan
         self.last_cloud = PointCloud(scan, self.pos, self.max_range)
+        self.get_logger().info(f'Heard scan')
 
     def lds_callback(self, msg: 'LaserScan'):
         """
