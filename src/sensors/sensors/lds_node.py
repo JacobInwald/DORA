@@ -53,7 +53,7 @@ class LdsNode(Node):
     def pose_publish(self):
         self.get_logger().error(
             f'Start localisation')
-        if self.last_cloud is None:
+        if self.last_cloud is None or self.processing_pose:
             return False
         # Localise Cloud and Publish Pose
         self.processing_pose = True
