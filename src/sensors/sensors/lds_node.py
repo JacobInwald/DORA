@@ -35,7 +35,7 @@ class LdsNode(Node):
             depth=1
         )
         self.lds_sub_ = self.create_subscription(
-            LaserScan, '/scan', self.lds_callback, lds_qos)
+            LaserScan, '/scan', self.scan_callback, lds_qos)
         self.gps_pub_ = self.create_publisher(Pose, '/pose', 10)
         self.gps_timer = self.create_timer(1, self.pose_publish)
         self.scan_srv_ = self.create_service(
@@ -55,7 +55,7 @@ class LdsNode(Node):
     def pose_publish(self):
         if self.last_cloud is None:
             return False
-	# Localise Cloud and Publish Pose
+        # Localise Cloud and Publish Pose
         self.processing_pose = True
         pose, acc = self.reference_map.localise_cloud(self.last_cloud)
         if acc > 0.75:
@@ -70,9 +70,12 @@ class LdsNode(Node):
             self.processing_pose = False
             return False
 
-    def scan_callback(self, msg: LdsCmd) -> bool:
+    def lds_callback(self, msg: 'LaserScan'):
         """
-        Calculate occupancy map from last scan and publish map
+        Store last laser scan
+
+        Args:
+            msg: message received
         """
 
         # Read Scan
@@ -88,29 +91,6 @@ class LdsNode(Node):
         self.last_scan = scan
         self.last_cloud = PointCloud(scan, self.pos, self.max_range)
         self.get_logger().info(f'Heard scan')
-
-    def lds_callback(self, msg: 'LaserScan'):
-        """
-        Store last laser scan
-
-        Args:
-            msg: message received
-        """
-        if self.last_scan is None:
-            return False
-
-        # Read Scan
-        res = msg.angle_increment
-        start = msg.angle_min
-        scan = []
-        a = start
-        for i in range(len(msg.ranges)):
-            scan.append([a, msg.ranges[i]])
-            a += res
-
-        # Create PointCloud
-        self.last_scan = scan
-        self.last_cloud = PointCloud(scan, self.pos, self.max_range)
         return True
 
 # Entry Point
