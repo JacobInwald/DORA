@@ -51,11 +51,11 @@ def generate_launch_description():
         #     package='sensors',
         #     executable='gps_node'
         # ),
-        Node(
-            namespace='lds',
-            package='sensors',
-            executable='lds_node'
-        ),
+        # Node(
+        #     namespace='lds',
+        #     package='sensors',
+        #     executable='lds_node'
+        # ),
         Node(
             namespace='sweeper',
             package='actuators',
