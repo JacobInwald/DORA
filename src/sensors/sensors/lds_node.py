@@ -38,8 +38,6 @@ class LdsNode(Node):
             LaserScan, '/scan', self.lds_callback, lds_qos)
         self.gps_pub_ = self.create_publisher(Pose, '/pose', 10)
         self.gps_timer = self.create_timer(1, self.pose_publish)
-        self.scan_srv_ = self.create_service(
-            LdsCmd, '/lds_service', self.scan_callback)
 
         # Variables
         self.max_range = 4.5
