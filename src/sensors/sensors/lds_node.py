@@ -58,7 +58,7 @@ class LdsNode(Node):
         # Localise Cloud and Publish Pose
         self.processing_pose = True
         pose, acc = self.reference_map.localise_cloud(self.last_cloud)
-        if acc > 0.75:
+        if acc > 0.6:
             self.get_logger().info(f'DORA pose: {pose}, Certainty: {100*acc}%')
             self.pose = pose
             self.gps_pub_.publish(pose.to_msg())
