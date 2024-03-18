@@ -7,9 +7,8 @@ from dora_msgs.msg import Toy, Pose, Toys, Map
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
 from .router import Router
 from .occupancy_map import OccupancyMap
-from job import DoraJob
+from .job import DoraJob
 from actuators.wheels import WheelsMove
-import cv2
 
 
 class Controller(Node):
@@ -22,15 +21,17 @@ class Controller(Node):
 
     def __init__(self):
         super().__init__('controller')
-        
+
         toy_qos = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
-        self.toy_sub_ = self.create_subscription(Toys, '/toys', self.toy_callback, toy_qos)
-        self.pose_sub_ = self.create_subscription(Pose, '/pose', self.pose_callback, 10)
+        self.toy_sub_ = self.create_subscription(
+            Toys, '/toys', self.toy_callback, toy_qos)
+        self.pose_sub_ = self.create_subscription(
+            Pose, '/pose', self.pose_callback, 10)
         self.cli_node_ = Node('control_client')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, '/lds_service')
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, '/wheels')

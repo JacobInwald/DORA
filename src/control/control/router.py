@@ -1,21 +1,22 @@
 import numpy as np
-from point_cloud import PointCloud
-from occupancy_map import OccupancyMap
+from .point_cloud import PointCloud
+from .occupancy_map import OccupancyMap
 from dora_msgs.msg import Toy, Toys
 from queue import PriorityQueue
+
 
 class Router:
     """
     The Router class is responsible for calculating routes.
     (the original Router class but without the navigation part)
-    
+
     Parameters:
         unload_points: Key-value pair to store coodinate and type of the unload points.
                        In form of (x, y): toy class
 
     TODO: Implement class (Keming)
     """
-    
+
     def __init__(self):
         self.unload_points = {}
 
@@ -36,10 +37,10 @@ class Router:
 
         g = {}
         g[str(start)] = 0
-        alpha = 0.5 # the penalty parameter for being close to obstacles
-        f = lambda p,a: 3* np.linalg.norm(p - end) + g[str(p)] + a * alpha
+        alpha = 0.5  # the penalty parameter for being close to obstacles
+        def f(p, a): return 3 * np.linalg.norm(p - end) + g[str(p)] + a * alpha
         q = PriorityQueue()
-        q.put((f(start,0), start))
+        q.put((f(start, 0), start))
         parent = {}
         found = False
 
@@ -56,22 +57,21 @@ class Router:
             for d in directions:
                 n = cur + d * move_dist
                 strNext = str(n)
-            
-                
+
                 if map.sample_coord(n) > 0.5:
                     g[strNext] = g[strCur] + np.inf
                     continue
-                
+
                 # penalize for obstacles in 3 move_dist
                 penalty = map.sample_coord(n, mean=True)
-                
+
                 try:
                     if g[strCur] + self.controller.move_dist < g[strNext]:
                         g[strNext] = g[strCur] + move_dist
                         parent[strNext] = cur
                 except KeyError:
                     g[strNext] = g[strCur] + move_dist
-                    q.put((f(n,penalty), tuple(n)))
+                    q.put((f(n, penalty), tuple(n)))
                     parent[strNext] = cur
 
         if found:
@@ -123,7 +123,7 @@ class Router:
 
         Returns:
         - A tuple of coordinate and the Toy object.
-        
+
         """
         closest_point = None
         closest_toy = None
@@ -138,7 +138,7 @@ class Router:
                 shortest_dist = this_dist
                 closest_point = np.array([toy.position.x, toy.position.y])
                 closest_toy = toy
-                
+
         return (closest_point, closest_toy)
 
     def next_unload_pt(self, map: OccupancyMap, toy: Toy) -> np.ndarray:
@@ -151,22 +151,22 @@ class Router:
 
         Returns:
         - The coordinate of the unload point
-        
+
         """
-        
+
         closest_unload_point = None
         shortest_dist = None
-        
+
         for _, (unload_point, unload_point_class) in enumerate(self.unload_points):
             if unload_point_class != Toy.cls:
                 continue
-            this_dist = np.linalg.norm([unload_point[0], unload_point[1]], [Toy.position.x, Toy.position.y])
+            this_dist = np.linalg.norm([unload_point[0], unload_point[1]], [
+                                       Toy.position.x, Toy.position.y])
             if closest_unload_point == None:
                 shortest_dist = this_dist
                 closest_unload_point = unload_point
             if this_dist < shortest_dist:
                 shortest_dist = this_dist
                 closest_unload_point = unload_point
-                
+
         return closest_unload_point
-            
