@@ -1,7 +1,6 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
-# https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html
 from sensor_msgs.msg import LaserScan
 from dora_msgs.msg import Map, Pose
 from dora_srvs.srv import LdsCmd
