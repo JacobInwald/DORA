@@ -35,7 +35,7 @@ class LdsNode(Node):
             depth=1
         )
         self.lds_sub_ = self.create_subscription(
-            LaserScan, '/scan', self.scan_callback, lds_qos)
+            LaserScan, '/scan', self.lds_callback, lds_qos)
         self.gps_pub_ = self.create_publisher(Pose, '/pose', 10)
         self.gps_timer = self.create_timer(1, self.pose_publish)
         self.scan_srv_ = self.create_service(
