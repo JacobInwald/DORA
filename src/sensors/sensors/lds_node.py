@@ -87,7 +87,7 @@ class LdsNode(Node):
 
         # Create PointCloud
         self.last_scan = scan
-        self.last_cloud = PointCloud(scan, self.pos, self.max_range)
+        self.last_cloud = PointCloud(scan, self.pose, self.max_range)
         self.get_logger().info(f'Heard scan')
         return True
 
