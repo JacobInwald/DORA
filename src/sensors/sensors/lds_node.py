@@ -47,7 +47,7 @@ class LdsNode(Node):
             self.reference_map = OccupancyMap.load('reference_map.npz')
         else:
             self.reference_map = reference_map
-        self.pose = None
+        self.pose = [0, 0, 0]
         self.processing_pose = False
 
     def pose_publish(self):
@@ -87,7 +87,7 @@ class LdsNode(Node):
 
         # Create PointCloud
         self.last_scan = scan
-        self.last_cloud = PointCloud(scan, self.pose, self.max_range)
+        self.last_cloud = PointCloud(scan, self.pose[0:1], self.max_range)
         self.get_logger().info(f'Heard scan')
         return True
 
