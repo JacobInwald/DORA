@@ -172,7 +172,7 @@ class OccupancyMap:
         num_perfect_matches = np.sum(template)
 
         # O(2^n)
-        for i in range(20):
+        for i in range(25):
             # Generate the rotated template
             _template = rotate_image(template, np.rad2deg(r))
             _template[_template < 0.75] = 0

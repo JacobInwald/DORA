@@ -6,7 +6,7 @@ from dora_msgs.msg import Map, Pose
 from dora_srvs.srv import LdsCmd
 from control.occupancy_map import OccupancyMap
 from control.point_cloud import PointCloud
-
+from time import time
 
 class LdsNode(Node):
     """
@@ -51,9 +51,9 @@ class LdsNode(Node):
         self.processing_pose = False
 
     def pose_publish(self):
-        if self.last_cloud is None or self.processing_pose:
+        if self.last_cloud is None:
             return False
-        from time import time
+
         self.get_logger().info(
             f'Start localisation')
         # Localise Cloud and Publish Pose
@@ -65,7 +65,11 @@ class LdsNode(Node):
             self.get_logger().info(
                 f'DORA pose: {pose}, Certainty: {100*acc}%, Time: {t} seconds.')
             self.pose = pose
-            self.gps_pub_.publish(pose.to_msg())
+            msg = Pose()
+            msg.x = pose[0]
+            msg.y = pose[1]
+            msg.rot = pose[2]
+            self.gps_pub_.publish(msg)
             self.processing_pose = False
             return True
         else:

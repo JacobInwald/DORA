@@ -105,7 +105,11 @@ class Controller(Node):
         """
         Run demo job
         """
-        return True
+        cur_pos = np.array([self.pose.x, self.pose.y])
+        next_retrieve_pt = np.array([2.3, 2])
+        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        status = self.navigate(route)
+        return status
 
     def navigate_to_toy(self) -> bool:
         """
