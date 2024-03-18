@@ -53,20 +53,24 @@ class LdsNode(Node):
     def pose_publish(self):
         if self.last_cloud is None or self.processing_pose:
             return False
-        self.get_logger().error(
+        from time import time
+        self.get_logger().info(
             f'Start localisation')
         # Localise Cloud and Publish Pose
+        st = time()
         self.processing_pose = True
         pose, acc = self.reference_map.localise_cloud(self.last_cloud)
+        t = time() - st
         if acc > 0.6:
-            self.get_logger().info(f'DORA pose: {pose}, Certainty: {100*acc}%')
+            self.get_logger().info(
+                f'DORA pose: {pose}, Certainty: {100*acc}%, Time: {t} seconds.')
             self.pose = pose
             self.gps_pub_.publish(pose.to_msg())
             self.processing_pose = False
             return True
         else:
             self.get_logger().error(
-                f'Localisation accuracy of {100*acc}% too low, not publishing pose.')
+                f'Localisation accuracy of {100*acc}% too low, not publishing pose. Time: {t} seconds.')
             self.processing_pose = False
             return False
 
