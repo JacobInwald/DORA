@@ -27,6 +27,7 @@ class Controller(Node):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
+        self.running = False
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
         self.toy_sub_ = self.create_subscription(
             Toys, '/toys', self.toy_callback, toy_qos)
@@ -78,6 +79,8 @@ class Controller(Node):
         self.pose = (msg.x, msg.y, msg.rot)
         self.get_logger().info(f'Heard pose: {self.pose}')
 
+        self.demo()
+
     def scan_request(self):
         lds_cmd = LdsCmd()
         lds_cmd.scan = True
@@ -108,6 +111,10 @@ class Controller(Node):
         Run demo job
         """
         self.get_logger().info('Running demo task')
+        if self.running:
+            return
+        self.running = True
+
         while self.pose is None:
             pass
         cur_pos = np.array(self.pose[0:2])
