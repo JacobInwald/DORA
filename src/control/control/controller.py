@@ -184,7 +184,7 @@ class Controller(Node):
                 future = self.wheels_cli_.call_async(wheels_dist_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
 
-                cur_pose[0:2] = aim_point[0:2]
+                cur_pose = np.array([aim_point[0], aim_point[1], angle])
 
         return self.close_to(route[-1], cur_pose)
 
