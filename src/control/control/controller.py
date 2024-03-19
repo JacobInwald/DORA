@@ -85,7 +85,7 @@ class Controller(Node):
         angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
         rot = angle - self.pose[2]
         self.get_logger().info(
-            f'{angle}')
+            f'{rot}')
         # self.demo()
 
     def scan_request(self):
