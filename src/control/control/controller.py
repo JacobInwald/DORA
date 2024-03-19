@@ -106,6 +106,7 @@ class Controller(Node):
         """
         Run demo job
         """
+        self.get_logger().info('Running demo task')
         while self.pose is None:
             pass
         cur_pos = np.array(self.pose[0:2])
