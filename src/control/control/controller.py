@@ -78,15 +78,7 @@ class Controller(Node):
         """
         self.pose = (msg.x, msg.y, msg.rot)
         self.get_logger().info(f'Heard pose: {self.pose}')
-        pt = self.pose + np.array([1, -1, 0])
-        x_dis = pt[0] - self.pose[0]
-        y_dis = pt[1] - self.pose[1]
-        # y axis is 0 x axis is np.pi/2
-        angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
-        rot = angle - self.pose[2]
-        self.get_logger().info(
-            f'{rot}')
-        # self.demo()
+        self.demo()
 
     def scan_request(self):
         lds_cmd = LdsCmd()
