@@ -21,7 +21,7 @@ class Router:
     def __init__(self):
         self.unload_points = {}
 
-    def route(self, start, end, map: OccupancyMap) -> np.ndarray:
+    def route_(self, start, end, map: OccupancyMap) -> np.ndarray:
         """
         This function calculates the route from the current position to the end point.
 
@@ -86,7 +86,7 @@ class Router:
 
         return [start]
 
-    def route_(self, start, end, map: OccupancyMap) -> np.ndarray:
+    def route(self, start, end, map: OccupancyMap) -> np.ndarray:
         """
         This function calculates the route from the current position to the end point.
 

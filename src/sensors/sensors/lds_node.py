@@ -71,7 +71,8 @@ class LdsNode(Node):
             msg = Pose()
             msg.x = pose[0]
             msg.y = pose[1]
-            r = (- pose[2] + (np.pi / 4)) % (2 * np.pi)
+            r = pose[2]
+            # r = (-r + (np.pi / 4)) % (2 * np.pi)
             msg.rot = r
             self.gps_pub_.publish(msg)
             self.processing_pose = False
