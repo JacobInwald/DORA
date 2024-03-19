@@ -44,6 +44,8 @@ class Controller(Node):
         self.map = OccupancyMap.load('reference_map.npz')
         self.close_thres = 0.02
 
+        self.create_timer(1, self.demo)
+
     def switch(self, msg, response):
         self.get_logger().info(f'Received job request: {msg.job}')
         response.status = False
@@ -78,8 +80,6 @@ class Controller(Node):
         """
         self.pose = (msg.x, msg.y, msg.rot)
         self.get_logger().info(f'Heard pose: {self.pose}')
-
-        self.demo()
 
     def scan_request(self):
         lds_cmd = LdsCmd()
