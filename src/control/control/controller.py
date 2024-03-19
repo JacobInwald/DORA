@@ -159,11 +159,11 @@ class Controller(Node):
         for aim_point in route:
             while not self.close_to(aim_point, cur_pose):
                 self.get_logger().info('Request pose from LDS')
+
                 self.get_logger().info(
                     f'Moving from {cur_pose} to {aim_point} ... ')
                 x_dis = aim_point[0] - cur_pose[0]
                 y_dis = aim_point[1] - cur_pose[1]
-                # y axis is 0 x axis is np.pi/2
                 angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
                 self.get_logger().info(
                     f'{angle}')
