@@ -83,9 +83,10 @@ class Controller(Node):
         y_dis = pt[1] - self.pose[1]
         # y axis is 0 x axis is np.pi/2
         angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
+        rot = angle - self.pose[2]
         self.get_logger().info(
-                    f'{angle}')
-        #self.demo()
+            f'{angle}')
+        # self.demo()
 
     def scan_request(self):
         lds_cmd = LdsCmd()
@@ -171,7 +172,7 @@ class Controller(Node):
                 x_dis = aim_point[0] - cur_pose[0]
                 y_dis = aim_point[1] - cur_pose[1]
                 # y axis is 0 x axis is np.pi/2
-                angle = np.arctan2(y_dis, x_dis) - (np.pi / 4)
+                angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
                 self.get_logger().info(
                     f'{angle}')
                 rotation = angle - cur_pose[2]
