@@ -44,7 +44,7 @@ void loop()
     String second = Serial.readStringUntil('-');
     int move_time = second.toInt();
 
-    int speed = 50;
+    int speed = 1;
 
     if (first == "forward")
     {
