@@ -63,7 +63,7 @@ class LdsNode(Node):
         self.processing_pose = True
         pose, acc = self.reference_map.localise_cloud(self.last_cloud)
         t = time() - st
-        if acc > 0.6:
+        if acc > 0.7:
             self.get_logger().info(
                 f'DORA pose: {pose}, Certainty: {100*acc}%, Time: {t} seconds.')
             self.pose = pose

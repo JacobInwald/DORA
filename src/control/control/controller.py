@@ -44,7 +44,7 @@ class Controller(Node):
         self.map = OccupancyMap.load('reference_map.npz')
         self.close_thres = 0.02
 
-        # self.create_timer(1, self.demo)
+        self.create_timer(1, self.demo)
 
     def switch(self, msg, response):
         self.get_logger().info(f'Received job request: {msg.job}')
@@ -157,26 +157,21 @@ class Controller(Node):
             job status
         """
         last_pose = None
+        cur_pose = self.pose
         for aim_point in route:
-            while not self.close_to(aim_point, self.pose):
+            while not self.close_to(aim_point, cur_pose):
                 self.get_logger().info('Request pose from LDS')
-                last_pose = self.pose
-                # posecmd = LdsCmd.Request()
-                # future = self.lds_cli_.call_async(posecmd)
-                # rclpy.spin_until_future_complete(self.cli_node_, future)
-                while last_pose == self.pose:
-                    pass
                 self.get_logger().info(
-                    f'Moving from {self.pose} to {aim_point} ... ')
-                x_dis = aim_point[0] - self.pose[0]
-                y_dis = aim_point[1] - self.pose[1]
+                    f'Moving from {cur_pose} to {aim_point} ... ')
+                x_dis = aim_point[0] - cur_pose[0]
+                y_dis = aim_point[1] - cur_pose[1]
                 # y axis is 0 x axis is np.pi/2
                 angle = np.arctan2(y_dis, x_dis)
-                x_distance = aim_point[0] - self.pose[0]
-                y_distance = aim_point[1] - self.pose[1]
+                x_distance = aim_point[0] - cur_pose[0]
+                y_distance = aim_point[1] - cur_pose[1]
                 angle = math.atan2(y_distance, x_distance)
 
-                rotation = angle - self.pose[2]
+                rotation = angle - cur_pose[2]
                 wheels_rot_cmd = WheelsCmd.Request()
                 wheels_rot_cmd.type = 1  # TURN
                 wheels_rot_cmd.magnitude = rotation
@@ -190,7 +185,9 @@ class Controller(Node):
                 future = self.wheels_cli_.call_async(wheels_dist_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
 
-        return self.close_to(route[-1], self.pose)
+                cur_pose[0:2] = aim_point[0:2]
+
+        return self.close_to(route[-1], cur_pose)
 
     def close_to(self, src: np.ndarray, dst: Pose):
         """
