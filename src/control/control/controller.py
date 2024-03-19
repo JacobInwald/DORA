@@ -44,19 +44,20 @@ class Controller(Node):
         self.close_thres = 0.02
 
     def switch(self, msg, response):
+        response.status = False
         if msg.job == DoraJob.SCAN:
-            return self.scan_request()
+            response.status = self.scan_request()
         elif msg.job == DoraJob.NAV_TOY:
-            return self.navigate_to_toy()
+            response.status = self.navigate_to_toy()
         elif msg.job == DoraJob.RETRIEVE:
-            return self.retrieve_request()
+            response.status = self.retrieve_request()
         elif msg.job == DoraJob.NAV_STORAGE:
-            return self.navigate_to_storage()
+            response.status = self.navigate_to_storage()
         elif msg.job == DoraJob.UNLOAD:
-            return self.unload_request()
+            response.status = self.unload_request()
         elif msg.job == DoraJob.DEMO:
-            return self.demo()
-        return False
+            response.status = self.demo()
+        return response
 
     def toy_callback(self, msg: Toys):
         """
