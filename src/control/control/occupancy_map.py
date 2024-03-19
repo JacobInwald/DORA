@@ -318,7 +318,7 @@ class OccupancyMap:
             path (str): The path to save the occupancy map to.
         """
         occ = OccupancyMap(np.array([0, 0]), [])
-        data = np.load(path)
+        data = np.load('data/maps/'+path)
         occ.offset = data['offset']
         occ.resolution = data['resolution']
         occ.map = data['map']

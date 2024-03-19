@@ -66,7 +66,7 @@ class Router:
                 penalty = map.sample_coord(n, mean=True)
 
                 try:
-                    if g[strCur] + self.controller.move_dist < g[strNext]:
+                    if g[strCur] + move_dist < g[strNext]:
                         g[strNext] = g[strCur] + move_dist
                         parent[strNext] = cur
                 except KeyError:

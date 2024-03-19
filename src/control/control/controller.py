@@ -27,6 +27,7 @@ class Controller(Node):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
+        self.running = False
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
         self.toy_sub_ = self.create_subscription(
             Toys, '/toys', self.toy_callback, toy_qos)
@@ -40,23 +41,27 @@ class Controller(Node):
         self.router = Router()
         self.toy = None
         self.pose = None
-        self.map = OccupancyMap.load('reference_map.npy')
-        self.close_thres = 3
+        self.map = OccupancyMap.load('reference_map.npz')
+        self.close_thres = 0.02
 
-    def switch(self, msg):
-        if msg.job == DoraJob.SCAN:
-            return self.scan_request()
-        elif msg.job == DoraJob.NAV_TOY:
-            return self.navigate_to_toy()
-        elif msg.job == DoraJob.RETRIEVE:
-            return self.retrieve_request()
-        elif msg.job == DoraJob.NAV_STORAGE:
-            return self.navigate_to_storage()
-        elif msg.job == DoraJob.UNLOAD:
-            return self.unload_request()
-        elif msg.job == DoraJob.DEMO:
-            return self.demo()
-        return False
+        # self.create_timer(1, self.demo)
+
+    def switch(self, msg, response):
+        self.get_logger().info(f'Received job request: {msg.job}')
+        response.status = False
+        if msg.job == 0:  # SCAN
+            response.status = self.scan_request()
+        elif msg.job == 1:  # NAV_TOY
+            response.status = self.navigate_to_toy()
+        elif msg.job == 2:  # RETRIEVE
+            response.status = self.retrieve_request()
+        elif msg.job == 3:  # NAV_STORE
+            response.status = self.navigate_to_storage()
+        elif msg.job == 4:  # UNLOAD
+            response.status = self.unload_request()
+        elif msg.job == 5:  # DEMO
+            response.status = self.demo()
+        return response
 
     def toy_callback(self, msg: Toys):
         """
@@ -105,7 +110,19 @@ class Controller(Node):
         """
         Run demo job
         """
-        return True
+        self.get_logger().info('Running demo task')
+        if self.running:
+            return
+        self.running = True
+
+        while self.pose is None:
+            pass
+
+        cur_pos = np.array(self.pose[0:2])
+        next_retrieve_pt = cur_pos + np.array([0, -1])
+        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        status = self.navigate(route)
+        return status
 
     def navigate_to_toy(self) -> bool:
         """
@@ -139,25 +156,40 @@ class Controller(Node):
         Returns:
             job status
         """
+        last_pose = None
         for aim_point in route:
             while not self.close_to(aim_point, self.pose):
-                x_distance = aim_point[0] - self.pose.x
-                y_distance = aim_point[1] - self.pose.y
+                self.get_logger().info('Request pose from LDS')
+                last_pose = self.pose
+                # posecmd = LdsCmd.Request()
+                # future = self.lds_cli_.call_async(posecmd)
+                # rclpy.spin_until_future_complete(self.cli_node_, future)
+                while last_pose == self.pose:
+                    pass
+                self.get_logger().info(
+                    f'Moving from {self.pose} to {aim_point} ... ')
+                x_dis = aim_point[0] - self.pose[0]
+                y_dis = aim_point[1] - self.pose[1]
+                # y axis is 0 x axis is np.pi/2
+                angle = np.arctan2(y_dis, x_dis)
+                x_distance = aim_point[0] - self.pose[0]
+                y_distance = aim_point[1] - self.pose[1]
                 angle = math.atan2(y_distance, x_distance)
 
-                rotation = angle - self.pose.rot
+                rotation = angle - self.pose[2]
                 wheels_rot_cmd = WheelsCmd.Request()
-                wheels_rot_cmd.type = WheelsMove.TURN
+                wheels_rot_cmd.type = 1  # TURN
                 wheels_rot_cmd.magnitude = rotation
                 future = self.wheels_cli_.call_async(wheels_rot_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
 
-                distance = math.sqrt(x_distance ^ 2 + y_distance ^ 2)
+                distance = math.sqrt(x_distance ** 2 + y_distance ** 2)
                 wheels_dist_cmd = WheelsCmd.Request()
-                wheels_dist_cmd.type = WheelsMove.FORWARD
+                wheels_dist_cmd.type = 0  # FORWARD
                 wheels_dist_cmd.magnitude = distance
                 future = self.wheels_cli_.call_async(wheels_dist_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
+
         return self.close_to(route[-1], self.pose)
 
     def close_to(self, src: np.ndarray, dst: Pose):
@@ -165,9 +197,9 @@ class Controller(Node):
         :param src: np.array([x,y]) represents coordinate
         :param dst: Pose represent current coordinate
         """
-        dx = dst.x - src[0]
-        dy = dst.y - src[1]
-        return math.sqrt(dx ^ 2 + dy ^ 2) < self.close_thres
+        dx = dst[0] - src[0]
+        dy = dst[1] - src[1]
+        return math.sqrt(dx ** 2 + dy ** 2) < self.close_thres
 
 
 # Entry Point
