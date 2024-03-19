@@ -1,4 +1,5 @@
 import numpy as np
+import cv2
 from .point_cloud import PointCloud
 from .occupancy_map import OccupancyMap
 from dora_msgs.msg import Toy, Toys
@@ -32,6 +33,73 @@ class Router:
             np.ndarray: The calculated route as an array of coordinates.
         """
         move_dist = map.resolution * 5
+        directions = np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]
+                               if (x, y) != (0, 0)])
+
+        g = {}
+        g[str(start)] = 0
+        alpha = 0.5  # the penalty parameter for being close to obstacles
+        def f(p, a): return 3 * np.linalg.norm(p - end) + g[str(p)] + a * alpha
+        q = PriorityQueue()
+        q.put((f(start, 0), start))
+        parent = {}
+        found = False
+
+        # A* Algorithm
+        while q.empty() is False:
+            _, cur = q.get()
+            cur = np.array(cur)
+            strCur = str(cur)
+
+            if np.linalg.norm(cur - end) < move_dist:
+                found = True
+                break
+
+            for d in directions:
+                n = cur + d * move_dist
+                strNext = str(n)
+
+                if map.sample_coord(n) > 0.5:
+                    g[strNext] = g[strCur] + np.inf
+                    continue
+
+                # penalize for obstacles in 3 move_dist
+                penalty = map.sample_coord(n, mean=True)
+
+                try:
+                    if g[strCur] + move_dist < g[strNext]:
+                        g[strNext] = g[strCur] + move_dist
+                        parent[strNext] = cur
+                except KeyError:
+                    g[strNext] = g[strCur] + move_dist
+                    q.put((f(n, penalty), tuple(n)))
+                    parent[strNext] = cur
+
+        if found:
+            route = [cur]
+            cur = str(cur)
+            while cur in parent:
+                route.append(parent[cur])
+                cur = str(parent[cur])
+            route.reverse()
+            return np.array(route)
+
+        return [start]
+
+    def route_(self, start, end, map: OccupancyMap) -> np.ndarray:
+        """
+        This function calculates the route from the current position to the end point.
+
+        Parameters:
+            end (np.ndarray): The end point coordinates on the map.
+            map (OccupancyMap): The occupancy map object representing the environment.
+
+        Returns:
+            np.ndarray: The calculated route as an array of coordinates.
+        """
+        move_dist = 0.1
+        map = map.change_res(move_dist)
+
         directions = np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]
                                if (x, y) != (0, 0)])
 
