@@ -159,12 +159,14 @@ class Controller(Node):
         last_pose = None
         for aim_point in route:
             while not self.close_to(aim_point, self.pose):
+                self.get_logger().info('Request pose from LDS')
                 last_pose = self.pose
                 posecmd = LdsCmd.Request()
                 future = self.lds_cli_.call_async(posecmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
-                while last_pose == self.pose:
-                    pass
+
+                self.get_logger().info(
+                    f'Moving from {self.pose} to {aim_point} ... ')
                 x_dis = aim_point[0] - self.pose[0]
                 y_dis = aim_point[1] - self.pose[1]
                 # y axis is 0 x axis is np.pi/2
