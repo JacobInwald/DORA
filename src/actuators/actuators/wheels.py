@@ -35,7 +35,8 @@ class Wheels(Node):
     def callback(self, msg, resp):
         type_ = msg.type
         magnitude = msg.magnitude
-        self.get_logger().info(f'Received cmd of type {type_} with magnitude {magnitude}')
+        self.get_logger().info(
+            f'Received cmd of type {type_} with magnitude {magnitude}')
 
         if type_ == 0:
             self.forward(magnitude)
@@ -48,7 +49,8 @@ class Wheels(Node):
     def forward(self, dist: float):
         forward = dist > 0
         time = self.convert_dist_to_time(abs(dist))
-        self.get_logger().info(f'Start turn, forward: {forward}, time: {time}, dist: {dist}')
+        self.get_logger().info(
+            f'Start turn, forward: {forward}, time: {time}, dist: {dist}')
         self.arduino.write(
             f"{'forward' if forward else 'backward'}.{time}-".encode())
 
@@ -56,7 +58,8 @@ class Wheels(Node):
         right = angle > 0
         angle = np.rad2deg(angle)
         time = self.convert_angle_to_time(abs(angle))
-        self.get_logger().info(f'Start turn, right: {right}, time: {time}, angle: {angle}')
+        self.get_logger().info(
+            f'Start turn, right: {right}, time: {time}, angle: {angle}')
         self.arduino.write(
             f"{'right' if right else 'left'}.{time}-".encode())
 
@@ -65,7 +68,7 @@ class Wheels(Node):
         Convert distance to time for the Arduino (in integer milliseconds).
         1 meter = ~1000 milliseconds.
         """
-        return int(dist)
+        return int(dist * 1000)
 
     def convert_angle_to_time(self, angle: float) -> int:
         """

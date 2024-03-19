@@ -118,7 +118,7 @@ class Controller(Node):
         while self.pose is None:
             pass
         cur_pos = np.array(self.pose[0:2])
-        next_retrieve_pt = np.array([2.3, 2])
+        next_retrieve_pt = np.array([2.3, -2])
         route = self.router.route(cur_pos, next_retrieve_pt, self.map)
         status = self.navigate(route)
         return status
