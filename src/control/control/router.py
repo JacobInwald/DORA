@@ -31,7 +31,7 @@ class Router:
         Returns:
             np.ndarray: The calculated route as an array of coordinates.
         """
-        move_dist = map.resolution
+        move_dist = map.resolution * 5
         directions = np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]
                                if (x, y) != (0, 0)])
 

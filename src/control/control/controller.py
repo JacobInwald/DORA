@@ -119,8 +119,8 @@ class Controller(Node):
 
         cur_pos = np.array(self.pose[0:2])
         next_retrieve_pt = cur_pos + np.array([0, -1])
-        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
-        status = self.navigate(route)
+        # route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        status = self.navigate([next_retrieve_pt])
         return status
 
     def navigate_to_toy(self) -> bool:
