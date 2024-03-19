@@ -8,6 +8,7 @@ from control.occupancy_map import OccupancyMap
 from control.point_cloud import PointCloud
 from time import time
 
+
 class LdsNode(Node):
     """
     Represents the LDS (Laser Distance Sensor).
@@ -38,7 +39,8 @@ class LdsNode(Node):
             LaserScan, '/scan', self.lds_callback, lds_qos)
         self.gps_pub_ = self.create_publisher(Pose, '/pose', 10)
         self.gps_timer = self.create_timer(1, self.pose_publish)
-
+        self.service_ = self.create_service(
+            LdsCmd, '/lds_service', self.lds_service)
         # Variables
         self.max_range = 4.5
         self.last_scan = None
@@ -102,6 +104,10 @@ class LdsNode(Node):
         self.get_logger().info(f'Heard scan')
         return True
 
+    def lds_service(self, msg, response):
+        self.pose_publish()
+        response.status = True
+        return response
 # Entry Point
 
 

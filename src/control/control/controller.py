@@ -117,8 +117,9 @@ class Controller(Node):
 
         while self.pose is None:
             pass
+
         cur_pos = np.array(self.pose[0:2])
-        next_retrieve_pt = np.array([2.3, -2])
+        next_retrieve_pt = cur_pos + np.array([0, -1])
         route = self.router.route(cur_pos, next_retrieve_pt, self.map)
         status = self.navigate(route)
         return status
@@ -155,8 +156,19 @@ class Controller(Node):
         Returns:
             job status
         """
+        last_pose = None
         for aim_point in route:
             while not self.close_to(aim_point, self.pose):
+                last_pose = self.pose
+                posecmd = LdsCmd.Request()
+                future = self.lds_cli_.call_async(posecmd)
+                rclpy.spin_until_future_complete(self.cli_node_, future)
+                while last_pose == self.pose:
+                    pass
+                x_dis = aim_point[0] - self.pose[0]
+                y_dis = aim_point[1] - self.pose[1]
+                # y axis is 0 x axis is np.pi/2
+                angle = np.arctan2(y_dis, x_dis)
                 x_distance = aim_point[0] - self.pose[0]
                 y_distance = aim_point[1] - self.pose[1]
                 angle = math.atan2(y_distance, x_distance)
@@ -174,6 +186,7 @@ class Controller(Node):
                 wheels_dist_cmd.magnitude = distance
                 future = self.wheels_cli_.call_async(wheels_dist_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
+
         return self.close_to(route[-1], self.pose)
 
     def close_to(self, src: np.ndarray, dst: Pose):
