@@ -41,7 +41,8 @@ class Controller(Node):
         self.toy = None
         self.pose = None
         self.map = OccupancyMap.load('reference_map.npz')
-        self.close_thres = 3
+        self.close_thres = 0.02
+        
 
     def switch(self, msg):
         if msg.job == DoraJob.SCAN:
@@ -75,6 +76,7 @@ class Controller(Node):
         """
         self.pose = (msg.x, msg.y, msg.rot)
         self.get_logger().info(f'Heard pose: {self.pose}')
+        self.demo()
 
     def scan_request(self):
         lds_cmd = LdsCmd()
@@ -105,7 +107,9 @@ class Controller(Node):
         """
         Run demo job
         """
-        cur_pos = np.array([self.pose.x, self.pose.y])
+        while self.pose is None:
+            pass
+        cur_pos = np.array(self.pose[0:2])
         next_retrieve_pt = np.array([2.3, 2])
         route = self.router.route(cur_pos, next_retrieve_pt, self.map)
         status = self.navigate(route)
@@ -145,20 +149,20 @@ class Controller(Node):
         """
         for aim_point in route:
             while not self.close_to(aim_point, self.pose):
-                x_distance = aim_point[0] - self.pose.x
-                y_distance = aim_point[1] - self.pose.y
+                x_distance = aim_point[0] - self.pose[0]
+                y_distance = aim_point[1] - self.pose[1]
                 angle = math.atan2(y_distance, x_distance)
 
-                rotation = angle - self.pose.rot
+                rotation = angle - self.pose[2]
                 wheels_rot_cmd = WheelsCmd.Request()
-                wheels_rot_cmd.type = WheelsMove.TURN
+                wheels_rot_cmd.type = 1 #TURN
                 wheels_rot_cmd.magnitude = rotation
                 future = self.wheels_cli_.call_async(wheels_rot_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
 
-                distance = math.sqrt(x_distance ^ 2 + y_distance ^ 2)
+                distance = math.sqrt(x_distance ** 2 + y_distance ** 2)
                 wheels_dist_cmd = WheelsCmd.Request()
-                wheels_dist_cmd.type = WheelsMove.FORWARD
+                wheels_dist_cmd.type = 0 #FORWARD
                 wheels_dist_cmd.magnitude = distance
                 future = self.wheels_cli_.call_async(wheels_dist_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
@@ -169,9 +173,9 @@ class Controller(Node):
         :param src: np.array([x,y]) represents coordinate
         :param dst: Pose represent current coordinate
         """
-        dx = dst.x - src[0]
-        dy = dst.y - src[1]
-        return math.sqrt(dx ^ 2 + dy ^ 2) < self.close_thres
+        dx = dst[0] - src[0]
+        dy = dst[1] - src[1]
+        return math.sqrt(dx ** 2 + dy ** 2) < self.close_thres
 
 
 # Entry Point
