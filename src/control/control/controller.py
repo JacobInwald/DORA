@@ -44,6 +44,7 @@ class Controller(Node):
         self.close_thres = 0.02
 
     def switch(self, msg, response):
+        self.get_logger().info(f'Received job request: {msg.job}')
         response.status = False
         if msg.job == 0:  # SCAN
             response.status = self.scan_request()
