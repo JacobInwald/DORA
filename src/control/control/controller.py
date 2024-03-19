@@ -165,7 +165,7 @@ class Controller(Node):
                 x_dis = aim_point[0] - cur_pose[0]
                 y_dis = aim_point[1] - cur_pose[1]
                 # y axis is 0 x axis is np.pi/2
-                angle = np.arctan2(y_dis, x_dis) - (np.pi / 2)
+                angle = np.arctan2(y_dis, x_dis) - (np.pi / 4)
                 self.get_logger().info(
                     f'{angle}')
                 rotation = angle - cur_pose[2]
