@@ -166,10 +166,8 @@ class Controller(Node):
                 y_dis = aim_point[1] - cur_pose[1]
                 # y axis is 0 x axis is np.pi/2
                 angle = np.arctan2(y_dis, x_dis)
-                x_distance = aim_point[0] - cur_pose[0]
-                y_distance = aim_point[1] - cur_pose[1]
-                angle = math.atan2(y_distance, x_distance)
-
+                self.get_logger().info(
+                    f'{angle}')
                 rotation = angle - cur_pose[2]
                 wheels_rot_cmd = WheelsCmd.Request()
                 wheels_rot_cmd.type = 1  # TURN
@@ -177,7 +175,7 @@ class Controller(Node):
                 future = self.wheels_cli_.call_async(wheels_rot_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
 
-                distance = math.sqrt(x_distance ** 2 + y_distance ** 2)
+                distance = np.sqrt(x_dis ** 2 + y_dis ** 2)
                 wheels_dist_cmd = WheelsCmd.Request()
                 wheels_dist_cmd.type = 0  # FORWARD
                 wheels_dist_cmd.magnitude = distance
