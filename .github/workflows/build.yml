@@ -29,4 +29,5 @@ jobs:
 
       - name: Build DORA
         run: |
+          source /opt/ros/humble/setup.bash
           colcon build --symlink-install
