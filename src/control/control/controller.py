@@ -42,9 +42,8 @@ class Controller(Node):
         self.pose = None
         self.map = OccupancyMap.load('reference_map.npz')
         self.close_thres = 0.02
-        
 
-    def switch(self, msg):
+    def switch(self, msg, response):
         if msg.job == DoraJob.SCAN:
             return self.scan_request()
         elif msg.job == DoraJob.NAV_TOY:
@@ -76,7 +75,6 @@ class Controller(Node):
         """
         self.pose = (msg.x, msg.y, msg.rot)
         self.get_logger().info(f'Heard pose: {self.pose}')
-        self.demo()
 
     def scan_request(self):
         lds_cmd = LdsCmd()
@@ -155,14 +153,14 @@ class Controller(Node):
 
                 rotation = angle - self.pose[2]
                 wheels_rot_cmd = WheelsCmd.Request()
-                wheels_rot_cmd.type = 1 #TURN
+                wheels_rot_cmd.type = 1  # TURN
                 wheels_rot_cmd.magnitude = rotation
                 future = self.wheels_cli_.call_async(wheels_rot_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
 
                 distance = math.sqrt(x_distance ** 2 + y_distance ** 2)
                 wheels_dist_cmd = WheelsCmd.Request()
-                wheels_dist_cmd.type = 0 #FORWARD
+                wheels_dist_cmd.type = 0  # FORWARD
                 wheels_dist_cmd.magnitude = distance
                 future = self.wheels_cli_.call_async(wheels_dist_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
