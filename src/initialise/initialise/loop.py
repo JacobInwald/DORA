@@ -22,7 +22,7 @@ class Loop(Node):
         self.job = 5  # DEMO
         self.job_cmd = JobCmd.Request()
         # Run loop
-        self.loop_cli = self.cli_node_.create_service(
+        self.loop_cli = self.create_service(
             LoopCmd, '/loop', self.run)
 
     def run(self):
