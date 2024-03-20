@@ -39,8 +39,8 @@ class LdsNode(Node):
         )
         self.lds_sub_ = self.create_subscription(
             LaserScan, '/scan', self.lds_callback, lds_qos)
-        self.pose_pub_ = self.create_publisher(Pose, '/pose', 10)
-        self.pose_timer = self.create_timer(1, self.pose_publish)
+        # self.pose_pub_ = self.create_publisher(Pose, '/pose', 10)
+        # self.pose_timer = self.create_timer(1, self.pose_publish)
         
         # Variables
         self.max_range = 4.5

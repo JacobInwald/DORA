@@ -90,12 +90,16 @@ class Controller(Node):
         self.get_logger().info(f'Heard pose: {self.pose}')
         self.demo()
 
-    def scan_request(self):
-        lds_cmd = LdsCmd()
-        lds_cmd.scan = True
-        future = self.lds_cli_.call_async(lds_cmd)
+    def localise_request(self):
+        self.get_logger().info('Request pose from LDS ...')
+        pose_cmd = LdsCmd.Request()
+        pose_cmd.localise = True 
+        future = self.lds_cli_.call_async(pose_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
-        return future.result()
+        if future.result().status:
+            return np.array([future.result().x, future.result().y, future.result().rot])
+        else:
+            return None
 
     def retrieve_request(self) -> bool:
         """
@@ -127,13 +131,9 @@ class Controller(Node):
         while self.pose is None:
             pass
 
-        self.get_logger().info('Request pose ...')
-        pose_cmd = LdsCmd.Request()
-        pose_cmd.localise = True 
-        future = self.lds_cli_.call_async(pose_cmd)
-        rclpy.spin_until_future_complete(self.cli_node_, future)
-        
-        cur_pos = np.array([future.result().x, future.result().y])
+
+        pose = self.localise_request()
+        cur_pos = np.array(pose[0:2])
         self.get_logger().info(f'Current position: {cur_pos}')
         
         next_retrieve_pt = cur_pos + np.array([0, -1])
@@ -179,13 +179,9 @@ class Controller(Node):
         cur_pose = self.pose
         for aim_point in route:
             while not self.close_to(aim_point, cur_pose):
-                
-                self.get_logger().info('Request pose from LDS ...')
-                pose_cmd = LdsCmd.Request()
-                pose_cmd.localise = True 
-                future = self.lds_cli_.call_async(pose_cmd)
-                rclpy.spin_until_future_complete(self.cli_node_, future)
-                cur_pose = np.array([future.result().x, future.result().y, future.result().rot])
+                cur_pose = None
+                while cur_pose == None:
+                    cur_pose = self.localise_request()
                 
                 self.get_logger().info(
                     f'Moving from {cur_pose} to {aim_point} ... ')
