@@ -39,8 +39,8 @@ class LdsNode(Node):
         )
         self.lds_sub_ = self.create_subscription(
             LaserScan, '/scan', self.lds_callback, lds_qos)
-        # self.pose_pub_ = self.create_publisher(Pose, '/pose', 10)
-        # self.pose_timer = self.create_timer(1, self.pose_publish)
+        self.pose_pub_ = self.create_publisher(Pose, '/pose', 10)
+        self.pose_timer = self.create_timer(1, self.pose_publish)
         
         # Variables
         self.max_range = 4.5
@@ -58,42 +58,42 @@ class LdsNode(Node):
             LdsCmd, '/lds_service', self.lds_service)
 
     def pose_publish(self):
-            """
-            Publishes the pose based on the last received cloud data.
+        """
+        Publishes the pose based on the last received cloud data.
 
-            Returns:
-                bool: True if the pose was successfully published, False otherwise.
-            """
-            
-            if self.last_cloud is None:
-                return False
+        Returns:
+            bool: True if the pose was successfully published, False otherwise.
+        """
+        
+        if self.last_cloud is None:
+            return False
 
+        self.get_logger().info(
+            f'Start localisation')
+        # Localise Cloud and Publish Pose
+        st = time()
+        self.processing_pose = True
+        pose, acc = self.reference_map.localise_cloud(self.last_cloud)
+        t = time() - st
+        if acc > 0.7:
             self.get_logger().info(
-                f'Start localisation')
-            # Localise Cloud and Publish Pose
-            st = time()
-            self.processing_pose = True
-            pose, acc = self.reference_map.localise_cloud(self.last_cloud)
-            t = time() - st
-            if acc > 0.7:
-                self.get_logger().info(
-                    f'DORA pose: {pose}, Certainty: {100*acc}%, Time: {t} seconds.')
-                self.pose = pose
-                msg = Pose()
-                msg.x = pose[0]
-                msg.y = pose[1]
-                r = pose[2]
-                # r = 0
-                r = ((2*np.pi)-r) % (2 * np.pi)
-                msg.rot = r
-                self.pose_pub_.publish(msg)
-                self.processing_pose = False
-                return True
-            else:
-                self.get_logger().error(
-                    f'Localisation accuracy of {100*acc}% too low, not publishing pose. Time: {t} seconds.')
-                self.processing_pose = False
-                return False
+                f'DORA pose: {pose}, Certainty: {100*acc}%, Time: {t} seconds.')
+            self.pose = pose
+            msg = Pose()
+            msg.x = pose[0]
+            msg.y = pose[1]
+            r = pose[2]
+            # r = 0
+            r = ((2*np.pi)-r) % (2 * np.pi)
+            msg.rot = r
+            self.pose_pub_.publish(msg)
+            self.processing_pose = False
+            return True
+        else:
+            self.get_logger().error(
+                f'Localisation accuracy of {100*acc}% too low, not publishing pose. Time: {t} seconds.')
+            self.processing_pose = False
+            return False
 
     def lds_callback(self, msg: 'LaserScan'):
         """

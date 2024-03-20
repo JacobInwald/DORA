@@ -49,7 +49,10 @@ class Controller(Node):
         self.pose = None
         self.map = OccupancyMap.load('reference_map.npz')
         self.close_thres = 0.02
-        self.running = False
+        
+        self.drop_off_0 = np.array([0, 0])
+        self.drop_off_1 = np.array([0, 0])
+        self.drop_off_2 = np.array([0, 0])
         
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
 
@@ -87,7 +90,6 @@ class Controller(Node):
         """
         self.pose = (msg.x, msg.y, msg.rot)
         self.get_logger().info(f'Heard pose: {self.pose}')
-        self.demo()
 
     def localise_request(self):
         self.get_logger().info('Request pose from LDS ...')
@@ -99,6 +101,41 @@ class Controller(Node):
             return np.array([future.result().x, future.result().y, future.result().rot])
         else:
             return None
+
+    def turn_request(self, angle: float) -> bool:
+        """
+        Send service request for turning robot
+
+        Args:
+            angle: angle to turn
+
+        Returns:
+            job status
+        """
+        wheels_rot_cmd = WheelsCmd.Request()
+        wheels_rot_cmd.type = 1  # TURN
+        wheels_rot_cmd.magnitude = angle
+        future = self.wheels_cli_.call_async(wheels_rot_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+        
+        return future.result().status
+    
+    def move_request(self, distance: float) -> bool:
+        """
+        Send service request for moving robot
+
+        Args:
+            distance: distance to move
+
+        Returns:
+            job status
+        """
+        wheels_dist_cmd = WheelsCmd.Request()
+        wheels_dist_cmd.type = 0  # FORWARD
+        wheels_dist_cmd.magnitude = distance
+        future = self.wheels_cli_.call_async(wheels_dist_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+        return future.result().status
 
     def retrieve_request(self) -> bool:
         """
@@ -117,6 +154,61 @@ class Controller(Node):
             job status
         """
         pass
+    
+    def close_to(self, src: np.ndarray, dst: np.ndarray):
+        """
+        :param src: np.array([x,y]) represents coordinate
+        :param dst: Pose represent current coordinate
+        """
+        return np.linalg.norm(src, dst) < self.close_thres
+    
+    def navigate(self, route: np.ndarray) -> bool:
+        """
+        Navigate through route.
+        Translate route to robot (wheels) moves
+        Call wheels service for every move.
+
+        Returns:
+            job status
+        """
+        for pt in route:
+            if not self.navigate_to_pt(pt):
+                return False
+        return True
+
+    def navigate_to_pt(self, pt: np.ndarray) -> bool:
+        """
+        Navigate to a point
+
+        Args:
+            pt: point to navigate to
+
+        Returns:
+            job status
+        """
+        tries = 3
+        for i in range(tries):
+            cur_pose = None
+            while cur_pose == None:
+                cur_pose = self.localise_request()
+            
+            if self.close_to(pt, cur_pose):
+                return True
+            
+            self.get_logger().info(f'Navigate: {cur_pose} -> {pt}')
+            
+            x_dis = pt[0] - cur_pose[0]
+            y_dis = pt[1] - cur_pose[1]
+            angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
+            rotation = angle - cur_pose[2]
+            distance = np.sqrt(x_dis ** 2 + y_dis ** 2)
+            
+            self.turn_request(rotation)
+            self.move_request(distance)
+            
+        return self.close_to(pt, cur_pose)
+
+    # JOBS
 
     def demo(self):
         """
@@ -127,15 +219,9 @@ class Controller(Node):
         while pose is None:
             pose = self.localise_request()
         cur_pos = np.array(pose[0:2])
-        self.get_logger().info(f'Current position: {cur_pos}')
         
         next_retrieve_pt = cur_pos + np.array([0, -1])
-        self.get_logger().info('Routing path ...')
-        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
-        
-        status = self.navigate([next_retrieve_pt])
-        
-        return status
+        return self.navigate_to_pt(next_retrieve_pt)
 
     def navigate_to_toy(self) -> bool:
         """
@@ -160,54 +246,6 @@ class Controller(Node):
         status = self.navigate(route)
         return status
 
-    def navigate(self, route: np.ndarray) -> bool:
-        """
-        Navigate through route.
-        Translate route to robot (wheels) moves
-        Call wheels service for every move.
-
-        Returns:
-            job status
-        """
-        cur_pose = self.pose
-        for aim_point in route:
-            while not self.close_to(aim_point, cur_pose):
-                cur_pose = None
-                while cur_pose == None:
-                    cur_pose = self.localise_request()
-                
-                self.get_logger().info(
-                    f'Moving from {cur_pose} to {aim_point} ... ')
-                x_dis = aim_point[0] - cur_pose[0]
-                y_dis = aim_point[1] - cur_pose[1]
-                angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
-                
-                rotation = angle - cur_pose[2]
-                wheels_rot_cmd = WheelsCmd.Request()
-                wheels_rot_cmd.type = 1  # TURN
-                wheels_rot_cmd.magnitude = rotation
-                future = self.wheels_cli_.call_async(wheels_rot_cmd)
-                rclpy.spin_until_future_complete(self.cli_node_, future)
-
-                distance = np.sqrt(x_dis ** 2 + y_dis ** 2)
-                wheels_dist_cmd = WheelsCmd.Request()
-                wheels_dist_cmd.type = 0  # FORWARD
-                wheels_dist_cmd.magnitude = distance
-                future = self.wheels_cli_.call_async(wheels_dist_cmd)
-                rclpy.spin_until_future_complete(self.cli_node_, future)
-
-                # cur_pose = np.array([aim_point[0], aim_point[1], angle])
-
-        return self.close_to(route[-1], cur_pose)
-
-    def close_to(self, src: np.ndarray, dst: Pose):
-        """
-        :param src: np.array([x,y]) represents coordinate
-        :param dst: Pose represent current coordinate
-        """
-        dx = dst[0] - src[0]
-        dy = dst[1] - src[1]
-        return math.sqrt(dx ** 2 + dy ** 2) < self.close_thres
 
 
 # Entry Point
