@@ -14,5 +14,5 @@ class Dora(Node):
         loop_cmd = LoopCmd.Request()
         loop_cmd.start = True
         future = self.client_.call_async(loop_cmd)
-        rclpy.spin_until_future_complete(self.client_, future)
+        rclpy.spin_until_future_complete(self, future)
         self.destroy_node()
