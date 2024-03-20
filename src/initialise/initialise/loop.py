@@ -13,13 +13,12 @@ class Loop(Node):
         super().__init__('loop')
         self.cli_node_ = Node('loop_client')
         self.job_cli_ = self.cli_node_.create_client(JobCmd, '/job')
-        while not self.cli_node_.service_is_ready():
+        while not self.job_cli_.service_is_ready():
             pass
-        # self.loop_cli = self.cli_node_.create_service(
-        #     LoopCmd, '/loop', self.run)
         self.job = 5  # DEMO
         self.job_cmd = JobCmd.Request()
-        self.run()
+        self.loop_cli = self.cli_node_.create_service(
+            LoopCmd, '/loop', self.run)
 
     def run(self):
         self.get_logger().info('Heard loop request, starting control loop ...')
