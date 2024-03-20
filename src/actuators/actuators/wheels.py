@@ -56,7 +56,6 @@ class Wheels(Node):
 
     def turn(self, angle: float):
         right = angle > 0
-        angle = np.rad2deg(angle)
         time = self.convert_angle_to_time(abs(angle))
         self.get_logger().info(
             f'Start turn, right: {right}, time: {time}, angle: {angle}')
@@ -68,14 +67,14 @@ class Wheels(Node):
         Convert distance to time for the Arduino (in integer milliseconds).
         1 meter = ~1000 milliseconds.
         """
-        return int(dist * 1000)
+        return int(dist * 1300)
 
     def convert_angle_to_time(self, angle: float) -> int:
         """
         Convert angle to time for the Arduino (in integer milliseconds).
         360 degrees = ~1300 milliseconds.
         """
-        return int(angle / 360 * 1300)
+        return int((angle / (2*np.pi)) * 1300)
 
 
 def main():

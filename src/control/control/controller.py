@@ -119,7 +119,7 @@ class Controller(Node):
 
         cur_pos = np.array(self.pose[0:2])
         next_retrieve_pt = cur_pos + np.array([0, -1])
-        # route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
         status = self.navigate([next_retrieve_pt])
         return status
 
@@ -155,17 +155,16 @@ class Controller(Node):
         Returns:
             job status
         """
-        last_pose = None
         cur_pose = self.pose
         for aim_point in route:
             while not self.close_to(aim_point, cur_pose):
                 self.get_logger().info('Request pose from LDS')
+
                 self.get_logger().info(
                     f'Moving from {cur_pose} to {aim_point} ... ')
                 x_dis = aim_point[0] - cur_pose[0]
                 y_dis = aim_point[1] - cur_pose[1]
-                # y axis is 0 x axis is np.pi/2
-                angle = np.arctan2(y_dis, x_dis)
+                angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
                 self.get_logger().info(
                     f'{angle}')
                 rotation = angle - cur_pose[2]
