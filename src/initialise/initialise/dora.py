@@ -9,6 +9,8 @@ class Dora(Node):
         rclpy.init()
         super().__init__('dora')
         self.client_ = self.create_client(LoopCmd, '/loop')
+        while not self.client_.service_is_ready():
+            pass
         loop_cmd = LoopCmd.Request()
         loop_cmd.start = True
         self.client_.call_async(loop_cmd)
