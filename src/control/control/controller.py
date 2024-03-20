@@ -190,7 +190,7 @@ class Controller(Node):
         tries = 3
         for i in range(tries):
             cur_pose = None
-            while cur_pose == None:
+            while cur_pose is None:
                 cur_pose = self.localise_request()
             
             if self.close_to(pt, cur_pose):
