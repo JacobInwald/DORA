@@ -43,6 +43,7 @@ class Controller(Node):
             not self.wheels_cli_.service_is_ready() or \
                 not self.sweeper_cli_.service_is_ready():
             self.get_logger().info('Waiting for services to be ready ...')
+            sleep(1)
             
         self.router = Router()
         self.toy = None

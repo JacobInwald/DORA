@@ -16,6 +16,7 @@ class Loop(Node):
         self.job_cli_ = self.cli_node_.create_client(JobCmd, '/job')
         while not self.job_cli_.service_is_ready():
             self.get_logger().info('Waiting for controller to be ready ...')
+            sleep(1)
             
         # Variables
         self.job = 5  # DEMO
