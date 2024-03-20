@@ -185,7 +185,7 @@ class Controller(Node):
                 pose_cmd.localise = True 
                 future = self.lds_cli_.call_async(pose_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
-                cur_pose = np.array([future.result().pose.x, future.result().pose.y, future.result().pose.rot])
+                cur_pose = np.array([future.result().x, future.result().y, future.result().rot])
                 
                 self.get_logger().info(
                     f'Moving from {cur_pose} to {aim_point} ... ')

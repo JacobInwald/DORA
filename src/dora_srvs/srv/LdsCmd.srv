@@ -1,6 +1,7 @@
 bool localise
 bool cloud
 ---
-dora_msgs/Pose pose
-dora_msgs/Cloud cloud
+float64 x
+float64 y
+float64 rot
 bool status

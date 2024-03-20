@@ -135,15 +135,15 @@ class LdsNode(Node):
                 while self.processing_pose:
                     pass
                 self.pose_publish()
-                response.pose = Pose()
-                response.pose.x = self.pose[0]
-                response.pose.y = self.pose[1]
-                response.pose.rot = self.pose[2]
+                # response.pose = Pose()
+                response.x = self.pose[0]
+                response.y = self.pose[1]
+                response.rot = self.pose[2]
             
-            if request.cloud:
-                while self.last_cloud is None:
-                    pass
-                response.cloud = self.last_cloud.to_msg()
+            # if request.cloud:
+            #     while self.last_cloud is None:
+            #         pass
+            #     response.cloud = self.last_cloud.to_msg()
 
             response.status = True
             return response
