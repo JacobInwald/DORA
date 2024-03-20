@@ -127,12 +127,9 @@ class Controller(Node):
         if self.running:
             return
         self.running = True
-
-        while self.pose is None:
-            pass
-
-
-        pose = self.localise_request()
+        pose = None
+        while pose is None:
+            pose = self.localise_request()
         cur_pos = np.array(pose[0:2])
         self.get_logger().info(f'Current position: {cur_pos}')
         

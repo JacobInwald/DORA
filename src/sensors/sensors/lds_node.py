@@ -134,11 +134,14 @@ class LdsNode(Node):
             if request.localise:
                 while self.processing_pose:
                     pass
-                self.pose_publish()
-                # response.pose = Pose()
-                response.x = self.pose[0]
-                response.y = self.pose[1]
-                response.rot = self.pose[2]
+                ret = self.pose_publish()
+                if ret:
+                    response.x = self.pose[0]
+                    response.y = self.pose[1]
+                    response.rot = self.pose[2]
+                else:
+                    response.status = False
+                    return response
             
             # if request.cloud:
             #     while self.last_cloud is None:
