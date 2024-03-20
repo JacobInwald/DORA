@@ -25,7 +25,7 @@ class Loop(Node):
         self.loop_cli = self.create_service(
             LoopCmd, '/loop', self.run)
 
-    def run(self):
+    def run(self, request, response):
         self.get_logger().info('Heard loop request, starting control loop ...')
         while self.job != DoraJob.SCAN:
             job_cmd = JobCmd.Request()
@@ -35,8 +35,8 @@ class Loop(Node):
             rclpy.spin_until_future_complete(self.cli_node_, future)
             if future.result():
                 self.job = (self.job + 1) % len(DoraJob)
-        # response.status = False
-        # return response
+        response.status = False
+        return response
 # Entry Point
 
 
