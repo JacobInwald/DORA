@@ -46,11 +46,11 @@ def generate_launch_description():
                               'frame_id': 'base_scan'}.items(),
         ),
         camera_node,
-        Node(
-            namespace='gps',
-            package='sensors',
-            executable='gps_node'
-        ),
+        # Node(
+        #     namespace='gps',
+        #     package='sensors',
+        #     executable='gps_node'
+        # ),
         Node(
             namespace='lds',
             package='sensors',
