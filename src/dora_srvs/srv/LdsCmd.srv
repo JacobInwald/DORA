@@ -1,3 +1,6 @@
-bool scan
+bool localise
+bool cloud
 ---
+dora_msgs/Pose pose
+dora_msgs/Cloud cloud
 bool status

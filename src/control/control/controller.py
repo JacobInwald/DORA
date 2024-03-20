@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from time import sleep
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
@@ -9,7 +10,6 @@ from .router import Router
 from .occupancy_map import OccupancyMap
 from .job import DoraJob
 from actuators.wheels import WheelsMove
-
 
 class Controller(Node):
     """
@@ -27,22 +27,32 @@ class Controller(Node):
             history=QoSHistoryPolicy.KEEP_LAST,
             depth=1
         )
-        self.running = False
-        self.service_ = self.create_service(JobCmd, '/job', self.switch)
         self.toy_sub_ = self.create_subscription(
             Toys, '/toys', self.toy_callback, toy_qos)
         self.pose_sub_ = self.create_subscription(
             Pose, '/pose', self.pose_callback, 10)
+        # Initilaise clients
         self.cli_node_ = Node('control_client')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, '/lds_service')
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, '/wheels')
         self.sweeper_cli_ = self.cli_node_.create_client(
             SweeperCmd, '/sweeper')
+        
+        # Wait for the services to be ready
+        while not self.lds_cli_.service_is_ready() or \
+            not self.wheels_cli_.service_is_ready() or \
+                not self.sweeper_cli_.service_is_ready():
+            self.get_logger().info('Waiting for services to be ready ...')
+            sleep(1)
+            
         self.router = Router()
         self.toy = None
         self.pose = None
         self.map = OccupancyMap.load('reference_map.npz')
         self.close_thres = 0.02
+        self.running = False
+        
+        self.service_ = self.create_service(JobCmd, '/job', self.switch)
 
     def switch(self, msg, response):
         self.get_logger().info(f'Received job request: {msg.job}')
@@ -109,7 +119,7 @@ class Controller(Node):
         """
         Run demo job
         """
-        self.get_logger().info('Running demo task')
+        self.get_logger().info('Running demo task ...')
         if self.running:
             return
         self.running = True
@@ -117,10 +127,21 @@ class Controller(Node):
         while self.pose is None:
             pass
 
-        cur_pos = np.array(self.pose[0:2])
+        self.get_logger().info('Request pose ...')
+        pose_cmd = LdsCmd.Request()
+        pose_cmd.localise = True 
+        future = self.lds_cli_.call_async(pose_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+        
+        cur_pos = np.array(future.result().pose.x, future.result().pose.y)
+        self.get_logger().info(f'Current position: {cur_pos}')
+        
         next_retrieve_pt = cur_pos + np.array([0, -1])
+        self.get_logger().info('Routing path ...')
         route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        
         status = self.navigate([next_retrieve_pt])
+        
         return status
 
     def navigate_to_toy(self) -> bool:
@@ -158,15 +179,20 @@ class Controller(Node):
         cur_pose = self.pose
         for aim_point in route:
             while not self.close_to(aim_point, cur_pose):
-                self.get_logger().info('Request pose from LDS')
-
+                
+                self.get_logger().info('Request pose from LDS ...')
+                pose_cmd = LdsCmd.Request()
+                pose_cmd.localise = True 
+                future = self.lds_cli_.call_async(pose_cmd)
+                rclpy.spin_until_future_complete(self.cli_node_, future)
+                cur_pose = np.array([future.result().pose.x, future.result().pose.y, future.result().pose.rot])
+                
                 self.get_logger().info(
                     f'Moving from {cur_pose} to {aim_point} ... ')
                 x_dis = aim_point[0] - cur_pose[0]
                 y_dis = aim_point[1] - cur_pose[1]
                 angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
-                self.get_logger().info(
-                    f'{angle}')
+                
                 rotation = angle - cur_pose[2]
                 wheels_rot_cmd = WheelsCmd.Request()
                 wheels_rot_cmd.type = 1  # TURN
@@ -181,7 +207,7 @@ class Controller(Node):
                 future = self.wheels_cli_.call_async(wheels_dist_cmd)
                 rclpy.spin_until_future_complete(self.cli_node_, future)
 
-                cur_pose = np.array([aim_point[0], aim_point[1], angle])
+                # cur_pose = np.array([aim_point[0], aim_point[1], angle])
 
         return self.close_to(route[-1], cur_pose)
 
