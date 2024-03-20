@@ -161,7 +161,7 @@ class OccupancyMap:
         start_minima = None
         best_pose = np.array([0, 0, 0])
         r = 0
-
+        self.change_res(0.025)
         # Normalise reference map
         ref = np.copy(self.map).astype(np.float32)
         template = cloud.generate(
@@ -170,9 +170,9 @@ class OccupancyMap:
         template[template < 0.75] = 0
 
         num_perfect_matches = np.sum(template)
-
+        
         # O(2^n)
-        for i in range(25):
+        for i in range(100):
             # Generate the rotated template
             _template = rotate_image(template, np.rad2deg(r))
             _template[_template < 0.75] = 0
@@ -220,10 +220,12 @@ class OccupancyMap:
                 best_temp = _template
                 best_res = res
                 best_diff = mask
+                
+                if np.sum(best_diff) / np.sum(best_temp) > 0.8:
+                    break
 
         # print(f"Best pose: {best_pose}, Score: {np.round(100 * np.sum(best_diff) / np.sum(best_temp), 5)}% match")
-        # plt.imshow(np.hstack([best_res, best_temp, np.abs(best_diff- best_temp)]))
-        # plt.show()
+        # cv2.imshow('win', np.hstack([best_res, best_temp, np.abs(best_diff- best_temp)]))
         return best_pose, np.round(np.sum(best_diff) / np.sum(best_temp), 5)
 
     #  Helpers
