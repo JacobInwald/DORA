@@ -133,7 +133,7 @@ class Controller(Node):
         future = self.lds_cli_.call_async(pose_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         
-        cur_pos = np.array(future.result().pose.x, future.result().pose.y)
+        cur_pos = np.array([future.result().x, future.result().y])
         self.get_logger().info(f'Current position: {cur_pos}')
         
         next_retrieve_pt = cur_pos + np.array([0, -1])
