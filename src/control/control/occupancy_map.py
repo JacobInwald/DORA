@@ -288,12 +288,12 @@ class OccupancyMap:
         try:
             coord = self.translate(coord)
             if not mean:
-                return self.map[coord[0], coord[1]]
+                return self.map[coord[1], coord[0]]
             else:
-                return (1 if 1 in self.map[coord[0] - n:coord[0] + n,
-                                           coord[1] - n:coord[1] + n] else
-                        np.mean(self.map[coord[0] - n:coord[0] + n,
-                                         coord[1] - n:coord[1] + n]))
+                subsample = self.map[coord[1] - n:coord[1] + n,
+                                     coord[0] - n:coord[0] + n]
+                return (1 if 1 in (subsample > 0.75) else
+                        np.mean(subsample))
         except IndexError:
             return 1
 
