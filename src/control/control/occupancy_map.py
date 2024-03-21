@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
-from dora_msgs.msg import Map
-from .point_cloud import PointCloud
-from .utils import *
+# from dora_msgs.msg import Map
+from point_cloud import PointCloud
+from utils import *
 
 
 class OccupancyMap:
@@ -138,6 +138,7 @@ class OccupancyMap:
 
     def fuzz_map(self, n: int = 3) -> np.ndarray:
         self.map = cv2.blur(self.map, (n, n))
+
 
     def localise_cloud(self, cloud: "PointCloud") -> "PointCloud":
         """
@@ -285,13 +286,14 @@ class OccupancyMap:
         """
         try:
             coord = self.translate(coord)
+            coord = np.roll(coord, 1)
+            # print(coord)
             if not mean:
                 return self.map[coord[0], coord[1]]
             else:
-                return (1 if 1 in self.map[coord[0] - n:coord[0] + n,
-                                           coord[1] - n:coord[1] + n] else
-                        np.mean(self.map[coord[0] - n:coord[0] + n,
-                                         coord[1] - n:coord[1] + n]))
+                subsample = self.map[coord[0]-n:coord[0]+n, coord[1]-n:coord[1]+n]
+                return (1 if (1 in (subsample > 0.75)) else
+                        np.mean(subsample))
         except IndexError:
             return 1
 
@@ -318,7 +320,7 @@ class OccupancyMap:
             path (str): The path to save the occupancy map to.
         """
         occ = OccupancyMap(np.array([0, 0]), [])
-        data = np.load('data/maps/'+path)
+        data = np.load(path)
         occ.offset = data['offset']
         occ.resolution = data['resolution']
         occ.map = data['map']

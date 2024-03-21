@@ -1,6 +1,6 @@
 import numpy as np
-from dora_msgs.msg import Cloud
-from .utils import *
+# from dora_msgs.msg import Cloud
+from utils import *
 
 
 class PointCloud:
@@ -176,39 +176,39 @@ class PointCloud:
 
     # Saving and loading
 
-    def to_msg(self):
-        """
-        Converts the point cloud to a ROS message.
+    # def to_msg(self):
+    #     """
+    #     Converts the point cloud to a ROS message.
 
-        Returns:
-        - sensor_msgs.msg.PointCloud2 - The ROS message representing the point cloud.
-        """
-        msg = Cloud()
+    #     Returns:
+    #     - sensor_msgs.msg.PointCloud2 - The ROS message representing the point cloud.
+    #     """
+    #     msg = Cloud()
 
-        msg.pose.x = self.origin[0]
-        msg.pose.y = self.origin[1]
-        msg.pose.rot = self.rot
+    #     msg.pose.x = self.origin[0]
+    #     msg.pose.y = self.origin[1]
+    #     msg.pose.rot = self.rot
 
-        msg.max_range = self.maxScanDist
+    #     msg.max_range = self.maxScanDist
 
-        msg.scan.header.stamp = self.get_clock().now().to_msg()
-        msg.scan.header.frame_id = "lidar"
-        msg.scan.angle_min = float(self.rot)
-        msg.scan.angle_max = float((self.rot + 2 * np.pi) % 2 * np.pi)
-        msg.scan.angle_increment = float(np.deg2rad(self.lidar.shape[0] / 360))
-        msg.scan.ranges = [float(reading[1]) for reading in self.lidar]
-        return msg
+    #     msg.scan.header.stamp = self.get_clock().now().to_msg()
+    #     msg.scan.header.frame_id = "lidar"
+    #     msg.scan.angle_min = float(self.rot)
+    #     msg.scan.angle_max = float((self.rot + 2 * np.pi) % 2 * np.pi)
+    #     msg.scan.angle_increment = float(np.deg2rad(self.lidar.shape[0] / 360))
+    #     msg.scan.ranges = [float(reading[1]) for reading in self.lidar]
+    #     return msg
 
-    def from_msg(msg: Cloud):
-        offset = np.array([msg.pose.x, msg.pose.y])
-        rot = msg.pose.rot
-        maxScanDist = msg.max_range
-        res = msg.angle_increment
-        start = msg.angle_min
-        scan = []
-        a = start
-        for i in range(len(msg.ranges)):
-            scan.append([a, msg.ranges[i]])
-            a += res
+    # def from_msg(msg: Cloud):
+    #     offset = np.array([msg.pose.x, msg.pose.y])
+    #     rot = msg.pose.rot
+    #     maxScanDist = msg.max_range
+    #     res = msg.angle_increment
+    #     start = msg.angle_min
+    #     scan = []
+    #     a = start
+    #     for i in range(len(msg.ranges)):
+    #         scan.append([a, msg.ranges[i]])
+    #         a += res
 
-        return PointCloud(np.array(scan), offset, maxScanDist)
+    #     return PointCloud(np.array(scan), offset, maxScanDist)
