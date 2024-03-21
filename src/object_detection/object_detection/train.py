@@ -47,4 +47,4 @@ if __name__ == '__main__':
     dataset_version = 1
     dataset = load_dataset(version=dataset_version)
     data = f'{dataset.location}/data.yaml'
-    model = train_model(data, batch_size=32)
+    model = train_model(data, batch_size=32, img_size=384)

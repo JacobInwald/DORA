@@ -34,7 +34,7 @@ def parse_opt():
     parser.add_argument('--source', type=str,
                         default='data/vid/20240201_dav_cut.mp4')
     parser.add_argument('--weights', type=str,
-                        default='data/weights/yolo_32.pt')
+                        default='data/weights/yolo_phone_32.pt')
     return parser.parse_args()
 
 
