@@ -161,7 +161,7 @@ class Controller(Node):
         :param src: np.array([x,y]) represents coordinate
         :param dst: Pose represent current coordinate
         """
-        return np.linalg.norm(src, dst) < self.close_thres
+        return np.linalg.norm(src[0:2], dst[0:2]) < self.close_thres
     
     def navigate(self, route: np.ndarray) -> bool:
         """

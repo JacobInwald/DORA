@@ -4,6 +4,7 @@ from rclpy.node import Node
 from dora_srvs.srv import WheelsCmd
 import serial
 import numpy as np
+from time import sleep
 
 
 class WheelsMove(Enum):
@@ -53,6 +54,7 @@ class Wheels(Node):
             f'Start turn, forward: {forward}, time: {time}, dist: {dist}')
         self.arduino.write(
             f"{'forward' if forward else 'backward'}.{time}-".encode())
+        sleep((time/1000) + 0.5)
 
     def turn(self, angle: float):
         right = angle > 0
@@ -61,6 +63,7 @@ class Wheels(Node):
             f'Start turn, right: {right}, time: {time}, angle: {angle}')
         self.arduino.write(
             f"{'right' if right else 'left'}.{time}-".encode())
+        sleep((time/1000) + 0.5)
 
     def convert_dist_to_time(self, dist: float) -> int:
         """
