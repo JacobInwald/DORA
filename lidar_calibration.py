@@ -2,9 +2,9 @@
 # from rclpy.node import Node
 # from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 # from sensor_msgs.msg import LaserScan
-from src.control.control.point_cloud import PointCloud
-from src.control.control.occupancy_map import OccupancyMap
-from src.control.control.utils import *
+# from src.control.control.point_cloud import PointCloud
+# from src.control.control.occupancy_map import OccupancyMap
+# from src.control.control.utils import *
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
@@ -171,4 +171,9 @@ def stitch_scans():
     print(f'Pose 12: {pose12}')
 
 
-stitch_scans()
+# stitch_scans()
+ys = [2750, 2100, 1450, 790]
+xs = [360, 270, 180, 90]
+
+plt.plot(xs, ys)
+plt.show()
