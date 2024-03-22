@@ -201,7 +201,7 @@ class Controller(Node):
 
             x_dis = pt[0] - cur_pose[0]
             y_dis = pt[1] - cur_pose[1]
-            angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
+            angle = 2*np.pi - (np.arctan2(y_dis, x_dis) + (np.pi / 2))
             rotation = angle - cur_pose[2]
             distance = np.sqrt(x_dis ** 2 + y_dis ** 2)
 
