@@ -11,6 +11,7 @@ from .occupancy_map import OccupancyMap
 from .job import DoraJob
 from actuators.wheels import WheelsMove
 
+
 class Controller(Node):
     """
     Controller for the robot movements (driving and SWEEPER).
@@ -37,24 +38,24 @@ class Controller(Node):
         self.wheels_cli_ = self.cli_node_.create_client(WheelsCmd, '/wheels')
         self.sweeper_cli_ = self.cli_node_.create_client(
             SweeperCmd, '/sweeper')
-        
+
         # Wait for the services to be ready
         while not self.lds_cli_.service_is_ready() or \
             not self.wheels_cli_.service_is_ready() or \
                 not self.sweeper_cli_.service_is_ready():
             self.get_logger().info('Waiting for services to be ready ...')
             sleep(1)
-            
+
         self.router = Router()
         self.toy = None
         self.pose = None
         self.map = OccupancyMap.load('reference_map.npz')
         self.close_thres = 0.02
-        
+
         self.drop_off_0 = np.array([0, 0])
         self.drop_off_1 = np.array([0, 0])
         self.drop_off_2 = np.array([0, 0])
-        
+
         self.service_ = self.create_service(JobCmd, '/job', self.switch)
 
     def switch(self, msg, response):
@@ -95,7 +96,7 @@ class Controller(Node):
     def localise_request(self):
         self.get_logger().info('Request pose from LDS ...')
         pose_cmd = LdsCmd.Request()
-        pose_cmd.localise = True 
+        pose_cmd.localise = True
         future = self.lds_cli_.call_async(pose_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         if future.result().status:
@@ -118,9 +119,9 @@ class Controller(Node):
         wheels_rot_cmd.magnitude = angle
         future = self.wheels_cli_.call_async(wheels_rot_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
-        
+
         return future.result().status
-    
+
     def move_request(self, distance: float) -> bool:
         """
         Send service request for moving robot
@@ -155,14 +156,14 @@ class Controller(Node):
             job status
         """
         pass
-    
+
     def close_to(self, src: np.ndarray, dst: np.ndarray):
         """
         :param src: np.array([x,y]) represents coordinate
         :param dst: Pose represent current coordinate
         """
         return np.linalg.norm(src[0:2] - dst[0:2]) < self.close_thres
-    
+
     def navigate(self, route: np.ndarray) -> bool:
         """
         Navigate through route.
@@ -192,21 +193,21 @@ class Controller(Node):
             cur_pose = None
             while cur_pose is None:
                 cur_pose = self.localise_request()
-            
+
             if self.close_to(pt, cur_pose):
                 return True
-            
+
             self.get_logger().info(f'Navigate: {cur_pose} -> {pt}')
-            
+
             x_dis = pt[0] - cur_pose[0]
             y_dis = pt[1] - cur_pose[1]
             angle = np.arctan2(y_dis, x_dis) + (np.pi / 2)
             rotation = angle - cur_pose[2]
             distance = np.sqrt(x_dis ** 2 + y_dis ** 2)
-            
+
             self.turn_request(rotation)
             self.move_request(distance)
-            
+
         return self.close_to(pt, cur_pose)
 
     # JOBS
@@ -220,9 +221,9 @@ class Controller(Node):
         while pose is None:
             pose = self.localise_request()
         cur_pos = np.array(pose[0:2])
-        
-        next_retrieve_pt = cur_pos + np.array([0, -0.1])
-        return self.navigate_to_pt(next_retrieve_pt)
+        next_retrieve_pt = cur_pos + np.array([0, -1])
+        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        return self.navigate(route)
 
     def navigate_to_toy(self) -> bool:
         """
@@ -246,7 +247,6 @@ class Controller(Node):
         route = self.router.route(cur_pos, next_unload_pt, self.map)
         status = self.navigate(route)
         return status
-
 
 
 # Entry Point
