@@ -4,6 +4,7 @@ from dora_srvs.srv import JobCmd, LoopCmd
 from control.job import DoraJob
 from time import sleep
 
+
 class Loop(Node):
     """
     The control loop.
@@ -11,13 +12,13 @@ class Loop(Node):
 
     def __init__(self):
         super().__init__('loop')
-        
+
         self.cli_node_ = Node('loop_client')
         self.job_cli_ = self.cli_node_.create_client(JobCmd, '/job')
         while not self.job_cli_.service_is_ready():
             self.get_logger().info('Waiting for controller to be ready ...')
             sleep(1)
-            
+
         # Variables
         self.job = 5  # DEMO
         self.job_cmd = JobCmd.Request()
@@ -35,7 +36,8 @@ class Loop(Node):
             rclpy.spin_until_future_complete(self.cli_node_, future)
             if future.result():
                 self.job = (self.job + 1) % len(DoraJob)
-        response.status = False
+            break
+        response.status = True
         return response
 # Entry Point
 
