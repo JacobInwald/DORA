@@ -58,7 +58,9 @@ class Wheels(Node):
 
     def turn(self, angle: float):
         right = abs(angle) < np.pi
-        angle = abs(angle) % np.pi
+        angle = abs(angle)
+        if not right:
+            angle = angle - np.pi
         time = self.convert_angle_to_time(abs(angle))
         self.get_logger().info(
             f'Start turn, right: {right}, time: {time}, angle: {angle}')
