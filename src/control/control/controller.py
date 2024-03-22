@@ -161,7 +161,7 @@ class Controller(Node):
         :param src: np.array([x,y]) represents coordinate
         :param dst: Pose represent current coordinate
         """
-        return np.linalg.norm(src[0:2], dst[0:2]) < self.close_thres
+        return np.linalg.norm(src[0:2] - dst[0:2]) < self.close_thres
     
     def navigate(self, route: np.ndarray) -> bool:
         """
@@ -221,7 +221,7 @@ class Controller(Node):
             pose = self.localise_request()
         cur_pos = np.array(pose[0:2])
         
-        next_retrieve_pt = cur_pos + np.array([0, -1])
+        next_retrieve_pt = cur_pos + np.array([0, -0.1])
         return self.navigate_to_pt(next_retrieve_pt)
 
     def navigate_to_toy(self) -> bool:
