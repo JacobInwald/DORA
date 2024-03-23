@@ -79,6 +79,8 @@ class Wheels(Node):
         360 degrees = ~1300 milliseconds.
         """
         t = (angle / (2*np.pi)) * 2750
+        if angle < 15 / np.pi:
+            t = (angle / (2*np.pi)) * 2750 * 2
         return int(t)
 
 
