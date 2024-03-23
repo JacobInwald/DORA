@@ -76,8 +76,6 @@ class LdsNode(Node):
         pose, acc = self.reference_map.localise_cloud(self.last_cloud)
         t = time() - st
         if acc > 0.7:
-            self.get_logger().info(
-                f'DORA pose: {pose}, Certainty: {100*acc}%, Time: {t} seconds.')
             self.pose = pose
             msg = Pose()
             msg.x = pose[0]
@@ -88,6 +86,9 @@ class LdsNode(Node):
             if r > np.pi:
                 r = r - 2*np.pi
             msg.rot = r
+            self.pose[2] = r
+            self.get_logger().info(
+                f'DORA pose: {self.pose}, Certainty: {100*acc}%, Time: {t} seconds.')
             self.pose_pub_.publish(msg)
             self.processing_pose = False
             return True
