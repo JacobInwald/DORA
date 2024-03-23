@@ -65,10 +65,10 @@ class Router:
                     continue
 
                 # penalize for obstacles in 3 move_dist
-                penalty = occ.sample_coord(n, mean=True, n=3)
+                penalty = occ.sample_coord(n, mean=True, n=5)
                 if penalty != 1:
                     penalty = 0
-                penalty *= 2
+                penalty *= 5
                 penalty += int(dir != n_d)
 
                 try:
@@ -96,7 +96,7 @@ class Router:
         path_ = []
         for pt_ in path[1:]:
             mask = np.zeros(occ.map.shape)
-            cv2.line(mask, occ.translate(cur_), occ.translate(pt_), 1, 3)
+            cv2.line(mask, occ.translate(cur_), occ.translate(pt_), 1, 4)
             score = np.max(mask * occ.map)
             if score > 0.5:
                 path_.append(last)
@@ -194,11 +194,13 @@ class Router:
 
 
 # def test():
+#     from matplotlib import pyplot as plt
 #     occ = OccupancyMap.load('reference_map.npz')
 #     router = Router()
-#     start = np.array([2.5, -0.5])
-#     end = np.array([2.5, -1.5])
-#     route = router.route_(start, end, occ)
+#     start = np.array([1.5, -0.45])
+#     end = np.array([1.5, -1.45])
+#     route = router.route(start, end, occ)
+#     route = [start] + route
 #     pt_ = route[0]
 #     for pt in route[1:]:
 #         cv2.line(occ.map, occ.translate(pt_), occ.translate(pt), 2, 1)
