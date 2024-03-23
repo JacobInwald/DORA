@@ -99,6 +99,8 @@ class Controller(Node):
         pose_cmd.localise = True
         future = self.lds_cli_.call_async(pose_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
+        self.get_logger().info(
+            f'Heard Pose: {(future.result().x, future.result().y, future.result().rot)}')
         if future.result().status:
             return np.array([future.result().x, future.result().y, future.result().rot])
         else:
