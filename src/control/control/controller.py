@@ -225,6 +225,7 @@ class Controller(Node):
         cur_pos = np.array(pose[0:2])
         next_retrieve_pt = cur_pos + np.array([0, -1])
         route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        self.get_logger().info(f'Following path: {route}')
         return self.navigate(route)
 
     def navigate_to_toy(self) -> bool:
