@@ -4,6 +4,7 @@ from dora_msgs.msg import Toy, Toys
 from queue import PriorityQueue
 from .occupancy_map import OccupancyMap
 
+
 class Router:
     """
     The Router class is responsible for calculating routes.
@@ -52,10 +53,10 @@ class Router:
             if np.linalg.norm(cur - end) < move_dist:
                 found = True
                 break
-            
+
             n_d = 0
             for d in directions:
-                n_d +=1
+                n_d += 1
                 n = cur + d * move_dist
                 strNext = str(n)
 
@@ -64,7 +65,7 @@ class Router:
                     continue
 
                 # penalize for obstacles in 3 move_dist
-                penalty = occ.sample_coord(n, mean=True, n = 3)
+                penalty = occ.sample_coord(n, mean=True, n=3)
                 if penalty != 1:
                     penalty = 0
                 penalty *= 2
@@ -88,21 +89,21 @@ class Router:
                 route.append(parent[cur])
                 cur = str(parent[cur])
             route.reverse()
-            path =  np.array(route)
-            
+            path = np.array(route)
+
         # Reduce points in path
         cur_ = path[0]
-        path_ = [cur_]
+        path_ = []
         for pt_ in path[1:]:
             mask = np.zeros(occ.map.shape)
-            cv2.line(mask, occ.translate(cur_), occ.translate(pt_), 1, 1)
+            cv2.line(mask, occ.translate(cur_), occ.translate(pt_), 1, 3)
             score = np.max(mask * occ.map)
             if score > 0.5:
                 path_.append(last)
                 cur_ = last
             last = pt_
         path_.append(path[-1])
-        
+
         return path_
 
     def next_mapping_pt(self, map: OccupancyMap) -> np.ndarray:
@@ -204,5 +205,5 @@ class Router:
 #         pt_ = pt
 #     plt.imshow(occ.map)
 #     plt.show()
-    
+
 # test()
