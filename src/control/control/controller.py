@@ -173,7 +173,9 @@ class Controller(Node):
         Returns:
             job status
         """
+        i = 0
         for pt in route:
+            self.get_logger().info(f'Move ({i}) - Navigating to: {pt}')
             if not self.navigate_to_pt(pt):
                 return False
         return True
