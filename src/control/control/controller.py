@@ -188,7 +188,7 @@ class Controller(Node):
         Returns:
             job status
         """
-        tries = 3
+        tries = 5
         for i in range(tries):
             cur_pose = None
             while cur_pose is None:
