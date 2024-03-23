@@ -200,16 +200,27 @@ class Controller(Node):
                 return True
 
             self.get_logger().info(f'Navigate: {cur_pose} -> {pt}')
+            # Attempt turn
+            for i in range(3):
+                dir = pt - cur_pose[0:2]
+                dst = np.linalg.norm(dir)
+                angle = np.arccos(np.dot(dir / dst, np.array([0.0, -1.0])))
+                if dir[0] < 0:
+                    angle *= -1
+
+                rotation = angle - cur_pose[2]
+                self.turn_request(rotation)
+                # Update pose
+                cur_pose = None
+                while cur_pose is None:
+                    cur_pose = self.localise_request()
+                if abs(cur_pose[2] - angle) < 0.05:
+                    break
+            if abs(cur_pose[2] - angle) > 0.05:
+                return False
 
             dir = pt - cur_pose[0:2]
             dst = np.linalg.norm(dir)
-            angle = np.arccos(np.dot(dir / dst, np.array([0.0, -1.0])))
-            if dir[0] < 0:
-                angle *= -1
-
-            rotation = angle - cur_pose[2]
-
-            self.turn_request(rotation)
             self.move_request(dst)
 
         return self.close_to(pt, cur_pose)
