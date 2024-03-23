@@ -199,14 +199,16 @@ class Controller(Node):
 
             self.get_logger().info(f'Navigate: {cur_pose} -> {pt}')
 
-            x_dis = pt[0] - cur_pose[0]
-            y_dis = pt[1] - cur_pose[1]
-            angle = 2*np.pi - (np.arctan2(y_dis, x_dis) + (np.pi / 2))
+            dir = pt - cur_pose[0:2]
+            dst = np.linalg.norm(dir)
+            angle = np.arccos(np.dot(dir / dst, np.array([0.0, -1.0])))
+            if dir[0] < 0:
+                angle *= -1
+
             rotation = angle - cur_pose[2]
-            distance = np.sqrt(x_dis ** 2 + y_dis ** 2)
 
             self.turn_request(rotation)
-            self.move_request(distance)
+            self.move_request(dst)
 
         return self.close_to(pt, cur_pose)
 

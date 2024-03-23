@@ -31,7 +31,7 @@ class LdsNode(Node):
 
     def __init__(self, reference_map: OccupancyMap = None):
         super().__init__('lds_node')
-        
+
         lds_qos = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -41,7 +41,7 @@ class LdsNode(Node):
             LaserScan, '/scan', self.lds_callback, lds_qos)
         self.pose_pub_ = self.create_publisher(Pose, '/pose', 10)
         self.pose_timer = self.create_timer(1, self.pose_publish)
-        
+
         # Variables
         self.max_range = 4.5
         self.last_scan = None
@@ -52,7 +52,7 @@ class LdsNode(Node):
             self.reference_map = reference_map
         self.pose = [0, 0, 0]
         self.processing_pose = False
-        
+
         # Service
         self.service_ = self.create_service(
             LdsCmd, '/lds_service', self.lds_service)
@@ -64,7 +64,7 @@ class LdsNode(Node):
         Returns:
             bool: True if the pose was successfully published, False otherwise.
         """
-        
+
         if self.last_cloud is None:
             return False
 
@@ -85,6 +85,8 @@ class LdsNode(Node):
             r = pose[2]
             # r = 0
             r = ((2*np.pi)-r) % (2 * np.pi)
+            if r > np.pi:
+                r = r - 2*np.pi
             msg.rot = r
             self.pose_pub_.publish(msg)
             self.processing_pose = False
@@ -119,39 +121,41 @@ class LdsNode(Node):
         self.get_logger().info(f'Heard scan')
         return True
 
-    def lds_service(self, request:'LdsCmd.Request', response:'LdsCmd.Response'):
-            """
-            This method handles the LDS service request.
+    def lds_service(self, request: 'LdsCmd.Request', response: 'LdsCmd.Response'):
+        """
+        This method handles the LDS service request.
 
-            Args:
-                request (LdsCmd.Request): The request object containing the command parameters.
-                response (LdsCmd.Response): The response object to be populated with the result.
+        Args:
+            request (LdsCmd.Request): The request object containing the command parameters.
+            response (LdsCmd.Response): The response object to be populated with the result.
 
-            Returns:
-                LdsCmd.Response: The response object containing the result of the service request.
-            """
-            
-            if request.localise:
-                while self.processing_pose:
-                    pass
-                ret = self.pose_publish()
-                if ret:
-                    response.x = self.pose[0]
-                    response.y = self.pose[1]
-                    response.rot = self.pose[2]
-                else:
-                    response.status = False
-                    return response
-            
-            # if request.cloud:
-            #     while self.last_cloud is None:
-            #         pass
-            #     response.cloud = self.last_cloud.to_msg()
+        Returns:
+            LdsCmd.Response: The response object containing the result of the service request.
+        """
 
-            response.status = True
-            return response
-    
+        if request.localise:
+            while self.processing_pose:
+                pass
+            ret = self.pose_publish()
+            if ret:
+                response.x = self.pose[0]
+                response.y = self.pose[1]
+                response.rot = self.pose[2]
+            else:
+                response.status = False
+                return response
+
+        # if request.cloud:
+        #     while self.last_cloud is None:
+        #         pass
+        #     response.cloud = self.last_cloud.to_msg()
+
+        response.status = True
+        return response
+
 # Entry Point
+
+
 def main():
     rclpy.init()
     lds_node = LdsNode()
