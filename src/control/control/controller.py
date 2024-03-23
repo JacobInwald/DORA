@@ -50,7 +50,7 @@ class Controller(Node):
         self.toy = None
         self.pose = None
         self.map = OccupancyMap.load('reference_map.npz')
-        self.close_thres = 0.02
+        self.close_thres = 0.1
 
         self.drop_off_0 = np.array([0, 0])
         self.drop_off_1 = np.array([0, 0])
