@@ -57,11 +57,8 @@ class Wheels(Node):
         sleep((time/1000) + 0.5)
 
     def turn(self, angle: float):
-        angle = abs(angle)
-        right = angle < np.pi
-        if not right:
-            angle = 2*np.pi - angle
-        time = self.convert_angle_to_time(angle)
+        right = angle < 0
+        time = self.convert_angle_to_time(abs(angle))
         self.get_logger().info(
             f'Start turn, right: {right}, time: {time}, angle: {angle}')
         self.arduino.write(
