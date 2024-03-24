@@ -203,7 +203,7 @@ class Controller(Node):
 
             self.get_logger().info(f'Navigate: {cur_pose} -> {pt}')
             # Attempt turn
-            for i in range(3):
+            for i in range(6):
                 dir = pt - cur_pose[0:2]
                 dst = np.linalg.norm(dir)
                 angle = np.arccos(np.dot(dir / dst, np.array([0.0, -1.0])))
