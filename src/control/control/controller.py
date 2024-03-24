@@ -228,6 +228,25 @@ class Controller(Node):
         return self.close_to(pt, cur_pose)
 
     # JOBS
+    def calibrate_wheels(self):
+        """
+        Calibrate wheels
+        """
+        self.get_logger().info('Running calibration ...')
+        results = {}
+        for i in range(10):
+            self.turn_request(i*10)
+            pose = None
+            while pose is None:
+                pose = self.localise_request()
+            results[i*10] = pose[2]
+        self.get_logger().info(f'Calibration results: {results}')
+        res_y = np.array(list(results.values()))
+        res_x = np.array(list(results.keys()))
+        np.savez('calibration_turn.npz', x=res_x, y=res_y)
+        from matplotlib import pyplot as plt
+        plt.plot(res_x, res_y)
+        plt.show()
 
     def demo(self):
         """

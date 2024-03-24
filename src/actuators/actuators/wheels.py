@@ -57,13 +57,16 @@ class Wheels(Node):
         sleep((time/1000) + 0.5)
 
     def turn(self, angle: float):
-        right = angle > 0
-        time = self.convert_angle_to_time(abs(angle))
-        self.get_logger().info(
-            f'Start turn, right: {right}, time: {time}, angle: {angle}')
+        # right = angle > 0
+        # time = self.convert_angle_to_time(abs(angle))
+        # self.get_logger().info(
+        #     f'Start turn, right: {right}, time: {time}, angle: {angle}')
+        # self.arduino.write(
+        #     f"{'right' if right else 'left'}.{time}-".encode())
+        # sleep((time/1000) + 0.5)
         self.arduino.write(
-            f"{'right' if right else 'left'}.{time}-".encode())
-        sleep((time/1000) + 0.5)
+            f"'right'.{int(angle)}-".encode())
+        sleep(1)
 
     def convert_dist_to_time(self, dist: float) -> int:
         """
