@@ -12,9 +12,6 @@ from object_detection.demo import annotate
 from statistics import mean, median
 
 
-
-
-
 def filter_matches(matches, kpL, kpR,
                    k=15, threshold=0.2,
                    minDisparity=0, maxDisparity=100):
