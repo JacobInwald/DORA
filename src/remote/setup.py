@@ -13,13 +13,15 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='s2209602',
+    maintainer='Ardith Ho',
     maintainer_email='ardithhowaiman@gmail.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    description='Remote nodes',
+    license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "display_node = remote.display_node:main",
+            "gpu_node = remote.gpu_node:main"
         ],
     },
 )
