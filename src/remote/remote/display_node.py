@@ -15,7 +15,7 @@ class DisplayNode(Node):
     """
 
     def __init__(self):
-        super().__init__('gpu_node')
+        super().__init__('display_node')
         qos = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -25,6 +25,7 @@ class DisplayNode(Node):
         
     def callback(self, msg):
         frame = msg_to_np(msg)
+        self.get_logger().info(f'Recevied frame {msg.header.frame_id}')
         cv2.imshow('stereo', frame)
         cv2.waitKey(10)
 

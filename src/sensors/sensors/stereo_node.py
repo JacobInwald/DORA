@@ -52,6 +52,8 @@ class StereoNode(Node):
             raise IOError('Cannot open webcam')
         self.capL.set(cv2.CAP_PROP_FPS, rate)
         self.capR.set(cv2.CAP_PROP_FPS, rate)
+        self.capL.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
+        self.capR.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         
         self.frame_no = 1
         self.conversion = 0.001 # mm to metres
