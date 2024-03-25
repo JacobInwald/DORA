@@ -6,7 +6,7 @@ def generate_launch_description():
     return LaunchDescription([
         Node(
             namespace='gpu',
-            package='sensors',
+            package='remote',
             executable='gpu_node'
         )
     ])
