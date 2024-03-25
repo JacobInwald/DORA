@@ -72,7 +72,7 @@ class Controller(Node):
         elif msg.job == 4:  # UNLOAD
             response.status = self.unload_request()
         elif msg.job == 5:  # DEMO
-            response.status = self.demo()
+            response.status = self.calibrate_wheels()
         return response
 
     def toy_callback(self, msg: Toys):
@@ -233,13 +233,19 @@ class Controller(Node):
         Calibrate wheels
         """
         self.get_logger().info('Running calibration ...')
+        pose_ = None
+        while pose_ is None:
+            pose_ = self.localise_request()
         results = {}
-        for i in range(10):
-            self.turn_request(i*10)
+        for i in range(500):
+            t = (i+1)*2
+            self.turn_request(t)
+
             pose = None
             while pose is None:
                 pose = self.localise_request()
-            results[i*10] = pose[2]
+            results[t] = (pose[2] - pose_[2]) % (2 * np.pi)
+            pose_ = pose
         self.get_logger().info(f'Calibration results: {results}')
         res_y = np.array(list(results.values()))
         res_x = np.array(list(results.keys()))
