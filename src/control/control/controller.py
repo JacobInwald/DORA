@@ -237,7 +237,7 @@ class Controller(Node):
         while pose_ is None:
             pose_ = self.localise_request()
         results = {}
-        for i in range(500):
+        for i in range(50):
             t = (i+1)*10
             self.turn_request(float(t))
 
@@ -246,11 +246,6 @@ class Controller(Node):
                 pose = self.localise_request()
             results[t] = (pose[2] - pose_[2]) % (2 * np.pi)
             pose_ = pose
-            if i % 100 == 0:
-                self.get_logger().info(f'Calibration results: {results}')
-                res_y = np.array(list(results.values()))
-                res_x = np.array(list(results.keys()))
-                np.savez('calibration_turn.npz', x=res_x, y=res_y)
 
         self.get_logger().info(f'Calibration results: {results}')
         from matplotlib import pyplot as plt
