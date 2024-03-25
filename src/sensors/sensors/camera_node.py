@@ -39,6 +39,7 @@ class CameraNode(Node):
         header.frame_id = str(self.frame_no)
 
         msg = Image()
+        msg.header = header
         msg.height = np.shape(frame)[0]
         msg.width = np.shape(frame)[1]
         msg.encoding = "bgr8"

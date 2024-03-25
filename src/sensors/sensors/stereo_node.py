@@ -5,16 +5,14 @@ import time
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Header
+from sensor_msgs.msg import Image
 from dora_msgs.msg import Toy, Pose, Toys
 from object_detection.detect import Detect
 from object_detection.demo import annotate
 from statistics import mean, median
 
 
-def display(results, right):
-    pred = annotate(results, thickness=2)
-    out = cv2.hconcat([pred, right])
-    cv2.imshow('out', out)
+
 
 
 def filter_matches(matches, kpL, kpR,
@@ -30,9 +28,10 @@ def filter_matches(matches, kpL, kpR,
         disparities[i] = ptL[0] - ptR[0]
     matches = [matches[i] for i in range(k) if minDisparity <= disparities[i] < maxDisparity]
     disparities = list(filter(lambda x: minDisparity <= x < maxDisparity, disparities))
-    mid = median(disparities)
-    matches = [matches[i] for i in range(len(matches)) if abs(abs(disparities[i]) - mid) < mid * threshold]
-    disparities = list(filter(lambda x: abs(abs(x) - mid) < mid * threshold, disparities))
+    if len(disparities) > 0:
+        mid = median(disparities)
+        matches = [matches[i] for i in range(len(matches)) if abs(abs(disparities[i]) - mid) < mid * threshold]
+        disparities = list(filter(lambda x: abs(abs(x) - mid) < mid * threshold, disparities))
     return matches, disparities
 
 
@@ -44,9 +43,12 @@ class StereoNode(Node):
     Publishes Toys with topic name 'toys'.
     """
 
-    def __init__(self, rate=2, show=False, camera_yaml='data/camera_info/logitechC270_640x480.yaml'):
+    def __init__(self, rate=1, show=False, camera_yaml='data/camera_info/logitechC270_640x480.yaml'):
         super().__init__('stereo_node')
-        self.publisher_ = self.create_publisher(Toys, '/toys', rate)
+        self.toy_pub_ = self.create_publisher(Toys, '/toys', rate)
+        self.show = show
+        if self.show: self.display_pub_ = self.create_publisher(Image, '/stereo', rate)
+
         self.capL = cv2.VideoCapture('/dev/video0')
         self.capR = cv2.VideoCapture('/dev/video2')
         if not self.capL.isOpened() or not self.capR.isOpened():
@@ -55,7 +57,6 @@ class StereoNode(Node):
         self.capR.set(cv2.CAP_PROP_FPS, rate)
         
         self.frame_no = 1
-        self.show = show
         self.conversion = 0.001 # mm to metres
         self.model = Detect()
 
@@ -107,9 +108,9 @@ class StereoNode(Node):
         end_time = time.time()
         pub_msg.header = header
         pub_msg.toys = toy_arr
-        self.publisher_.publish(pub_msg)
+        self.toy_pub_.publish(pub_msg)
         self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
-        if self.show: display(results, frameR)
+        if self.show: self.display(results, frameR)
 
     def calculate_position(self, frameL, frameR, xywh, xyxy):
         """
@@ -153,6 +154,22 @@ class StereoNode(Node):
             kpR, desR = self.sift.detectAndCompute(frameR, mask=maskR)
             matches = list(self.flann.match(desL, desR))
         return matches, kpL, kpR
+    
+    def display(self, results, right, header):
+        pred = annotate(results, thickness=2)
+        frame = cv2.hconcat([pred, right])
+
+        msg = Image()
+        msg.header = header
+        msg.height = np.shape(frame)[0]
+        msg.width = np.shape(frame)[1]
+        msg.encoding = "bgr8"
+        msg.is_bigendian = False
+        msg.step = np.shape(frame)[2] * np.shape(frame)[1]
+        msg.data = np.array(frame).tobytes()
+
+        self.display_pub_.publish(msg)
+        self.get_logger().info(f'Frame {self.frame_no} published.')
 
 
 def main():
