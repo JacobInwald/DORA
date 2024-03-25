@@ -65,7 +65,7 @@ class Wheels(Node):
         #     f"{'right' if right else 'left'}.{time}-".encode())
         # sleep((time/1000) + 0.5)
         self.arduino.write(
-            f"'right'.{int(angle)}-".encode())
+            f"right.{int(angle)}-".encode())
         sleep(angle/1000 + 0.5)
 
     def convert_dist_to_time(self, dist: float) -> int:
