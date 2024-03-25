@@ -238,7 +238,7 @@ class Controller(Node):
             pose_ = self.localise_request()
         results = {}
         for i in range(500):
-            t = (i+1)*2
+            t = (i+1)*10
             self.turn_request(float(t))
 
             pose = None
