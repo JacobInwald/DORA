@@ -57,16 +57,16 @@ class Wheels(Node):
         sleep((time/1000) + 0.5)
 
     def turn(self, angle: float):
-        # right = angle > 0
-        # time = self.convert_angle_to_time(abs(angle))
-        # self.get_logger().info(
-        #     f'Start turn, right: {right}, time: {time}, angle: {angle}')
-        # self.arduino.write(
-        #     f"{'right' if right else 'left'}.{time}-".encode())
-        # sleep((time/1000) + 0.5)
+        right = angle > 0
+        time = self.convert_angle_to_time(abs(angle))
+        self.get_logger().info(
+            f'Start turn, right: {right}, time: {time}, angle: {angle}')
         self.arduino.write(
-            f"right.{int(angle)}-".encode())
-        sleep(angle/1000 + 0.5)
+            f"{'right' if right else 'left'}.{time}-".encode())
+        sleep((time/1000) + 0.5)
+        # self.arduino.write(
+        #     f"right.{int(angle)}-".encode())
+        # sleep(angle/1000 + 0.5)
 
     def convert_dist_to_time(self, dist: float) -> int:
         """
@@ -81,7 +81,11 @@ class Wheels(Node):
         Convert angle to time for the Arduino (in integer milliseconds).
         360 degrees = ~1300 milliseconds.
         """
-        t = (angle / (2*np.pi)) * 2750
+        l = np.array([37.19598879, -158.43157906, 795.7760816, 42.09105822])
+        if angle < np.deg2rad(60):
+            t = np.polyval(l, angle)
+        else:
+            t = (angle / (2*np.pi)) * 2750
         return int(t)
 
 

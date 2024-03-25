@@ -72,7 +72,7 @@ class Controller(Node):
         elif msg.job == 4:  # UNLOAD
             response.status = self.unload_request()
         elif msg.job == 5:  # DEMO
-            response.status = self.calibrate_wheels()
+            response.status = self.demo()
         return response
 
     def toy_callback(self, msg: Toys):
