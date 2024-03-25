@@ -40,7 +40,7 @@ class StereoNode(Node):
     Publishes Toys with topic name 'toys'.
     """
 
-    def __init__(self, rate=1, show=False, camera_yaml='data/camera_info/logitechC270_640x480.yaml'):
+    def __init__(self, rate=1, show=True, camera_yaml='data/camera_info/logitechC270_640x480.yaml'):
         super().__init__('stereo_node')
         self.toy_pub_ = self.create_publisher(Toys, '/toys', rate)
         self.show = show
@@ -107,7 +107,7 @@ class StereoNode(Node):
         pub_msg.toys = toy_arr
         self.toy_pub_.publish(pub_msg)
         self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
-        if self.show: self.display(results, frameR)
+        if self.show: self.display(results, frameR, header)
 
     def calculate_position(self, frameL, frameR, xywh, xyxy):
         """
