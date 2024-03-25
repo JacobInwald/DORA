@@ -1,4 +1,3 @@
-import numpy as np
 import cv2
 import yaml
 import time
@@ -10,22 +9,7 @@ from dora_msgs.msg import Toy, Toys, Pose
 from object_detection.detect import Detect
 from object_detection.demo import annotate
 from depth_estimation.estimator import Estimator
-
-
-def msg_to_np(msg):
-    """
-    Converts ROS2 Image message to numpy array.
-
-    Args:
-        msg: ROS2 sensor_msgs.msg.Image
-
-    Returns:
-        np array of the image
-    """
-    height = msg.height
-    width = msg.width
-    channel = msg.step // msg.width
-    return np.reshape(msg.data, (height, width, channel))
+from .utils import msg_to_np
 
 
 def display(frame, results):
