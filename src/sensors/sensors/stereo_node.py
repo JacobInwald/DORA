@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 import yaml
 import time
+import queue
+import threading
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Header
@@ -30,6 +32,33 @@ def filter_matches(matches, kpL, kpR,
         matches = [matches[i] for i in range(len(matches)) if abs(abs(disparities[i]) - mid) < mid * threshold]
         disparities = list(filter(lambda x: abs(abs(x) - mid) < mid * threshold, disparities))
     return matches, disparities
+
+
+# bufferless VideoCapture
+class VideoCapture:
+
+  def __init__(self, name):
+    self.cap = cv2.VideoCapture(name)
+    self.q = queue.Queue()
+    t = threading.Thread(target=self._reader)
+    t.daemon = True
+    t.start()
+
+  # read frames as soon as they are available, keeping only most recent one
+  def _reader(self):
+    while True:
+      ret, frame = self.cap.read()
+      if not ret:
+        break
+      if not self.q.empty():
+        try:
+          self.q.get_nowait()   # discard previous (unprocessed) frame
+        except queue.Empty:
+          pass
+      self.q.put(frame)
+
+  def read(self):
+    return self.q.get()
 
 
 class StereoNode(Node):
