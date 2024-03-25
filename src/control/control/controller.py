@@ -22,7 +22,7 @@ class Controller(Node):
         super().__init__('controller')
         self.service_ = self.create_service(JobCmd, 'job', self.switch)
         self.toy_sub_ = self.create_subscription(Toys, 'toys', self.toy_callback, 10)
-        self.gps_sub_ = self.create_subscription(Pose, 'gps', self.gps_callback, 10)
+        self.pos_sub_ = self.create_subscription(Pose, '/robot_position', self.gps_callback, 10)
         self.map_sub_ = self.create_subscription(Map, '/map', self.map_callback, 10)
         self.cli_node_ = Node('control_client')
         self.lds_cli_ = self.cli_node_.create_client(LdsCmd, 'lds_service')
@@ -62,7 +62,8 @@ class Controller(Node):
         Args:
             msg: Pose message from GPS
         """
-        self.pose = Pose
+        self.pose = msg
+        self.get_logger().info(f'Current pose is ')
 
     def map_callback(self, msg: Map): # Will work if corresponding publisher completes
         """
@@ -88,7 +89,12 @@ class Controller(Node):
         Returns:
             job status
         """
-        pass
+        sweeper_cmd = SweeperCmd.Request()
+        sweeper_cmd.type = 1  # Retrieve
+        future = self.sweeper_cli_.call_async(sweeper_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+
+        return future.result().status
 
     def unload_request(self) -> bool:
         """
@@ -97,7 +103,26 @@ class Controller(Node):
         Returns:
             job status
         """
-        pass
+        sweeper_cmd = SweeperCmd.Request()
+        sweeper_cmd.type = 2  # Unload
+        future = self.sweeper_cli_.call_async(sweeper_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+
+        return future.result().status
+
+    def stop_sweeper_request(self) -> bool:
+        """
+        Send service request for retrieving toy, similar to scan_request
+
+        Returns:
+            job status
+        """
+        sweeper_cmd = SweeperCmd.Request()
+        sweeper_cmd.type = 0  # Retrieve
+        future = self.sweeper_cli_.call_async(sweeper_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+
+        return future.result().status
 
     def navigate_to_toy(self) -> bool:
         """
@@ -158,6 +183,7 @@ class Controller(Node):
         dx = dst.x - src[0]
         dy = dst.y - src[1]
         return math.sqrt(dx ^ 2 + dy ^ 2) < self.close_thres
+
 
 
 # Entry Point

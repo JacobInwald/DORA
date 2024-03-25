@@ -2,11 +2,14 @@ from enum import Enum
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import SweeperCmd
+from motors import Motor
+from time import sleep
 
 
 class SweeperMove(Enum):
-    RETRIEVE = 0
-    UNLOAD = 1
+    STOP = 0
+    RETRIEVE = 1
+    UNLOAD = 2
 
 
 class Sweeper(Node):
@@ -17,34 +20,58 @@ class Sweeper(Node):
     Move the SWEEPER arm according to the command.
     """
 
+    mc = Motors()
+    motor_id_left = 0
+    motor_id_right = 1
+    # The port that your motor is plugged in to
+
+    speed1_motor = 80 # forward = positive, backwards = negative
+    speed2_motor = -80 # forward = positive, backwards = negative
+
+    def retrieve(self):
+        """
+        Control the SWEEPER spinner to retrieve toy by rotating inwards
+
+        Returns:
+            status: whether the move was executed
+        """
+        self.mc.move_motor(self.motor_id_left, self.speed1_motor)
+        self.mc.move_motor(self.motor_id_right, self.speed2_motor)
+        # Encoder board can be fragile - always use a try/except loop
+
+    def unload(self):
+        """
+        Control the SWEEPER spinner to unload toy by rotating outwards
+
+        Returns:
+            status: whether the move was executed
+        """
+        self.mc.move_motor(self.motor_id_left, self.speed2_motor)
+        self.mc.move_motor(self.motor_id_right, self.speed1_motor)
+
+    def stop(self):
+        self.mc.stop_motors()
+        return True
+
     def __init__(self):
         super().__init__('sweeper')
         self.service_ = self.create_service(SweeperCmd, 'sweeper', self.callback)
 
-    def callback(self, msg: SweeperCmd):
-        if msg.move == SweeperMove.RETRIEVE:
-            return self.retrieve()
-        elif msg.move == SweeperMove.UNLOAD:
-            return self.unload()
-        return False
+    def callback(self, msg, resp):
+        type_ = msg.type
+        self.get_logger().info(f'Received cmd of type {type_}')
 
-    def retrieve(self):
-        """
-        Control the SWEEPER arm to retrieve toy
-
-        Returns:
-            status: whether the move was executed
-        """
-        return True
-
-    def unload(self):
-        """
-        Control the SWEEPER arm to unload toy
-
-        Returns:
-            status: whether the move was executed
-        """
-        return False
+        if type_ == 1:
+            self.get_logger().info('Rotate inwards')
+            self.retrieve()
+        elif type_ == 2:
+            self.get_logger().info('Rotate outwards')
+            self.unload()
+        elif type_ == 0:
+            self.get_logger().info('Stop rotating')
+            self.stop()
+        resp.status = True
+        return resp
 
 
 def main():
