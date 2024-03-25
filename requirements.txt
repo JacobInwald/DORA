@@ -1,7 +1,7 @@
 matplotlib
 natsort
 numpy
-opencv_python
+opencv-python
 Pillow
 pytest
 PyYAML
