@@ -69,7 +69,7 @@ class StereoNode(Node):
     Publishes Toys with topic name 'toys'.
     """
 
-    def __init__(self, rate=1, show=True, camera_yaml='data/camera_info/logitechC270_640x480.yaml'):
+    def __init__(self, rate=2, show=True, camera_yaml='data/camera_info/logitechC270_640x480.yaml'):
         super().__init__('stereo_node')
         self.toy_pub_ = self.create_publisher(Toys, '/toys', rate)
         self.show = show
