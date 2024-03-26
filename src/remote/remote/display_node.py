@@ -1,4 +1,5 @@
 import cv2
+import time
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
@@ -24,8 +25,11 @@ class DisplayNode(Node):
         self.subscriber_ = self.create_subscription(Image, '/stereo', self.callback, qos)
         
     def callback(self, msg):
+        start_time = time.time()
         frame = msg_to_np(msg)
-        self.get_logger().info(f'Received frame {msg.header.frame_id}')
+        end_time = time.time()
+        self.get_logger().info('Received frame {} with process time {}ms'
+                               .format(msg.header.frame_id, (end_time-start_time)*1000))
         cv2.imshow('stereo', frame)
         cv2.waitKey(10)
 
