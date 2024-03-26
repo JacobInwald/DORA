@@ -25,7 +25,7 @@ class DisplayNode(Node):
         
     def callback(self, msg):
         frame = msg_to_np(msg)
-        self.get_logger().info(f'Recevied frame {msg.header.frame_id}')
+        self.get_logger().info(f'Received frame {msg.header.frame_id}')
         cv2.imshow('stereo', frame)
         cv2.waitKey(10)
 

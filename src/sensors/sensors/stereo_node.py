@@ -37,28 +37,28 @@ def filter_matches(matches, kpL, kpR,
 # bufferless VideoCapture
 class VideoCapture:
 
-  def __init__(self, name):
-    self.cap = cv2.VideoCapture(name)
-    self.q = queue.Queue()
-    t = threading.Thread(target=self._reader)
-    t.daemon = True
-    t.start()
+    def __init__(self, name):
+        self.cap = cv2.VideoCapture(name)
+        self.q = queue.Queue()
+        t = threading.Thread(target=self._reader)
+        t.daemon = True
+        t.start()
 
   # read frames as soon as they are available, keeping only most recent one
-  def _reader(self):
-    while True:
-      ret, frame = self.cap.read()
-      if not ret:
-        break
-      if not self.q.empty():
-        try:
-          self.q.get_nowait()   # discard previous (unprocessed) frame
-        except queue.Empty:
-          pass
-      self.q.put(frame)
+    def _reader(self):
+        while True:
+            ret, frame = self.cap.read()
+            if not ret:
+                break
+            if not self.q.empty():
+                try:
+                    self.q.get_nowait()   # discard previous (unprocessed) frame
+                except queue.Empty:
+                    pass
+            self.q.put(frame)
 
-  def read(self):
-    return self.q.get()
+    def read(self):
+        return self.q.get()
 
 
 class StereoNode(Node):
@@ -137,7 +137,10 @@ class StereoNode(Node):
         pub_msg.header = header
         pub_msg.toys = toy_arr
         self.toy_pub_.publish(pub_msg)
-        self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
+        (self.get_logger()
+         .info('Frame {}: detection time {:2f}ms'
+               .format(self.frame_no,
+                       (end_time-start_time)*1000)))
         if self.show: self.display(results, frameR, header)
 
     def calculate_position(self, frameL, frameR, xywh, xyxy):
@@ -184,6 +187,7 @@ class StereoNode(Node):
         return matches, kpL, kpR
     
     def display(self, results, right, header):
+        start_time = time.time()
         pred = annotate(results, thickness=2)
         frame = cv2.hconcat([pred, right])
 
@@ -195,9 +199,13 @@ class StereoNode(Node):
         msg.is_bigendian = False
         msg.step = np.shape(frame)[2] * np.shape(frame)[1]
         msg.data = np.array(frame).tobytes()
+        end_time = time.time()
 
         self.display_pub_.publish(msg)
-        self.get_logger().info(f'Frame {self.frame_no} published.')
+        (self.get_logger()
+         .info('Frame {}: post-process time {:2f}ms'
+               .format(self.frame_no,
+                       (end_time - start_time) * 1000)))
 
 
 def main():
