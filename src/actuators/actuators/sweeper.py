@@ -21,12 +21,14 @@ class Sweeper(Node):
     """
 
     mc = Motors()
-    motor_id_left = 0
-    motor_id_right = 1
+    motor_id_left = 1
+    motor_id_right = 0
     # The port that your motor is plugged in to
 
-    speed1_motor = 80 # forward = positive, backwards = negative
-    speed2_motor = -80 # forward = positive, backwards = negative
+    speed_inwards = 50
+    speed_outwards_left = -35
+    speed_outwards_right = -50
+    # Should be different speed for left and right motors when rotating outwards so that they will not block each other
 
     def retrieve(self):
         """
@@ -35,8 +37,8 @@ class Sweeper(Node):
         Returns:
             status: whether the move was executed
         """
-        self.mc.move_motor(self.motor_id_left, self.speed1_motor)
-        self.mc.move_motor(self.motor_id_right, self.speed2_motor)
+        self.mc.move_motor(self.motor_id_left, self.speed_inwards)
+        self.mc.move_motor(self.motor_id_right, self.speed_inwards)
         # Encoder board can be fragile - always use a try/except loop
 
     def unload(self):
@@ -46,8 +48,8 @@ class Sweeper(Node):
         Returns:
             status: whether the move was executed
         """
-        self.mc.move_motor(self.motor_id_left, self.speed2_motor)
-        self.mc.move_motor(self.motor_id_right, self.speed1_motor)
+        self.mc.move_motor(self.motor_id_left, self.speed_outwards_left)
+        self.mc.move_motor(self.motor_id_right, self.speed_outwards_right)
 
     def stop(self):
         self.mc.stop_motors()
