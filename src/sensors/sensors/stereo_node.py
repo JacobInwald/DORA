@@ -5,16 +5,12 @@ import time
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Header
+from sensor_msgs.msg import Image
 from dora_msgs.msg import Toy, Pose, Toys
 from object_detection.detect import Detect
 from object_detection.demo import annotate
 from statistics import mean, median
-
-
-def display(results, right):
-    pred = annotate(results, thickness=2)
-    out = cv2.hconcat([pred, right])
-    cv2.imshow('out', out)
+from .video_utils import VideoCapture, cv2_to_msg
 
 
 def filter_matches(matches, kpL, kpR,
@@ -30,9 +26,10 @@ def filter_matches(matches, kpL, kpR,
         disparities[i] = ptL[0] - ptR[0]
     matches = [matches[i] for i in range(k) if minDisparity <= disparities[i] < maxDisparity]
     disparities = list(filter(lambda x: minDisparity <= x < maxDisparity, disparities))
-    mid = median(disparities)
-    matches = [matches[i] for i in range(len(matches)) if abs(abs(disparities[i]) - mid) < mid * threshold]
-    disparities = list(filter(lambda x: abs(abs(x) - mid) < mid * threshold, disparities))
+    if len(disparities) > 0:
+        mid = median(disparities)
+        matches = [matches[i] for i in range(len(matches)) if abs(abs(disparities[i]) - mid) < mid * threshold]
+        disparities = list(filter(lambda x: abs(abs(x) - mid) < mid * threshold, disparities))
     return matches, disparities
 
 
@@ -44,21 +41,17 @@ class StereoNode(Node):
     Publishes Toys with topic name 'toys'.
     """
 
-    def __init__(self, rate=2, show=False, camera_yaml='data/camera_info/logitechC270_640x480.yaml'):
+    def __init__(self, rate=2, show=True, detector='orb', camera_yaml='data/camera_info/logitechC270_640x480.yaml'):
         super().__init__('stereo_node')
-        self.publisher_ = self.create_publisher(Toys, '/toys', rate)
-        self.capL = cv2.VideoCapture('/dev/video0')
-        self.capR = cv2.VideoCapture('/dev/video2')
-        if not self.capL.isOpened() or not self.capR.isOpened():
-            raise IOError('Cannot open webcam')
-        self.capL.set(cv2.CAP_PROP_FPS, rate)
-        self.capR.set(cv2.CAP_PROP_FPS, rate)
+        self.toy_pub_ = self.create_publisher(Toys, '/toys', rate)
+        self.show = show
+        if self.show: self.display_pub_ = self.create_publisher(Image, '/stereo', rate)
         
         self.frame_no = 1
-        self.show = show
         self.conversion = 0.001 # mm to metres
         self.model = Detect()
 
+        self.detector = detector
         self.orb = cv2.ORB_create(1000)
         self.sift = cv2.SIFT_create()
         self.bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
@@ -73,6 +66,13 @@ class StereoNode(Node):
         self.dy = camera_info['sensor_height'] / camera_info['image_height']  # physical size of a pixel in camera sensor
         self.fx, _, self.cx = camera_info['camera_matrix']['data'][:3]
 
+        self.capL = VideoCapture('/dev/video0')
+        self.capR = VideoCapture('/dev/video2')
+        if not self.capL.isOpened() or not self.capR.isOpened():
+            raise IOError('Cannot open webcam')
+        self.capL.set(cv2.CAP_PROP_FPS, rate)
+        self.capR.set(cv2.CAP_PROP_FPS, rate)
+
         self.capture()
 
     def capture(self):
@@ -85,10 +85,7 @@ class StereoNode(Node):
                 self.frame_no += 1
 
     def callback(self, frameL, frameR, stamp):
-        header = Header()
-        header.stamp = stamp
-        header.frame_id = str(self.frame_no)
-
+        header = self.create_header(stamp)
         start_time = time.time()
         results = self.model.predictions(frameL)[0]  # detect toys
         boxes = results.boxes
@@ -97,19 +94,31 @@ class StereoNode(Node):
         for xywh, xyxy, cls, conf in zip(boxes.xywh, boxes.xyxy, boxes.cls, boxes.conf):
             pos = self.calculate_position(frameL, frameR, xywh, xyxy)
             if pos is not None:
-                toy_msg = Toy()
-                toy_msg.cls = int(cls)
-                toy_msg.conf = float(conf)
-                toy_msg.position = Pose()
-                toy_msg.position.x = pos[0] * self.conversion
-                toy_msg.position.y = pos[1] * self.conversion
-                toy_arr.append(toy_msg)
+                toy_arr.append(self.create_toy_msg(pos, cls, conf))
         end_time = time.time()
         pub_msg.header = header
         pub_msg.toys = toy_arr
-        self.publisher_.publish(pub_msg)
-        self.get_logger().info(f'Frame {self.frame_no}: detection time {(end_time-start_time)*1000}ms')
-        if self.show: display(results, frameR)
+        self.toy_pub_.publish(pub_msg)
+        (self.get_logger()
+         .info('Frame {}: {:.1f}ms detection'
+               .format(self.frame_no,
+                       (end_time-start_time)*1000)))
+        if self.show: self.display(results, frameR, header)
+
+    def create_toy_msg(self, pos, cls, conf):
+        toy_msg = Toy()
+        toy_msg.cls = int(cls)
+        toy_msg.conf = float(conf)
+        toy_msg.position = Pose()
+        toy_msg.position.x = pos[0] * self.conversion
+        toy_msg.position.y = pos[1] * self.conversion
+        return toy_msg
+
+    def create_header(self, stamp):
+        header = Header()
+        header.stamp = stamp
+        header.frame_id = str(self.frame_no)
+        return header
 
     def calculate_position(self, frameL, frameR, xywh, xyxy):
         """
@@ -143,16 +152,35 @@ class StereoNode(Node):
             return px, py
         return None
 
-    def match_frames(self, frameL, frameR, maskL=None, maskR=None, detector='orb'):
-        if detector == 'orb':
+    def match_frames(self, frameL, frameR, maskL=None, maskR=None):
+        matches = []
+        if self.detector == 'orb':
             kpL, desL = self.orb.detectAndCompute(frameL, mask=maskL)
             kpR, desR = self.orb.detectAndCompute(frameR, mask=maskR)
-            matches = list(self.bf.match(desL, desR))
+            if desL is not None and desR is not None: 
+                matches = list(self.bf.match(desL, desR))
         else:
             kpL, desL = self.sift.detectAndCompute(frameL, mask=maskL)
             kpR, desR = self.sift.detectAndCompute(frameR, mask=maskR)
-            matches = list(self.flann.match(desL, desR))
+            if desL is not None and desR is not None: 
+                matches = list(self.flann.match(desL, desR))
         return matches, kpL, kpR
+    
+    def display(self, results, right, header):
+        start_time = time.time()
+        pred = annotate(results, thickness=2)
+        annotate_time = (time.time() - start_time) * 1000
+        start_time = time.time()
+        frame = cv2.hconcat([pred, right])
+        concat_time = (time.time() - start_time) * 1000
+        msg = cv2_to_msg(frame, header)
+
+        self.display_pub_.publish(msg)
+        (self.get_logger()
+         .info('Frame {}: {:.2f}ms annotate {:.2f}ms concat'
+               .format(self.frame_no,
+                       annotate_time,
+                       concat_time)))
 
 
 def main():

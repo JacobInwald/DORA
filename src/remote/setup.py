@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'sensors'
+package_name = 'remote'
 
 setup(
     name=package_name,
@@ -15,15 +15,13 @@ setup(
     zip_safe=True,
     maintainer='Ardith Ho',
     maintainer_email='ardithhowaiman@gmail.com',
-    description='Sensor nodes',
+    description='Remote nodes',
     license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            "camera_node = sensors.camera_node:main",
-            "stereo_node = sensors.stereo_node:main",
-            "gps_node = sensors.gps_node:main",
-            "lds_node = sensors.lds_node:main"
+            "display_node = remote.display_node:main",
+            "gpu_node = remote.gpu_node:main"
         ],
     },
 )

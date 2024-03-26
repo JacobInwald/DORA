@@ -8,6 +8,7 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
+    display = True
     mono = False
     if mono:
         camera_node = Node(
@@ -19,7 +20,8 @@ def generate_launch_description():
         camera_node = Node(
             namespace='stereo',
             package='sensors',
-            executable='stereo_node'
+            executable='stereo_node',
+            parameters=[{'show': display}]
         )
 
     LDS_MODEL = os.environ['LDS_MODEL']
