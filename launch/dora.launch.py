@@ -47,15 +47,10 @@ def generate_launch_description():
         ),
         camera_node,
         # Node(
-        #     namespace='gps',
+        #     namespace='lds',
         #     package='sensors',
-        #     executable='gps_node'
+        #     executable='lds_node'
         # ),
-        Node(
-            namespace='lds',
-            package='sensors',
-            executable='lds_node'
-        ),
         Node(
             namespace='sweeper',
             package='actuators',

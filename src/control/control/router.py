@@ -1,8 +1,8 @@
 import numpy as np
-from .point_cloud import PointCloud
-from .occupancy_map import OccupancyMap
+import cv2
 from dora_msgs.msg import Toy, Toys
 from queue import PriorityQueue
+from .occupancy_map import OccupancyMap
 
 
 class Router:
@@ -20,7 +20,7 @@ class Router:
     def __init__(self):
         self.unload_points = {}
 
-    def route(self, start, end, map: OccupancyMap) -> np.ndarray:
+    def route(self, start, end, occ: OccupancyMap) -> np.ndarray:
         """
         This function calculates the route from the current position to the end point.
 
@@ -31,22 +31,22 @@ class Router:
         Returns:
             np.ndarray: The calculated route as an array of coordinates.
         """
-        move_dist = map.resolution
-        directions = np.array([(x, y) for x in [-1, 0, 1] for y in [-1, 0, 1]
-                               if (x, y) != (0, 0)])
+        move_dist = 0.05
+        occ = occ.change_res(move_dist)
+        directions = np.array([[0, 1], [1, 0], [0, -1], [-1, 0]])
 
         g = {}
         g[str(start)] = 0
-        alpha = 0.5  # the penalty parameter for being close to obstacles
+        alpha = 2  # the penalty parameter for being close to obstacles
         def f(p, a): return 3 * np.linalg.norm(p - end) + g[str(p)] + a * alpha
         q = PriorityQueue()
-        q.put((f(start, 0), start))
+        q.put((f(start, 0), (start, 0)))
         parent = {}
         found = False
 
         # A* Algorithm
         while q.empty() is False:
-            _, cur = q.get()
+            _, (cur, dir) = q.get()
             cur = np.array(cur)
             strCur = str(cur)
 
@@ -54,26 +54,34 @@ class Router:
                 found = True
                 break
 
+            n_d = 0
             for d in directions:
+                n_d += 1
                 n = cur + d * move_dist
                 strNext = str(n)
 
-                if map.sample_coord(n) > 0.5:
+                if occ.sample_coord(n) > 0.5:
                     g[strNext] = g[strCur] + np.inf
                     continue
 
                 # penalize for obstacles in 3 move_dist
-                penalty = map.sample_coord(n, mean=True)
+                penalty = occ.sample_coord(n, mean=True, n=5)
+                if penalty != 1:
+                    penalty = 0
+                penalty *= 5
+                penalty += int(dir != n_d)
 
                 try:
-                    if g[strCur] + self.controller.move_dist < g[strNext]:
+                    if g[strCur] + move_dist < g[strNext]:
                         g[strNext] = g[strCur] + move_dist
-                        parent[strNext] = cur
+                        parent[strNext] = cur if n_d != dir else parent[strCur]
                 except KeyError:
                     g[strNext] = g[strCur] + move_dist
-                    q.put((f(n, penalty), tuple(n)))
-                    parent[strNext] = cur
+                    q.put((f(n, penalty), (tuple(n), n_d)))
+                    parent[strNext] = cur if n_d != dir else parent[strCur]
 
+        # Retrieve path
+        path = [start]
         if found:
             route = [cur]
             cur = str(cur)
@@ -81,9 +89,22 @@ class Router:
                 route.append(parent[cur])
                 cur = str(parent[cur])
             route.reverse()
-            return np.array(route)
+            path = np.array(route)
 
-        return [start]
+        # Reduce points in path
+        cur_ = path[0]
+        path_ = []
+        for pt_ in path[1:]:
+            mask = np.zeros(occ.map.shape)
+            cv2.line(mask, occ.translate(cur_), occ.translate(pt_), 1, 4)
+            score = np.max(mask * occ.map)
+            if score > 0.5:
+                path_.append(last)
+                cur_ = last
+            last = pt_
+        path_.append(path[-1])
+
+        return path_
 
     def next_mapping_pt(self, map: OccupancyMap) -> np.ndarray:
         """
@@ -170,3 +191,21 @@ class Router:
                 closest_unload_point = unload_point
 
         return closest_unload_point
+
+
+# def test():
+#     from matplotlib import pyplot as plt
+#     occ = OccupancyMap.load('reference_map.npz')
+#     router = Router()
+#     start = np.array([1.5, -0.45])
+#     end = np.array([1.5, -1.45])
+#     route = router.route(start, end, occ)
+#     route = [start] + route
+#     pt_ = route[0]
+#     for pt in route[1:]:
+#         cv2.line(occ.map, occ.translate(pt_), occ.translate(pt), 2, 1)
+#         pt_ = pt
+#     plt.imshow(occ.map)
+#     plt.show()
+
+# test()
