@@ -1,0 +1,33 @@
+name: Build DORA
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
+    steps:
+      - name: Setup ROS 2
+        uses: ros-tooling/setup-ros@0.7.1
+        with:
+          required-ros-distributions: humble
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Build DORA
+        run: |
+          source /opt/ros/humble/setup.bash
+          colcon build --symlink-install
