@@ -8,7 +8,7 @@ from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    display = False
+    display = True
     mono = False
     if mono:
         camera_node = Node(
