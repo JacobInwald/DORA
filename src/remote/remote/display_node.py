@@ -8,10 +8,10 @@ from .utils import msg_to_np
 
 class DisplayNode(Node):
     """
-    Represents the external GPU.
+    Represents the remote display.
 
-    Subscribes to the camera node.
-    Publishes Toys with topic name 'toys'
+    Subscribes to the stereo node.
+    Display real-time detection output.
     """
 
     def __init__(self):

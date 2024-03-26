@@ -23,7 +23,7 @@ class GpuNode(Node):
     Represents the external GPU.
 
     Subscribes to the camera node.
-    Publishes Toys with topic name 'toys'
+    Publishes Toys with topic name 'toys'.
     """
 
     def __init__(self, camera_info='data/camera_info/camerav2_1280x960.yaml'):

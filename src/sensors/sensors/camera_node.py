@@ -1,4 +1,3 @@
-import numpy as np
 import cv2
 import rclpy
 from rclpy.node import Node
