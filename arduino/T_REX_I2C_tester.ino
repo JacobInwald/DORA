@@ -15,36 +15,40 @@ int lowbat=550;                                      // adjust to suit your batt
 byte i2caddr=7;                                      // default I2C address of T'REX is 7. If this is changed, the T'REX will automatically store new address in EEPROM
 byte i2cfreq=0;                                      // I2C clock frequency. Default is 0=100kHz. Set to 1 for 400kHz
 
- 
+
 void setup()
 {
   Serial.begin(9600);
-  Wire.begin();                                      // no address - join the bus as master
+  Wire.begin(); // no address - join the bus as master
 }
 
-void go(int motor_time, int lmspeed, int rmspeed) {  
-  MasterSend(startbyte,2,lmspeed,0,rmspeed,0,sv[0],sv[1],sv[2],sv[3],sv[4],sv[5],devibrate,sensitivity,lowbat,i2caddr,i2cfreq);
+void go(int motor_time, int lmspeed, int rmspeed)
+{
+  MasterSend(startbyte, 2, lmspeed, 0, rmspeed, 0, sv[0], sv[1], sv[2], sv[3], sv[4], sv[5], devibrate, sensitivity, lowbat, i2caddr, i2cfreq);
   delay(50);
   //MasterReceive();                                   // receive data packet from T'REX controller
+
   delay(motor_time);
 
   // brake
-  MasterSend(startbyte,2,0,1,0,1,sv[0],sv[1],sv[2],sv[3],sv[4],sv[5],devibrate,sensitivity,lowbat,i2caddr,i2cfreq);
+  MasterSend(startbyte, 2, 0, 1, 0, 1, sv[0], sv[1], sv[2], sv[3], sv[4], sv[5], devibrate, sensitivity, lowbat, i2caddr, i2cfreq);
   delay(50);
+
   //MasterReceive();                                   // receive data packet from T'REX controller
   delay(50);
 }
 
-
 void loop()
 {
-  if (Serial.available() > 1) {
-    
+  if (Serial.available() > 1)
+  {
+
     String first = Serial.readStringUntil('.');
     String second = Serial.readStringUntil('-');
     int move_time = second.toInt();
 
     int speed = 150;
+
 
     if (first == "forward") {
       go(move_time, speed, speed);
