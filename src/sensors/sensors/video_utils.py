@@ -14,6 +14,7 @@ class VideoCapture:
         self.cap = cv2.VideoCapture(name)
         self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         self.q = queue.Queue()
+        self.ret = True
         t = threading.Thread(target=self._reader)
         t.daemon = True
         t.start()
@@ -23,6 +24,7 @@ class VideoCapture:
         while True:
             ret, frame = self.cap.read()
             if not ret:
+                self.ret = False
                 break
             if not self.q.empty():
                 try:
@@ -32,7 +34,7 @@ class VideoCapture:
             self.q.put(frame)
 
     def read(self):
-        return self.q.get()
+        return self.ret, self.q.get()
 
     def set(self, *args):
         self.cap.set(*args)
