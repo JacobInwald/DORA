@@ -100,7 +100,7 @@ class StereoNode(Node):
         pub_msg.toys = toy_arr
         self.toy_pub_.publish(pub_msg)
         (self.get_logger()
-         .info('Frame {}: detection time {:.2f}ms'
+         .info('Frame {}: {:.1f}ms detection'
                .format(self.frame_no,
                        (end_time-start_time)*1000)))
         if self.show: self.display(results, frameR, header)
@@ -153,14 +153,17 @@ class StereoNode(Node):
         return None
 
     def match_frames(self, frameL, frameR, maskL=None, maskR=None):
+        matches = []
         if self.detector == 'orb':
             kpL, desL = self.orb.detectAndCompute(frameL, mask=maskL)
             kpR, desR = self.orb.detectAndCompute(frameR, mask=maskR)
-            matches = list(self.bf.match(desL, desR))
+            if desL is not None and desR is not None: 
+                matches = list(self.bf.match(desL, desR))
         else:
             kpL, desL = self.sift.detectAndCompute(frameL, mask=maskL)
             kpR, desR = self.sift.detectAndCompute(frameR, mask=maskR)
-            matches = list(self.flann.match(desL, desR))
+            if desL is not None and desR is not None: 
+                matches = list(self.flann.match(desL, desR))
         return matches, kpL, kpR
     
     def display(self, results, right, header):
