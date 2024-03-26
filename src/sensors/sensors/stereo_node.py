@@ -166,15 +166,18 @@ class StereoNode(Node):
     def display(self, results, right, header):
         start_time = time.time()
         pred = annotate(results, thickness=2)
+        annotate_time = (time.time() - start_time) * 1000
+        start_time = time.time()
         frame = cv2.hconcat([pred, right])
+        concat_time = (time.time() - start_time) * 1000
         msg = cv2_to_msg(frame, header)
-        end_time = time.time()
 
         self.display_pub_.publish(msg)
         (self.get_logger()
-         .info('Frame {}: published with post-process time {:2f}ms'
+         .info('Frame {}: annotate {:2f}ms concat {:2f}ms'
                .format(self.frame_no,
-                       (end_time - start_time) * 1000)))
+                       annotate_time,
+                       concat_time)))
 
 
 def main():
