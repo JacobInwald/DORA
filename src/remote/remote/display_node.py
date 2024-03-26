@@ -28,7 +28,7 @@ class DisplayNode(Node):
         start_time = time.time()
         frame = msg_to_np(msg)
         end_time = time.time()
-        self.get_logger().info('Received frame {} with process time {}ms'
+        self.get_logger().info('Received frame {} with process time {:.2f}ms'
                                .format(msg.header.frame_id, (end_time-start_time)*1000))
         cv2.imshow('stereo', frame)
         cv2.waitKey(10)

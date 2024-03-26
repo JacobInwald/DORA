@@ -100,7 +100,7 @@ class StereoNode(Node):
         pub_msg.toys = toy_arr
         self.toy_pub_.publish(pub_msg)
         (self.get_logger()
-         .info('Frame {}: detection time {:2f}ms'
+         .info('Frame {}: detection time {:.2f}ms'
                .format(self.frame_no,
                        (end_time-start_time)*1000)))
         if self.show: self.display(results, frameR, header)
@@ -174,7 +174,7 @@ class StereoNode(Node):
 
         self.display_pub_.publish(msg)
         (self.get_logger()
-         .info('Frame {}: annotate {:2f}ms concat {:2f}ms'
+         .info('Frame {}: {:.2f}ms annotate {:.2f}ms concat'
                .format(self.frame_no,
                        annotate_time,
                        concat_time)))
