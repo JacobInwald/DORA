@@ -8,6 +8,9 @@ venv/
 log/
 build/
 install/
+data/img/
+data/vid/
+data/labelbox/
 *.jpg
 *.mp4
 *.avi

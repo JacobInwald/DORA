@@ -29,7 +29,7 @@ def msg_to_np(msg):
 
 
 def display(frame, results):
-    pred = annotate(results)
+    pred = annotate(results, thickness=2)
     out = cv2.vconcat([frame, pred])
     cv2.imshow('out', out)
 
@@ -55,6 +55,7 @@ class GpuNode(Node):
         self.depth_model = Estimator(device='gpu')
         with open(camera_info, 'r') as file:
             self.camera_info = yaml.safe_load(file)
+        self.conversion = 0.001  # mm to metres
 
     def callback(self, msg):
         frame = msg_to_np(msg)
@@ -68,7 +69,9 @@ class GpuNode(Node):
             toy_msg.cls = int(cls)
             toy_msg.conf = float(conf)
             toy_msg.position = Pose()
-            toy_msg.position.x, toy_msg.position.y = self.estimate_position(frame, xywh)
+            pos = self.estimate_position(frame, xywh)
+            toy_msg.position.x = pos[0] * self.conversion
+            toy_msg.position.y = pos[1] * self.conversion
             toy_arr.append(toy_msg)
         end_time = time.time()
         pub_msg.header = msg.header
@@ -83,11 +86,11 @@ class GpuNode(Node):
 
         Args:
             img: image predicted on
-            xywh: bbox prediciton; x, y represents the center coordinates of the bbox;
-            w, h represents the width and heigh of the bbox
+            xywh: bbox prediction; x, y represents the center coordinates of the bbox;
+            w, h represents the width and height of the bbox
 
         Returns:
-            x, y: position of the toy
+            x, y: position of the toy in mm
         """
         bx, by = xywh.cpu().numpy()[:2]  # center of bbox
         depth_map = self.depth_model.predict(img)

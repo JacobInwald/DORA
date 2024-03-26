@@ -19,14 +19,13 @@ def main(source, weights):
     cap.release()
 
 
-def annotate(results):
+def annotate(results, thickness=5):
     bbox_colours = [(255, 255, 0), (255, 0, 255), (0, 255, 255)]
     img = results.orig_img.copy()
     boxes = results.boxes
     for xyxy, cls in zip(boxes.xyxy, boxes.cls):
         xyxy = list(map(round, xyxy.cpu().numpy()))
-        img = cv2.rectangle(img, xyxy[:2], xyxy[2:],
-                            bbox_colours[int(cls)], thickness=5)
+        img = cv2.rectangle(img, xyxy[:2], xyxy[2:], bbox_colours[int(cls)], thickness=thickness)
     return img
 
 
@@ -35,7 +34,7 @@ def parse_opt():
     parser.add_argument('--source', type=str,
                         default='data/vid/20240201_dav_cut.mp4')
     parser.add_argument('--weights', type=str,
-                        default='data/weights/yolo/best_32.pt')
+                        default='data/weights/yolo_phone_32.pt')
     return parser.parse_args()
 
 
