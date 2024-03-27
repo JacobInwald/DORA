@@ -22,7 +22,7 @@ class Controller(Node):
 
     def __init__(self):
         super().__init__('controller')
-
+        
         toy_qos = QoSProfile(
             reliability=QoSReliabilityPolicy.BEST_EFFORT,
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -105,7 +105,7 @@ class Controller(Node):
             return np.array([future.result().x, future.result().y, future.result().rot])
         else:
             return None
-
+          
     def turn_request(self, angle: float) -> bool:
         """
         Send service request for turning robot
@@ -148,7 +148,12 @@ class Controller(Node):
         Returns:
             job status
         """
-        pass
+        sweeper_cmd = SweeperCmd.Request()
+        sweeper_cmd.type = 1  # Retrieve
+        future = self.sweeper_cli_.call_async(sweeper_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+
+        return future.result().status
 
     def unload_request(self) -> bool:
         """
@@ -157,7 +162,26 @@ class Controller(Node):
         Returns:
             job status
         """
-        pass
+        sweeper_cmd = SweeperCmd.Request()
+        sweeper_cmd.type = 2  # Unload
+        future = self.sweeper_cli_.call_async(sweeper_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+
+        return future.result().status
+
+    def stop_sweeper_request(self) -> bool:
+        """
+        Send service request for retrieving toy, similar to scan_request
+
+        Returns:
+            job status
+        """
+        sweeper_cmd = SweeperCmd.Request()
+        sweeper_cmd.type = 0  # Retrieve
+        future = self.sweeper_cli_.call_async(sweeper_cmd)
+        rclpy.spin_until_future_complete(self.cli_node_, future)
+
+        return future.result().status
 
     def close_to(self, src: np.ndarray, dst: np.ndarray):
         """
@@ -291,6 +315,7 @@ class Controller(Node):
         route = self.router.route(cur_pos, next_unload_pt, self.map)
         status = self.navigate(route)
         return status
+
 
 
 # Entry Point

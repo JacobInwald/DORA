@@ -1,3 +1,3 @@
-uint8 move
+uint8 type
 ---
 bool status
