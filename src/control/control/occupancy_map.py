@@ -1,72 +1,29 @@
 import numpy as np
-import matplotlib.pyplot as plt
+import cv2
 from dora_msgs.msg import Map
-from point_cloud import PointCloud
-
-
-def man_fuzz(grid: np.ndarray) -> np.ndarray:
-    """
-    Applies the Manhattan Fuzz algorithm to the given grid.
-
-    The Manhattan Fuzz algorithm calculates the mean value of each cell in the grid
-    by considering its neighboring cells in the Manhattan distance.
-
-    Params:
-        grid (np.ndarray): The input grid.
-
-    Returns:
-        np.ndarray: The grid with the Manhattan Fuzz algorithm applied.
-    """
-    for i in range(grid.shape[0]):
-        for j in range(grid.shape[1]):
-            if grid[i, j] >= 0.95 or grid[i, j] == 0:
-                continue
-            try:
-                grid[i, j] = np.mean([
-                    grid[i + x, j + y] for x in range(-1, 2)
-                    for y in range(-1, 2)
-                ])
-            except IndexError:
-                pass
-    return grid
-
-
-def bresenham(start: np.ndarray,
-              end: np.ndarray,
-              res: float = 1) -> np.ndarray[np.float64]:
-    """
-    Generate a Bresenham line between two points in a grid.
-
-    Params:
-        start (np.ndarray): The starting point of the line.
-        end (np.ndarray): The ending point of the line.
-        res (float, optional): The resolution of the grid. Defaults to 1.
-
-    Returns:
-        np.ndarray: An array of points representing the Bresenham line.
-    """
-
-    direction = end - start
-    length = int(np.linalg.norm(direction) / res) + 1
-    result = np.zeros((length + 1, 2))
-
-    for i in range(0, length + 1):
-        result[i] = (start + (i / length) * direction
-                     ).round(int(-np.log10(res)) if res < 1 else 0) // res
-
-    return result
-
+from .point_cloud import PointCloud
+from .utils import *
 
 
 class OccupancyMap:
     """
-    Represents an occupancy map based on obstacle coordinates and resolution.
-    nb: The coords are in the form [x, y].T or (y, x)
+    Represents an occupancy map generated from a list of point clouds.
 
     Attributes:
-    - offset: numpy.ndarray - The offset of the occupancy map.
-    - pointclouds: list - The coordinates of the obstacles.
-    - resolution: float - The resolution of the occupancy map.
+        offset (np.ndarray): The offset of the occupancy map.
+        pointclouds (list["PointCloud"]): A list of point clouds used to generate the occupancy map.
+        resolution (float): The resolution of the occupancy map.
+
+    Methods:
+        __init__: Initialize the OccupancyMap object.
+        generate: Generates an occupancy map based on the point clouds.
+        merge_cloud_into_map: Merges a point cloud into the occupancy map.
+        localise_cloud: Localizes a point cloud within the occupancy map.
+        sample_coord: Samples the occupancy map at a given coordinate.
+        translate: Translates a coordinate to a grid index.
+        change_res: Changes the resolution of the occupancy map.
+        save: Saves the occupancy map to a file.
+        load: Loads the occupancy map from a file.
     """
 
     def __init__(
@@ -76,129 +33,254 @@ class OccupancyMap:
         resolution: float = 0.05,
     ):
         """
-        Initialises an occupancy map based on the given obstacle coordinates and resolution.
+        Initialize the OccupancyMap object.
 
-        Params:
-            offset (np.ndarray): The offset of the occupancy map, given (x, y).
-            pointclouds (list[np.ndarray]): The coordinates of the obstacles, given [ox, oy].T.
-            resolution (float, optional): Resolution of the occupancy map. Defaults to 0.02.
-
-        Returns:
-            None
+        Args:
+            offset (np.ndarray): The offset of the occupancy map.
+            pointclouds (list["PointCloud"]): A list of point clouds used to generate the occupancy map.
+            resolution (float, optional): The resolution of the occupancy map. Defaults to 0.05.
         """
-        # explanatory
-        self.offset = offset
+        self.offset = np.copy(offset)
         self.resolution = resolution
-        self.pointclouds = (pointclouds
-                            if not isinstance(pointclouds, PointCloud) else
-                            [pointclouds])
+        self.pointclouds = (
+            pointclouds if not isinstance(
+                pointclouds, PointCloud) else [pointclouds]
+        )
         if len(self.pointclouds) == 0:
-            self.min = np.array([0, 0])
-            self.max = np.array([0, 0])
-            self.shape = np.array([0, 0])
-            self.map = np.array([[]])
-            return
-        # Gets the minimum and maximum x and y coordinates of the obstacles
-        mins = np.array([c.min for c in self.pointclouds])
-        maxs = np.array([c.max for c in self.pointclouds])
+            self.map = np.zeros((1, 1))
+        else:
+            self.map = self.generate()
 
-        self.min = np.array([min(mins[:, 0]), min(mins[:, 1])])
-        self.max = np.array([max(maxs[:, 0]), max(maxs[:, 1])])
+    # Generation
 
-        # Calculate the shape of the occupancy map
-        self.shape = np.round((self.max - self.min) / resolution).astype(int)
-
-        # Generate the occupancy map with probability 0.5 in each cell
-        self.map = np.ones(self.shape) * 0.5
-
-    def generate(self, fuzz: bool = True) -> "OccupancyMap":
+    def generate(self) -> "OccupancyMap":
         """
-        Generates an occupancy map based on the given obstacle coordinates.
-
-        Params:
-            fuzz (bool): Whether to apply a fuzzy filter to the occupancy map. Default is True.
+        Generates an occupancy map based on the point clouds.
 
         Returns:
-            map (numpy.ndarray): Occupancy map representing the environment, where 0.0 represents free area and 1.0 represents occupied area.
+            OccupancyMap: The generated occupancy map.
+        """
+        pad_size = int(self.pointclouds[0].maxScanDist / self.resolution) * 2
+        self.map = np.ones((int(pad_size), int(pad_size))) * 0.5
+        first = True
+
+        for cloud in self.pointclouds:
+            self.map = self.merge_cloud_into_map(
+                cloud, overwrite=first, set_map=False)
+            first = False
+
+        return self.map
+
+    def merge_cloud_into_map(self, cloud: "PointCloud", overwrite: bool = False, set_map: bool = True) -> "OccupancyMap":
+        """
+        Merges a point cloud into the occupancy map.
+
+        Args:
+            cloud (PointCloud): The point cloud to merge into the map.
+            overwrite (bool, optional): Whether to overwrite existing map values with the merged values. Defaults to False.
+            set_map (bool, optional): Whether to update the map with the merged result. Defaults to True.
+
+        Returns:
+            OccupancyMap: The merged occupancy map.
         """
 
-        # Draw Empty Space
-        for cloud in self.pointclouds:
-            o = self.translate(cloud.origin)  # Normalise the origin
-            for p in cloud.cloud():
-                i = self.translate(p)  # Normalise the point
-                # Draw ray between origin and point
-                line = bresenham(o, i)
-                for pl in line:
-                    try:
-                        self.map[int(pl[0])][int(pl[1])] = 0  # free area 0.0
-                    except IndexError:
-                        pass
+        # Init Vars
+        img = np.ones_like(self.map) * 0.5
+        pad_size = int(cloud.maxScanDist / self.resolution) * 2
+        img = np.pad(img, pad_size, mode='constant', constant_values=0.5)
 
-        # Draw on Obstacles
-        wallThickness = 3
-        for cloud in self.pointclouds:
-            for p in cloud.objectCloud:
-                i = self.translate(p, True)
+        # Paste previous map
+        ox, oy = self.translate(self.offset) + pad_size
+        oh, ow = self.map.shape
+        img[oy-oh//2:oy+oh//2, ox-ow//2:ox+ow//2] = self.map
 
-                for w in range(wallThickness):
-                    try:
-                        prob = 1
-                        # extend the occupied area
-                        self.map[i[0] + w][i[1]] = prob
-                        # extend the occupied area
-                        self.map[i[0]][i[1] + w] = prob
-                        # extend the occupied area
-                        self.map[i[0] + w][i[1] + w] = prob
-                    except IndexError:
-                        pass
+        # Generate and norm cloud image
+        cloud_img = cloud.generate(res=self.resolution)
+        h, w = cloud_img.shape
+        x, y = self.translate(cloud.origin) + pad_size
 
-        # Apply Fuzzy Filter
-        self.map = man_fuzz(self.map) if fuzz else self.map
+        # Init Masks
+        img_zeros = img <= 0.3
+        cloud_zeros = cloud_img <= 0.3
+
+        # Combine the cloud
+        subsample = img[y-(h//2):y+(h//2), x-(w//2):x+(w//2)]
+        img[y-(h//2):y+(h//2), x-(w//2):x+(w//2)
+            ] = np.maximum(subsample, cloud_img)
+
+        # Reset 0s
+        if not overwrite:
+
+            img_highs = img > 0.65
+            img_zeros = np.logical_and(img_zeros, ~img_highs)
+
+            cloud_highs = np.logical_and(
+                cloud_img > 0.65, img_highs[y-(h//2):y+(h//2), x-(w//2):x+(w//2)])
+            cloud_zeros = np.logical_and(cloud_zeros, ~cloud_highs)
+            img[y-(h//2):y+(h//2), x-(w//2):x+(w//2)][cloud_zeros] = 0
+
+            img[img_zeros] = 0
+
+        # Crop back to original sizes
+        w = np.abs(x - ox) + ow
+        h = np.abs(y - oy) + oh
+        if w % 2 != 0:
+            w += 1
+        if h % 2 != 0:
+            h += 1
+
+        img = img[oy-(h//2):oy+(h//2), ox-(w//2):ox+(w//2)]
+
+        if set_map:
+            self.map = img
+
+        return img
+
+    def fuzz_map(self, n: int = 3) -> np.ndarray:
+        self.map = cv2.blur(self.map, (n, n))
+
+    def localise_cloud(self, cloud: "PointCloud") -> "PointCloud":
+        """
+        Localizes the given point cloud within the occupancy map.
+
+        Args:
+            cloud (PointCloud): The point cloud to be localized.
+
+        Returns:
+            tuple: A tuple containing the best pose estimate and the match score.
+                The best pose estimate is a numpy array of shape (3,) representing
+                the x, y, and rotation coordinates of the best pose.
+                The match score is a float representing the percentage of match
+                between the best pose and the template.
+
+        """
+
+        # INIT
+        min_loss = np.inf
+        loss = 1
+        start_minima = None
+        best_pose = np.array([0, 0, 0])
+        r = 0
+        self.change_res(0.025)
+        # Normalise reference map
+        ref = np.copy(self.map).astype(np.float32)
+        template = cloud.generate(
+            rot=r, res=self.resolution).astype(np.float32)
+        ref[ref < 0.75] = 0
+        template[template < 0.75] = 0
+
+        num_perfect_matches = np.sum(template)
+        
+        # O(2^n)
+        for i in range(100):
+            # Generate the rotated template
+            _template = rotate_image(template, np.rad2deg(r))
+            _template[_template < 0.75] = 0
+            h, w = _template.shape
+
+            # Match the Template TODO: improve it takes the longest
+            ret = cv2.matchTemplate(ref, _template, cv2.TM_CCOEFF)
+            _, _, _, (max_x, max_y) = cv2.minMaxLoc(ret)
+
+            # Crop to the matched area
+            res = ref[max_y:max_y + h, max_x:max_x+w]
+
+            # Calculate the percentage of correct matches
+            mask1 = np.abs(res - _template) < 0.25
+            mask2 = _template != 0
+            mask = np.logical_and(mask1, mask2)
+            diff = (num_perfect_matches - np.sum(mask)) / num_perfect_matches
+
+            # Calculate the loss, using an exponential function to penalize large differences
+            #   the 0.1 means that when the match over 90% accurate, the loss is less than 1
+            loss = 2 ** (6*(diff - 0.1))
+            loss = min(loss, 30)
+
+            # Prevents moving out of minimas
+            if loss < 1:
+                if start_minima is None or \
+                    np.abs(loss) > np.abs(start_minima) or \
+                        np.abs(loss) < np.abs(start_minima) / 2:
+                    start_minima = np.abs(loss)
+
+                if np.abs(loss) > np.abs(start_minima):
+                    loss = -loss
+
+            # Update the rotation my minimum amount
+            delta_r = np.deg2rad(np.sign(loss) * max(np.abs(loss), 0.1))
+            r = (r + delta_r) % (2*np.pi)
+
+            if np.abs(loss) <= np.abs(min_loss) and loss > 0:
+                # Find center of match
+                center = np.array([max_x + w//2, max_y + h//2])
+                x, y = self.translate(center, False)
+                # Update the best pose
+                best_pose = np.array([x, y, r])
+                min_loss = loss
+                best_temp = _template
+                best_res = res
+                best_diff = mask
+                
+                if np.sum(best_diff) / np.sum(best_temp) > 0.8:
+                    break
+
+        # print(f"Best pose: {best_pose}, Score: {np.round(100 * np.sum(best_diff) / np.sum(best_temp), 5)}% match")
+        # cv2.imshow('win', np.hstack([best_res, best_temp, np.abs(best_diff- best_temp)]))
+        return best_pose, np.round(np.sum(best_diff) / np.sum(best_temp), 5)
+
+    #  Helpers
+
+    def translate(self, coord: np.ndarray, to_index: bool = True) -> np.ndarray:
+        """
+        Translates a coordinate to a grid index.
+
+        Params:
+            coord (float): The coordinate value to be translated.
+
+        Returns:
+            int: The grid index corresponding to the translated coordinate.
+        """
+        # [0][0] -> (-shape[0]*res, -shape[1]*res)
+        half_width = np.roll(self.map.shape, 1) / 2
+        if to_index:
+            return np.array(np.round(((coord - self.offset) / self.resolution) + half_width)).astype(int)
+        else:
+            return (coord - half_width) * self.resolution + self.offset
+
+    def change_res(self, new_res: float) -> "OccupancyMap":
+        """
+        Changes the resolution of the occupancy map.
+
+        Params:
+            res (float): The new resolution of the occupancy map.
+
+        Returns:
+            OccupancyMap: The occupancy map with the new resolution.
+        """
+        old_res = self.resolution
+        self.resolution = new_res
+
+        new_shape = np.array(self.map.shape) * (old_res / new_res)
+        if new_shape[0] % 2 != 0:
+            new_shape[0] += 1
+        if new_shape[1] % 2 != 0:
+            new_shape[1] += 1
+        self.map = cv2.resize(
+            self.map, (int(new_shape[1]), int(new_shape[0])), cv2.INTER_NEAREST)
 
         return self
 
-    def merge(self, others: "OccupancyMap") -> "OccupancyMap":
-        """
-        Merges the current OccupancyMap with another OccupancyMap.
-
-        Params:
-            other (OccupancyMap): The OccupancyMap to merge with.
-
-        Returns:
-            OccupancyMap: The merged OccupancyMap.
-        """
-        if isinstance(others, OccupancyMap):
-            others = [others]
-
-        for other in others:
-            newPointcloud = self.pointclouds
-
-            # Normalise the other pointclouds
-            for cloud in other.pointclouds:
-                cloud.transform(cloud.origin - self.offset)
-                # TODO: find efficient method of removing duplicates
-                # cloud.removeDuplicates(newPointcloud)
-
-                if cloud.isEmpty():
-                    continue
-                newPointcloud.append(cloud)
-
-        # rerolls the offset so it doesn't get rolled twice
-        self.__init__(self.offset, newPointcloud)
-        return self
-
-    def sampleCoord(self,
-                    coord: np.ndarray,
-                    yx=False,
-                    mean=False,
-                    n=3) -> np.ndarray:
+    def sample_coord(self,
+                     coord: np.ndarray,
+                     mean=False,
+                     n=3) -> np.ndarray:
         """
         Sample the occupancy map at a given coordinate.
 
         Params:
             coord (np.ndarray): The coordinate to sample.
-            yx (bool, optional): If True, the coordinate is treated as (y, x) instead of (x, y). Defaults to False.
+            mean (bool, optional): If True, return the mean value of the surrounding area instead of the sampled value. Defaults to False.
+            n (int, optional): The size of the surrounding area to consider when calculating the mean value. Defaults to 3.
 
         Returns:
             np.ndarray: The sampled value, nan if the coordinate is out of bounds.
@@ -206,35 +288,46 @@ class OccupancyMap:
         try:
             coord = self.translate(coord)
             if not mean:
-                return self.map[coord[0], coord[1]]
+                return self.map[coord[1], coord[0]]
             else:
-                return (1 if 1 in self.map[coord[0] - n:coord[0] + n,
-                                           coord[1] - n:coord[1] + n] else
-                        np.mean(self.map[coord[0] - n:coord[0] + n,
-                                         coord[1] - n:coord[1] + n]))
+                subsample = self.map[coord[1] - n:coord[1] + n,
+                                     coord[0] - n:coord[0] + n]
+                return (1 if 1 in (subsample > 0.75) else
+                        np.mean(subsample))
         except IndexError:
             return 1
 
-    def translate(self, coord: np.ndarray) -> np.ndarray:
+    # Saving
+
+    def save(self, name: str = None) -> None:
         """
-        Translates a coordinate to a grid index.
+        Save the occupancy map to a file.
 
         Params:
-            coord (float): The coordinate value to be translated.
-            
-        Returns:
-            int: The grid index corresponding to the translated coordinate.
+            path (str): The path to save the occupancy map to.
         """
-        return np.round(((coord - self.offset) - self.min) /
-                            self.resolution).astype(int)
+        if name is None:
+            name = "occupancy_map_" + hash(self)
+        np.savez(f'data/maps/{name}.npz', offset=self.offset,
+                 resolution=self.resolution, map=self.map)
 
-    def normalise(self) -> None:
+    @staticmethod
+    def load(path: str):
         """
-        Normalizes the pointclouds by applying the offset.
+        Save the occupancy map to a file.
+
+        Params:
+            path (str): The path to save the occupancy map to.
         """
-        for c in self.pointclouds:
-            c.transform(self.offset)
-        self.offset = np.array([0, 0])
+        occ = OccupancyMap(np.array([0, 0]), [])
+        data = np.load('data/maps/'+path)
+        occ.offset = data['offset']
+        occ.resolution = data['resolution']
+        occ.map = data['map']
+
+        return occ
+
+    # ROS Support
 
     def to_msg(self) -> "Map":
         """
@@ -247,7 +340,7 @@ class OccupancyMap:
         msg.offset.x = self.offset[0]
         msg.offset.y = self.offset[1]
         msg.resolution = self.resolution
-        msg.clouds = [c.toMsg() for c in self.pointclouds]
+        msg.map = self.map
         return msg
 
     @staticmethod
@@ -262,57 +355,8 @@ class OccupancyMap:
             OccupancyMap: The OccupancyMap representing the ROS message.
         """
         pos = np.array([msg.offset.x, msg.offset.y])
-        rot = msg.offset.rot
-        clouds = [PointCloud.fromMsg(c) for c in msg.clouds]
+        map = np.array(msg.map)
         res = msg.resolution
-        return OccupancyMap(pos, clouds, res)
-    
-    
-    def show(
-        self,
-        raycast: bool = False,
-        region: np.ndarray = None,
-        save: bool = False,
-        path: str = "",
-    ) -> None:
-        """
-        Display the occupancy map using matplotlib.
-
-        Params:
-            raycast (bool, optional): If True, displays the occupancy map with raycast visualization. Defaults to False.
-            region (np.ndarray, optional): The region to be plotted in the raycast visualization. Defaults to None.
-        """
-        plt.figure(1, figsize=(4, 4))
-        if not raycast:
-            plt.imshow(self.map, cmap="PiYG_r")
-            plt.clim(0, 1)
-            plt.gca().set_xticks(np.arange(-0.5, self.shape[1], 1), minor=True)
-            plt.gca().set_yticks(np.arange(-0.5, self.shape[0], 1), minor=True)
-            plt.grid(True, which="minor", color="w", linewidth=0.6, alpha=0.5)
-            plt.colorbar()
-        else:
-            if not region is None:
-                plt.plot(region[:, 0], region[:, 1], "bo-")
-
-            for cloud in self.pointclouds:
-                if len(cloud.objectCloud) == 0:
-                    continue
-
-                c = cloud.objectCloud + self.offset
-                plt.plot(
-                    [c[:, 0], self.offset[0] + np.zeros(np.size(c[:, 0]))],
-                    [c[:, 1], self.offset[1] + np.zeros(np.size(c[:, 1]))],
-                    "ro-",
-                )
-            plt.axis("equal")
-            plt.plot(self.offset[1], self.offset[0], "ob")
-            plt.gca().set_aspect("equal", "box")
-            bottom, top = plt.ylim()  # return the current y-lim
-            # rescale y axis, to match the grid orientation
-            plt.ylim((top, bottom))
-            plt.grid(True)
-        if save:
-            plt.savefig(path)
-            plt.close()
-        else:
-            plt.show()
+        occ = OccupancyMap(pos, [], res)
+        occ.map = map
+        return occ

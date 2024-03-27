@@ -1,8 +1,7 @@
 matplotlib
 natsort
 numpy
-opencv_python
-opencv_python_headless
+opencv-python
 Pillow
 pytest
 PyYAML
@@ -10,7 +9,6 @@ roboflow
 roslibpy
 setuptools
 ultralytics
-torch
-RPi.GPIO
-transformers
-cv_bridge
+timm==0.6.12
+torch==2.0.1
+torchvision==0.15.2

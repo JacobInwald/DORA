@@ -1,3 +1,3 @@
-float64 x
-float64 y
-float64 rot
+float64 x  # metres
+float64 y  # metres
+float64 rot  # radians

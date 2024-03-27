@@ -7,3 +7,4 @@ class DoraJob(Enum):
     RETRIEVE = 2
     NAV_STORAGE = 3
     UNLOAD = 4
+    DEMO = 5

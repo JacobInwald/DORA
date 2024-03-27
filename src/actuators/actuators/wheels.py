@@ -2,7 +2,9 @@ from enum import Enum
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import WheelsCmd
-from .stepper import Stepper
+import serial
+import numpy as np
+from time import sleep
 
 
 class WheelsMove(Enum):
@@ -10,21 +12,8 @@ class WheelsMove(Enum):
     TURN = 1
 
 
-MOTOR_PINS = {
-    "left": {
-        "step": 15,
-        "dir": 14,
-        "enable": 18
-    },
-    "right": {
-        "step": 2,
-        "dir": 3,
-        "enable": 4
-    }
-}
-STEPS_TO_DISTANCE = 1000
-STEPS_PER_DEGREE = 100
-SPEED = 1
+ARDUINO_PORT = '/dev/ttyACM0'
+ARDUINO_BAUDRATE = 9600
 
 
 class Wheels(Node):
@@ -37,31 +26,67 @@ class Wheels(Node):
 
     def __init__(self):
         super().__init__('wheels')
-        self.service_ = self.create_service(WheelsCmd, 'wheels', self.callback)
+        self.service_ = self.create_service(
+            WheelsCmd, '/wheels', self.callback)
+        try:
+            self.arduino = serial.Serial(ARDUINO_PORT, ARDUINO_BAUDRATE)
+        except serial.SerialException:
+            raise Exception("Arduino not found")
 
-        # initialize the stepper motors
-        self.left_motor = Stepper(MOTOR_PINS["left"].values())
-        self.right_motor = Stepper(MOTOR_PINS["right"].values())
+    def callback(self, msg, resp):
+        type_ = msg.type
+        magnitude = msg.magnitude
+        self.get_logger().info(
+            f'Received cmd of type {type_} with magnitude {magnitude}')
 
-    def callback(self, msg: WheelsCmd):
-        if msg.type == WheelsMove.FORWARD:
-            return self.forward(msg.magnitude)
-        elif msg.type == WheelsMove.TURN:
-            return self.turn(msg.magnitude)
-        return False
+        if type_ == 0:
+            self.forward(magnitude)
+        elif type_ == 1:
+            self.turn(magnitude)
+        self.get_logger().info('End move')
+        resp.status = True
+        return resp
 
     def forward(self, dist: float):
-        self.left_motor.step(dist * STEPS_TO_DISTANCE, "right", SPEED)
-        self.right_motor.step(dist * STEPS_TO_DISTANCE, "left", SPEED)
+        forward = dist > 0
+        time = self.convert_dist_to_time(abs(dist))
+        self.get_logger().info(
+            f'Start turn, forward: {forward}, time: {time}, dist: {dist}')
+        self.arduino.write(
+            f"{'forward' if forward else 'backward'}.{time}-".encode())
+        sleep((time/1000) + 0.5)
 
     def turn(self, angle: float):
-        if angle < 0:
-            self.left_motor.step(abs(angle) * STEPS_PER_DEGREE, "left", SPEED)
-            self.right_motor.step(abs(angle) * STEPS_PER_DEGREE, "left", SPEED)
+        right = angle > 0
+        time = self.convert_angle_to_time(abs(angle))
+        self.get_logger().info(
+            f'Start turn, right: {right}, time: {time}, angle: {angle}')
+        self.arduino.write(
+            f"{'right' if right else 'left'}.{time}-".encode())
+        sleep((time/1000) + 0.5)
+        # self.arduino.write(
+        #     f"right.{int(angle)}-".encode())
+        # sleep(angle/1000 + 0.5)
+
+    def convert_dist_to_time(self, dist: float) -> int:
+        """
+        Convert distance to time for the Arduino (in integer milliseconds).
+        1 meter = ~1000 milliseconds.
+        """
+        t = dist * 2100
+        return int(t)
+
+    def convert_angle_to_time(self, angle: float) -> int:
+        """
+        Convert angle to time for the Arduino (in integer milliseconds).
+        360 degrees = ~1300 milliseconds.
+        """
+        l = np.array([37.19598879, -158.43157906, 795.7760816, 42.09105822])
+        if angle < np.deg2rad(60):
+            t = np.polyval(l, angle)
         else:
-            self.left_motor.step(angle * STEPS_PER_DEGREE, "right", SPEED)
-            self.right_motor.step(
-                angle * STEPS_PER_DEGREE, "right", SPEED)
+            t = (angle / (2*np.pi)) * 2750
+        return int(t)
 
 
 def main():

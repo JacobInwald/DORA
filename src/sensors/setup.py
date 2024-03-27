@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             "camera_node = sensors.camera_node:main",
+            "stereo_node = sensors.stereo_node:main",
             "gps_node = sensors.gps_node:main",
             "lds_node = sensors.lds_node:main"
         ],

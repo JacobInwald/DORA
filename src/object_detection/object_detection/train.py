@@ -2,7 +2,9 @@ from ultralytics import YOLO
 from roboflow import Roboflow
 
 
-def load_dataset(api_key="exOzmfeaFpjkXbO6QvzA", workspace="toy-detection-ziaje", project_name="daycare-toys", version=1, format="yolov8"):
+def load_dataset(api_key='exOzmfeaFpjkXbO6QvzA',
+                 workspace='toy-detection-ziaje',
+                 project_name='c270-toys', version=1):
     """
     Load the dataset for toy recognition.
 
@@ -18,10 +20,10 @@ def load_dataset(api_key="exOzmfeaFpjkXbO6QvzA", workspace="toy-detection-ziaje"
     """
     rf = Roboflow(api_key=api_key)
     project = rf.workspace(workspace).project(project_name)
-    return project.version(version).download(format, f'datasets/{project_name}-{version}')
+    return project.version(version).download('yolov8', f'datasets/{project_name}-{version}')
 
 
-def train_model(data, model="yolov8n.yaml", epochs=100, batch_size=16, img_size=416):
+def train_model(data, model='yolov8n.yaml', epochs=100, batch_size=16, img_size=416):
     """
     Train the model for toy recognition.
 
@@ -45,6 +47,4 @@ if __name__ == '__main__':
     dataset_version = 1
     dataset = load_dataset(version=dataset_version)
     data = f'{dataset.location}/data.yaml'
-    # data = 'Daycare-Toys-1/data.yaml'
-    model = train_model(data, batch_size=32)
-    # model.save(f'weights/best_{dataset_version}.pt')
+    model = train_model(data, batch_size=32, img_size=384)
