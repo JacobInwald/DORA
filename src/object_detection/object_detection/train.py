@@ -3,8 +3,8 @@ from roboflow import Roboflow
 
 
 def load_dataset(api_key='exOzmfeaFpjkXbO6QvzA',
-                 workspace='toy-detection-ziaje',
-                 project_name='c270-toys', version=1):
+                 workspace='dora-yyage',
+                 project_name='c270', version=1):
     """
     Load the dataset for toy recognition.
 
