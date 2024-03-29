@@ -30,4 +30,4 @@ jobs:
       - name: Build DORA
         run: |
           source /opt/ros/humble/setup.bash
-          colcon build --symlink-install
+          colcon build --symlink-install --packages-skip turtlebot3_node
