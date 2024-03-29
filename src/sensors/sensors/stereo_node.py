@@ -63,7 +63,7 @@ class StereoNode(Node):
             camera_info = yaml.safe_load(file)
         self.b = camera_info['camera_width'] # baseline distance
         self.f = camera_info['focal_length'] # focal length
-        self.dy = camera_info['sensor_height'] / camera_info['image_height']  # physical size of a pixel in camera sensor
+        self.dx = camera_info['sensor_width'] / camera_info['image_width']  # physical size of a pixel in camera sensor
         self.fx, _, self.cx = camera_info['camera_matrix']['data'][:3]
 
         self.capL = VideoCapture('/dev/video0')
@@ -147,7 +147,7 @@ class StereoNode(Node):
 
         if len(disparities) > 0:
             disparity = mean(disparities)
-            py = (self.f * self.b) / (self.dy * disparity)
+            py = (self.f * self.b) / (self.dx * disparity)
             px = (bx - self.cx) / self.fx * py - (self.b / 2)
             return px, py
         return None

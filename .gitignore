@@ -16,8 +16,3 @@ data/labelbox/
 *.mp4
 *.avi
 *.ipynb
-
-src/demo_perception.py
-src/utils.py
-src/midas/
-sample.py
