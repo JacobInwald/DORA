@@ -31,13 +31,13 @@ class Sweeper(Node):
         type_ = msg.type
         self.get_logger().info(f'Received cmd {SweeperMove(type_).name}')
 
-        if type_ == SweeperMove.RETRIEVE:
+        if type_ == SweeperMove.RETRIEVE.value:
             self.get_logger().info('Rotate inwards')
             self.retrieve()
-        elif type_ == SweeperMove.UNLOAD:
+        elif type_ == SweeperMove.UNLOAD.value:
             self.get_logger().info('Rotate outwards')
             self.unload()
-        elif type_ == SweeperMove.STOP:
+        elif type_ == SweeperMove.STOP.value:
             self.get_logger().info('Stop rotating')
             self.stop()
         resp.status = True

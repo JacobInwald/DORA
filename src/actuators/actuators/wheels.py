@@ -39,9 +39,9 @@ class Wheels(Node):
         self.get_logger().info(
             f'Received cmd {WheelsMove(type_).name} with magnitude {magnitude}')
 
-        if type_ == WheelsMove.FORWARD:
+        if type_ == WheelsMove.FORWARD.value:
             self.forward(magnitude)
-        elif type_ == WheelsMove.TURN:
+        elif type_ == WheelsMove.TURN.value:
             self.turn(magnitude)
         self.get_logger().info('End move')
         resp.status = True

@@ -30,7 +30,7 @@ class Loop(Node):
         self.get_logger().info('Heard loop request, starting control loop ...')
         while self.job != DoraJob.SCAN:
             job_cmd = JobCmd.Request()
-            job_cmd.job = self.job
+            job_cmd.job = self.job.value
             self.get_logger().info(f'Sent job request: id = {self.job}')
             future = self.job_cli_.call_async(job_cmd)
             rclpy.spin_until_future_complete(self.cli_node_, future)
@@ -44,7 +44,7 @@ class Loop(Node):
         """
         Switch to the next job execute.
         """
-        self.job = (self.job + 1) % len(DoraJob)
+        self.job = DoraJob((self.job.value + 1) % len(DoraJob))
 
 
 def main():
