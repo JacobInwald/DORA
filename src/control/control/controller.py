@@ -61,17 +61,17 @@ class Controller(Node):
     def switch(self, msg, response):
         self.get_logger().info(f'Received job request: {msg.job}')
         response.status = False
-        if msg.job == 0:  # SCAN
+        if msg.job == DoraJob.SCAN:
             response.status = self.scan_request()
-        elif msg.job == 1:  # NAV_TOY
+        elif msg.job == DoraJob.NAV_TOY:
             response.status = self.navigate_to_toy()
-        elif msg.job == 2:  # RETRIEVE
+        elif msg.job == DoraJob.RETRIEVE:
             response.status = self.retrieve_request()
-        elif msg.job == 3:  # NAV_STORE
+        elif msg.job == DoraJob.NAV_STORE:
             response.status = self.navigate_to_storage()
-        elif msg.job == 4:  # UNLOAD
+        elif msg.job == DoraJob.UNLOAD:
             response.status = self.unload_request()
-        elif msg.job == 5:  # DEMO
+        elif msg.job == DoraJob.DEMO:
             response.status = self.demo()
         return response
 
