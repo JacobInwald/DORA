@@ -1,9 +1,9 @@
-from enum import Enum
+import serial
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import WheelsCmd
-import serial
-import numpy as np
+from enum import Enum
 from time import sleep
 
 

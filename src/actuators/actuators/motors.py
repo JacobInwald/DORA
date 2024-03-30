@@ -1,7 +1,8 @@
-from iotools import MotorControl
 import smbus
+import datetime
 from time import sleep
-from datetime import datetime
+from .iotools import MotorControl
+
 
 class Motors(object):
 	def __init__(self):
@@ -15,10 +16,10 @@ class Motors(object):
 		self.num_encoder_ports = 6
 		self.refresh_rate = 10 #refresh rate - reduces errors in i2c reading
 
-	def move_motor(self,id,speed):
+	def move_motor(self, id, speed):
 		self.mc.setMotor(id, speed)
 
-	def stop_motor(self,id):
+	def stop_motor(self, id):
 		self.mc.stopMotor(id)
 
 	def stop_motors(self):
@@ -28,12 +29,12 @@ class Motors(object):
 		self.encoder_data = self.bus.read_i2c_block_data(self.encoder_address, 	\
 							self.encoder_register, 	\
 							self.num_encoder_ports)
-	def read_encoder(self,id):
+	def read_encoder(self, id):
 		self.__i2c_read_encoder()
 		encoder_id_value =self.encoder_data[id]
 		return encoder_id_value
 
 	def print_encoder_data(self):
 		self.__i2c_read_encoder()
-		ts = str(datetime.now())
-		print self.encoder_data, ts.rjust(50,'.')
+		ts = str(datetime.datetime.now())
+		self.get_logger().info(self.encoder_data, ts.rjust(50,'.'))
