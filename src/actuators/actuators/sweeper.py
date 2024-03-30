@@ -29,15 +29,15 @@ class Sweeper(Node):
 
     def callback(self, msg, resp):
         type_ = msg.type
-        self.get_logger().info(f'Received cmd of type {type_}')
+        self.get_logger().info(f'Received cmd {SweeperMove(type_).name}')
 
-        if type_ == 1:
+        if type_ == SweeperMove.RETRIEVE:
             self.get_logger().info('Rotate inwards')
             self.retrieve()
-        elif type_ == 2:
+        elif type_ == SweeperMove.UNLOAD:
             self.get_logger().info('Rotate outwards')
             self.unload()
-        elif type_ == 0:
+        elif type_ == SweeperMove.STOP:
             self.get_logger().info('Stop rotating')
             self.stop()
         resp.status = True
