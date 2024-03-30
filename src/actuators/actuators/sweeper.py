@@ -1,8 +1,8 @@
-from enum import Enum
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import SweeperCmd
-from motors import Motors
+from enum import Enum
+from .motors import Motors
 
 
 class SweeperMove(Enum):
