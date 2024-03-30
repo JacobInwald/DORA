@@ -26,7 +26,7 @@ class Loop(Node):
         self.loop_cli = self.create_service(
             LoopCmd, '/loop', self.run)
 
-    def run(self, request, response):
+    def run(self, _, response):
         self.get_logger().info('Heard loop request, starting control loop ...')
         while self.job != DoraJob.SCAN:
             job_cmd = JobCmd.Request()
@@ -39,7 +39,6 @@ class Loop(Node):
             break
         response.status = True
         return response
-# Entry Point
 
 
 def main():
