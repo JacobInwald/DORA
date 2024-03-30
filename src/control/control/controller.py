@@ -67,7 +67,7 @@ class Controller(Node):
             response.status = self.navigate_to_toy()
         elif msg.job == DoraJob.RETRIEVE:
             response.status = self.retrieve_request()
-        elif msg.job == DoraJob.NAV_STORE:
+        elif msg.job == DoraJob.NAV_STORAGE:
             response.status = self.navigate_to_storage()
         elif msg.job == DoraJob.UNLOAD:
             response.status = self.unload_request()
