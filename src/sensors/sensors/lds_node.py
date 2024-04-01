@@ -67,8 +67,7 @@ class LdsNode(Node):
         if self.last_cloud is None:
             return False
 
-        self.get_logger().info(
-            f'Start localisation')
+        self.get_logger().info(f'Start localisation')
         # Localise Cloud and Publish Pose
         st = time()
         self.processing_pose = True
@@ -97,7 +96,7 @@ class LdsNode(Node):
             self.processing_pose = False
             return False
 
-    def lds_callback(self, msg: 'LaserScan'):
+    def lds_callback(self, msg: LaserScan):
         """
         Store last laser scan
 
@@ -117,11 +116,12 @@ class LdsNode(Node):
         # Create PointCloud
         self.last_scan = scan
         self.last_cloud = PointCloud(
-            scan, self.pose[0:2], self.max_range, rot=self.pose[2])
+            scan, self.pose[:2], self.max_range, rot=self.pose[2])
         self.get_logger().info(f'Heard scan')
         return True
 
-    def lds_service(self, request: 'LdsCmd.Request', response: 'LdsCmd.Response'):
+    def lds_service(self, request: LdsCmd.Request, response: LdsCmd.Response) \
+            -> LdsCmd.Response:
         """
         This method handles the LDS service request.
 
@@ -154,8 +154,6 @@ class LdsNode(Node):
         return response
 
 # Entry Point
-
-
 def main():
     rclpy.init()
     lds_node = LdsNode()

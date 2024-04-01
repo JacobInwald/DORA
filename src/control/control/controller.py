@@ -1,4 +1,3 @@
-import math
 import numpy as np
 from time import sleep
 import rclpy
@@ -6,10 +5,11 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy
 from dora_msgs.msg import Toy, Pose, Toys, Map
 from dora_srvs.srv import JobCmd, LdsCmd, SweeperCmd, WheelsCmd
+from actuators.wheels import WheelsMove
+from actuators.sweeper import SweeperMove
 from .router import Router
 from .occupancy_map import OccupancyMap
 from .job import DoraJob
-from actuators.wheels import WheelsMove
 
 
 class Controller(Node):
@@ -61,17 +61,17 @@ class Controller(Node):
     def switch(self, msg, response):
         self.get_logger().info(f'Received job request: {msg.job}')
         response.status = False
-        if msg.job == 0:  # SCAN
+        if msg.job == DoraJob.SCAN.value:
             response.status = self.scan_request()
-        elif msg.job == 1:  # NAV_TOY
+        elif msg.job == DoraJob.NAV_TOY.value:
             response.status = self.navigate_to_toy()
-        elif msg.job == 2:  # RETRIEVE
+        elif msg.job == DoraJob.RETRIEVE.value:
             response.status = self.retrieve_request()
-        elif msg.job == 3:  # NAV_STORE
+        elif msg.job == DoraJob.NAV_STORAGE.value:
             response.status = self.navigate_to_storage()
-        elif msg.job == 4:  # UNLOAD
+        elif msg.job == DoraJob.UNLOAD.value:
             response.status = self.unload_request()
-        elif msg.job == 5:  # DEMO
+        elif msg.job == DoraJob.DEMO.value:
             response.status = self.demo()
         return response
 
@@ -117,7 +117,7 @@ class Controller(Node):
             job status
         """
         wheels_rot_cmd = WheelsCmd.Request()
-        wheels_rot_cmd.type = 1  # TURN
+        wheels_rot_cmd.type = WheelsMove.TURN.value
         wheels_rot_cmd.magnitude = angle
         future = self.wheels_cli_.call_async(wheels_rot_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
@@ -135,7 +135,7 @@ class Controller(Node):
             job status
         """
         wheels_dist_cmd = WheelsCmd.Request()
-        wheels_dist_cmd.type = 0  # FORWARD
+        wheels_dist_cmd.type = WheelsMove.FORWARD.value
         wheels_dist_cmd.magnitude = distance
         future = self.wheels_cli_.call_async(wheels_dist_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
@@ -149,10 +149,9 @@ class Controller(Node):
             job status
         """
         sweeper_cmd = SweeperCmd.Request()
-        sweeper_cmd.type = 1  # Retrieve
+        sweeper_cmd.type = SweeperMove.RETRIEVE.value
         future = self.sweeper_cli_.call_async(sweeper_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
-
         return future.result().status
 
     def unload_request(self) -> bool:
@@ -163,10 +162,9 @@ class Controller(Node):
             job status
         """
         sweeper_cmd = SweeperCmd.Request()
-        sweeper_cmd.type = 2  # Unload
+        sweeper_cmd.type = SweeperMove.UNLOAD.value
         future = self.sweeper_cli_.call_async(sweeper_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
-
         return future.result().status
 
     def stop_sweeper_request(self) -> bool:
@@ -177,10 +175,9 @@ class Controller(Node):
             job status
         """
         sweeper_cmd = SweeperCmd.Request()
-        sweeper_cmd.type = 0  # Retrieve
+        sweeper_cmd.type = SweeperMove.STOP.value
         future = self.sweeper_cli_.call_async(sweeper_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
-
         return future.result().status
 
     def close_to(self, src: np.ndarray, dst: np.ndarray):

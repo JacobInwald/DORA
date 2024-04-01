@@ -1,9 +1,8 @@
-from enum import Enum
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import SweeperCmd
-from motors import Motor
-from time import sleep
+from enum import Enum
+from .motors import Motors
 
 
 class SweeperMove(Enum):
@@ -30,15 +29,15 @@ class Sweeper(Node):
 
     def callback(self, msg, resp):
         type_ = msg.type
-        self.get_logger().info(f'Received cmd of type {type_}')
+        self.get_logger().info(f'Received cmd {SweeperMove(type_).name}')
 
-        if type_ == 1:
+        if type_ == SweeperMove.RETRIEVE.value:
             self.get_logger().info('Rotate inwards')
             self.retrieve()
-        elif type_ == 2:
+        elif type_ == SweeperMove.UNLOAD.value:
             self.get_logger().info('Rotate outwards')
             self.unload()
-        elif type_ == 0:
+        elif type_ == SweeperMove.STOP.value:
             self.get_logger().info('Stop rotating')
             self.stop()
         resp.status = True
