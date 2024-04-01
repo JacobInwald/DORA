@@ -61,17 +61,17 @@ class Controller(Node):
     def switch(self, msg, response):
         self.get_logger().info(f'Received job request: {msg.job}')
         response.status = False
-        if msg.job == DoraJob.SCAN:
+        if msg.job == DoraJob.SCAN.value:
             response.status = self.scan_request()
-        elif msg.job == DoraJob.NAV_TOY:
+        elif msg.job == DoraJob.NAV_TOY.value:
             response.status = self.navigate_to_toy()
-        elif msg.job == DoraJob.RETRIEVE:
+        elif msg.job == DoraJob.RETRIEVE.value:
             response.status = self.retrieve_request()
-        elif msg.job == DoraJob.NAV_STORAGE:
+        elif msg.job == DoraJob.NAV_STORAGE.value:
             response.status = self.navigate_to_storage()
-        elif msg.job == DoraJob.UNLOAD:
+        elif msg.job == DoraJob.UNLOAD.value:
             response.status = self.unload_request()
-        elif msg.job == DoraJob.DEMO:
+        elif msg.job == DoraJob.DEMO.value:
             response.status = self.demo()
         return response
 
@@ -117,7 +117,7 @@ class Controller(Node):
             job status
         """
         wheels_rot_cmd = WheelsCmd.Request()
-        wheels_rot_cmd.type = WheelsMove.TURN
+        wheels_rot_cmd.type = WheelsMove.TURN.value
         wheels_rot_cmd.magnitude = angle
         future = self.wheels_cli_.call_async(wheels_rot_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
@@ -135,7 +135,7 @@ class Controller(Node):
             job status
         """
         wheels_dist_cmd = WheelsCmd.Request()
-        wheels_dist_cmd.type = WheelsMove.FORWARD
+        wheels_dist_cmd.type = WheelsMove.FORWARD.value
         wheels_dist_cmd.magnitude = distance
         future = self.wheels_cli_.call_async(wheels_dist_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
@@ -149,7 +149,7 @@ class Controller(Node):
             job status
         """
         sweeper_cmd = SweeperCmd.Request()
-        sweeper_cmd.type = SweeperMove.RETRIEVE
+        sweeper_cmd.type = SweeperMove.RETRIEVE.value
         future = self.sweeper_cli_.call_async(sweeper_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         return future.result().status
@@ -162,7 +162,7 @@ class Controller(Node):
             job status
         """
         sweeper_cmd = SweeperCmd.Request()
-        sweeper_cmd.type = SweeperMove.UNLOAD
+        sweeper_cmd.type = SweeperMove.UNLOAD.value
         future = self.sweeper_cli_.call_async(sweeper_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         return future.result().status
@@ -175,7 +175,7 @@ class Controller(Node):
             job status
         """
         sweeper_cmd = SweeperCmd.Request()
-        sweeper_cmd.type = SweeperMove.STOP
+        sweeper_cmd.type = SweeperMove.STOP.value
         future = self.sweeper_cli_.call_async(sweeper_cmd)
         rclpy.spin_until_future_complete(self.cli_node_, future)
         return future.result().status
