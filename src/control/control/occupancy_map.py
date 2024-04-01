@@ -70,7 +70,8 @@ class OccupancyMap:
 
         return self.map
 
-    def merge_cloud_into_map(self, cloud: PointCloud, overwrite: bool = False, set_map: bool = True) -> np.ndarray:
+    def merge_cloud_into_map(self, cloud: PointCloud, overwrite: bool = False, set_map: bool = True) \
+            -> np.ndarray:
         """
         Merges a point cloud into the occupancy map.
 
