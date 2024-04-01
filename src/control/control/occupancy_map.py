@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 from dora_msgs.msg import Map
 from .point_cloud import PointCloud
 from .utils import *
@@ -29,7 +28,7 @@ class OccupancyMap:
     def __init__(
         self,
         offset: np.ndarray,
-        pointclouds: list["PointCloud"],
+        pointclouds: list[PointCloud],
         resolution: float = 0.05,
     ):
         """
@@ -53,7 +52,7 @@ class OccupancyMap:
 
     # Generation
 
-    def generate(self) -> "OccupancyMap":
+    def generate(self) -> np.ndarray:
         """
         Generates an occupancy map based on the point clouds.
 
@@ -71,7 +70,7 @@ class OccupancyMap:
 
         return self.map
 
-    def merge_cloud_into_map(self, cloud: "PointCloud", overwrite: bool = False, set_map: bool = True) -> "OccupancyMap":
+    def merge_cloud_into_map(self, cloud: PointCloud, overwrite: bool = False, set_map: bool = True) -> np.ndarray:
         """
         Merges a point cloud into the occupancy map.
 
@@ -136,10 +135,10 @@ class OccupancyMap:
 
         return img
 
-    def fuzz_map(self, n: int = 3) -> np.ndarray:
+    def fuzz_map(self, n: int = 3) -> None:
         self.map = cv2.blur(self.map, (n, n))
 
-    def localise_cloud(self, cloud: "PointCloud") -> "PointCloud":
+    def localise_cloud(self, cloud: PointCloud) -> (np.ndarray, np.ndarray):
         """
         Localizes the given point cloud within the occupancy map.
 
@@ -329,7 +328,7 @@ class OccupancyMap:
 
     # ROS Support
 
-    def to_msg(self) -> "Map":
+    def to_msg(self) -> Map:
         """
         Converts the OccupancyMap to a ROS message.
 
@@ -344,7 +343,7 @@ class OccupancyMap:
         return msg
 
     @staticmethod
-    def from_msg(msg: "Map") -> "OccupancyMap":
+    def from_msg(msg: Map) -> "OccupancyMap":
         """
         Converts a ROS message to an OccupancyMap.
 
