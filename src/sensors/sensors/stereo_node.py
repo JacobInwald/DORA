@@ -63,7 +63,7 @@ class StereoNode(Node):
             camera_info = yaml.safe_load(file)
         self.b = camera_info['camera_width'] # baseline distance
         self.f = camera_info['focal_length'] # focal length
-        self.dx = camera_info['sensor_width'] / camera_info['image_width']  # physical size of a pixel in camera sensor
+        self.sx = camera_info['sensor_width'] / camera_info['image_width']  # physical size of a pixel in camera sensor
         self.fx, _, self.cx = camera_info['camera_matrix']['data'][:3]
 
         self.capL = VideoCapture('/dev/video0')
@@ -134,7 +134,7 @@ class StereoNode(Node):
         Returns:
             x, y: position of the toy in mm
         """
-        bx, by = xywh.cpu().numpy()[:2]  # center of bbox
+        bx = xywh.cpu().numpy()[0]  # center of bbox
         x1, y1, x2, y2 = list(map(round, xyxy.cpu().numpy()))
         maskL = np.zeros(frameL.shape[:2], dtype=np.uint8)
         maskL[y1:y2, x1:x2] = 1
@@ -147,7 +147,7 @@ class StereoNode(Node):
 
         if len(disparities) > 0:
             disparity = mean(disparities)
-            py = (self.f * self.b) / (self.dx * disparity)
+            py = (self.f * self.b) / (self.sx * disparity)
             px = (bx - self.cx) / self.fx * py - (self.b / 2)
             return px, py
         return None
