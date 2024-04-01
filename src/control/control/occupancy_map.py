@@ -14,10 +14,10 @@ class OccupancyMap:
         resolution (float): The resolution of the occupancy map.
 
     Methods:
-        __init__: Initialize the OccupancyMap object.
+        __init__: Initialise the OccupancyMap object.
         generate: Generates an occupancy map based on the point clouds.
         merge_cloud_into_map: Merges a point cloud into the occupancy map.
-        localise_cloud: Localizes a point cloud within the occupancy map.
+        localise_cloud: Localises a point cloud within the occupancy map.
         sample_coord: Samples the occupancy map at a given coordinate.
         translate: Translates a coordinate to a grid index.
         change_res: Changes the resolution of the occupancy map.
@@ -57,7 +57,7 @@ class OccupancyMap:
         Generates an occupancy map based on the point clouds.
 
         Returns:
-            OccupancyMap: The generated occupancy map.
+            numpy.ndarray: The generated occupancy map.
         """
         pad_size = int(self.pointclouds[0].maxScanDist / self.resolution) * 2
         self.map = np.ones((int(pad_size), int(pad_size))) * 0.5
@@ -81,7 +81,7 @@ class OccupancyMap:
             set_map (bool, optional): Whether to update the map with the merged result. Defaults to True.
 
         Returns:
-            OccupancyMap: The merged occupancy map.
+            numpy.ndarray: The merged occupancy map.
         """
 
         # Init Vars
