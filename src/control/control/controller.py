@@ -244,17 +244,18 @@ class Controller(Node):
         self.get_logger().info('Running calibration ...')
         pose_ = None
         while pose_ is None:
-            pose_ = self.localise_request()
+            self.localise_request()
+            pose_ = np.copy(self.pose)
         results = {}
         for i in range(30):
             t = (i+51)*10
             self.turn_request(float(t))
 
-            pose = None
-            while pose is None:
-                pose = self.localise_request()
-            results[t] = (pose[2] - pose_[2]) % (2 * np.pi)
-            pose_ = pose
+            self.pose = None
+            while self.pose is None:
+                self.localise_request()
+            results[t] = (self.pose[2] - pose_[2]) % (2 * np.pi)
+            pose_ = np.copy(self.pose)
 
         self.get_logger().info(f'Calibration results: {results}')
         from matplotlib import pyplot as plt
