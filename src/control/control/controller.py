@@ -215,6 +215,7 @@ class Controller(Node):
         """
         tries = 5
         for i in range(tries):
+            self.pose = None
             while self.pose is None:
                 self.localise_request()
 
