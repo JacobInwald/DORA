@@ -102,9 +102,9 @@ class Controller(Node):
         self.get_logger().info(
             f'Heard Pose: {(future.result().x, future.result().y, future.result().rot)}')
         if future.result().status:
-            return np.array([future.result().x, future.result().y, future.result().rot])
+            self.pose = np.array([future.result().x, future.result().y, future.result().rot])
         else:
-            return None
+            self.pose = None
           
     def turn_request(self, angle: float) -> bool:
         """
@@ -215,38 +215,24 @@ class Controller(Node):
         """
         tries = 5
         for i in range(tries):
-            cur_pose = None
-            while cur_pose is None:
-                cur_pose = self.localise_request()
+            while self.pose is None:
+                self.localise_request()
 
-            if self.close_to(pt, cur_pose):
+            if self.close_to(pt, self.pose):
                 return True
 
-            self.get_logger().info(f'Navigate: {cur_pose} -> {pt}')
+            self.get_logger().info(f'Navigate: {self.pose} -> {pt}')
+            
+            angle = self.calculate_angle(pt)
+                    
             # Attempt turn
-            for i in range(6):
-                dir = pt - cur_pose[0:2]
-                dst = np.linalg.norm(dir)
-                angle = np.arccos(np.dot(dir / dst, np.array([0.0, -1.0])))
-                if dir[0] < 0:
-                    angle *= -1
+            self.rotate(angle)
 
-                rotation = angle - cur_pose[2]
-                self.turn_request(rotation)
-                # Update pose
-                cur_pose = None
-                while cur_pose is None:
-                    cur_pose = self.localise_request()
-                if abs(cur_pose[2] - angle) < 0.05:
-                    break
-            if abs(cur_pose[2] - angle) > 0.05:
-                return False
-
-            dir = pt - cur_pose[0:2]
+            dir = pt - self.pose[0:2]
             dst = np.linalg.norm(dir)
             self.move_request(dst)
 
-        return self.close_to(pt, cur_pose)
+        return self.close_to(pt, self.pose)
 
     # JOBS
     def calibrate_wheels(self):
@@ -281,14 +267,17 @@ class Controller(Node):
         Run demo job
         """
         self.get_logger().info('Running demo task ...')
-        pose = None
-        while pose is None:
-            pose = self.localise_request()
-        cur_pos = np.array(pose[0:2])
-        next_retrieve_pt = cur_pos + np.array([0, -1])
-        route = self.router.route(cur_pos, next_retrieve_pt, self.map)
+        self.pose = None
+        while self.pose is None:
+            self.localise_request()
+        next_retrieve_pt = np.array(self.pose[:2]) + np.array([0, -1])
+        route = self.router.route(self.pose[:2], next_retrieve_pt, self.map)
         self.get_logger().info(f'Following path: {route}')
-        return self.navigate(route)
+        if self.navigate(route):
+            toy_position = np.array(self.pose[:2]) + np.array([-0.3, -0.3])
+            angle = self.calculate_angle(toy_position)
+            return self.rotate(angle)
+        return False
 
     def navigate_to_toy(self) -> bool:
         """
@@ -298,7 +287,7 @@ class Controller(Node):
         Returns:
             job status
         """
-        cur_pos = np.array([self.pose.x, self.pose.y])
+        cur_pos = np.array([self.pose[:2]])
         next_retrieve_pt, self.toy = self.router.next_retrieve_pt(
             self.map, self.toy_sub_, cur_pos)
         route = self.router.route(cur_pos, next_retrieve_pt, self.map)
@@ -306,13 +295,36 @@ class Controller(Node):
         return status
 
     def navigate_to_storage(self) -> bool:
-        cur_pos = np.array([self.pose.x, self.pose.y])
+        cur_pos = np.array([self.pose[:2]])
         next_unload_pt = self.router.next_unload_pt(
-            self.map, self.toy, cur_pos)
+            self.map, self.toy)
         route = self.router.route(cur_pos, next_unload_pt, self.map)
         status = self.navigate(route)
         return status
-
+    
+    def rotate(self, angle: float, n=6) -> bool:
+        self.pose = None
+        while self.pose is None:
+            self.localise_request()
+    
+        for i in range(n):
+            rotation = angle - self.pose[2]
+            self.turn_request(rotation)
+            # Update pose
+            self.pose = None
+            while self.pose is None:
+                self.localise_request()
+            if abs(self.pose[2] - angle) < 0.05:
+                return True
+        return False
+    
+    def calculate_angle(self, target_pos) -> float:
+        dir = target_pos - self.pose[:2]
+        dst = np.linalg.norm(dir)
+        angle = np.arccos(np.dot(dir / dst, np.array([0.0, -1.0])))
+        if dir[0] < 0:
+            angle *= -1
+        return angle
 
 
 # Entry Point
