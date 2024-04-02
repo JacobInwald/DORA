@@ -276,9 +276,10 @@ class Controller(Node):
         route = self.router.route(self.pose[:2], next_retrieve_pt, self.map)
         self.get_logger().info(f'Following path: {route}')
         if self.navigate(route):
-            toy_position = np.array(self.pose[:2]) + np.array([0.3, -0.3])
+            toy_position = np.array(self.pose[:2]) + np.array([1, -1])
             angle = self.calculate_angle(toy_position)
             if self.rotate(angle):
+                self.get_logger().info(f'Following path: {route}Retreiving toy')
                 return self.retrieve_request()
         return False
 
