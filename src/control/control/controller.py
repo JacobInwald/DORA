@@ -228,7 +228,7 @@ class Controller(Node):
             # Attempt turn
             self.rotate(angle)
 
-            dir = pt - self.pose[0:2]
+            dir = pt - self.pose[:2]
             dst = np.linalg.norm(dir)
             self.move_request(dst)
 
@@ -303,7 +303,6 @@ class Controller(Node):
         return status
     
     def rotate(self, angle: float, n=6) -> bool:
-        self.pose = None
         while self.pose is None:
             self.localise_request()
     
