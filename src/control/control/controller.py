@@ -308,6 +308,7 @@ class Controller(Node):
         for i in range(n):
             angle = self.calculate_angle(target)
             rotation = angle - self.pose[2]
+            self.get_logger().info(f'Rotate: {rotation}rad to {angle}')
             self.turn_request(rotation)
             # Update pose
             self.pose = None
