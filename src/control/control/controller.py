@@ -274,6 +274,7 @@ class Controller(Node):
         while self.pose is None:
             self.localise_request()
         next_retrieve_pt = np.array(self.pose[:2]) + np.array([0, -1])
+        next_retrieve_pt = np.array([1.65, -1.375])
         route = self.router.route(self.pose[:2], next_retrieve_pt, self.map)
         self.get_logger().info(f'Following path: {route}')
         if self.navigate(route):
