@@ -230,7 +230,9 @@ class Controller(Node):
             dir = pt - self.pose[:2]
             dst = np.linalg.norm(dir)
             self.move_request(dst)
-
+        
+        while self.pose is None:
+                self.localise_request()
         return self.close_to(pt, self.pose)
 
     # JOBS
@@ -302,9 +304,6 @@ class Controller(Node):
         return status
     
     def rotate(self, target, n=6) -> bool:
-        while self.pose is None:
-            self.localise_request()
-    
         for i in range(n):
             angle = self.calculate_angle(target)
             rotation = angle - self.pose[2]
