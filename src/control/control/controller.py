@@ -278,6 +278,7 @@ class Controller(Node):
         if self.navigate(route):
             toy_position = np.array(self.pose[:2]) + np.array([1, -1])
             angle = self.calculate_angle(toy_position)
+            self.get_logger().info(f'Rotate: {self.pose[2]} to {angle}')
             if self.rotate(angle):
                 self.get_logger().info(f'Following path: {route}Retreiving toy')
                 return self.retrieve_request()
@@ -310,7 +311,6 @@ class Controller(Node):
         for i in range(n):
             angle = self.calculate_angle(target)
             rotation = angle - self.pose[2]
-            self.get_logger().info(f'Rotate: {rotation}rad to {angle}')
             self.turn_request(rotation)
             # Update pose
             self.pose = None
