@@ -315,7 +315,7 @@ class Controller(Node):
             while self.pose is None:
                 self.localise_request()
             if abs(self.pose[2] - angle) < 0.05:
-                return Truetarget
+                return True
         return False
     
     def calculate_angle(self, target) -> float:
