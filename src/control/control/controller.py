@@ -213,7 +213,7 @@ class Controller(Node):
         Returns:
             job status
         """
-        tries = 5
+        tries = 8
         for i in range(tries):
             self.pose = None
             while self.pose is None:
@@ -305,7 +305,7 @@ class Controller(Node):
         status = self.navigate(route)
         return status
     
-    def rotate(self, target, n=6) -> bool:
+    def rotate(self, target, n=10) -> bool:
         for i in range(n):
             angle = self.calculate_angle(target)
             rotation = angle - self.pose[2]
