@@ -222,11 +222,10 @@ class Controller(Node):
                 return True
 
             self.get_logger().info(f'Navigate: {self.pose} -> {pt}')
-            
-            angle = self.calculate_angle(pt)
-                    
+
             # Attempt turn
-            self.rotate(angle)
+            if not self.rotate(pt):
+                break
 
             dir = pt - self.pose[:2]
             dst = np.linalg.norm(dir)
@@ -302,11 +301,12 @@ class Controller(Node):
         status = self.navigate(route)
         return status
     
-    def rotate(self, angle: float, n=6) -> bool:
+    def rotate(self, target, n=6) -> bool:
         while self.pose is None:
             self.localise_request()
     
         for i in range(n):
+            angle = self.calculate_angle(target)
             rotation = angle - self.pose[2]
             self.turn_request(rotation)
             # Update pose
@@ -317,8 +317,8 @@ class Controller(Node):
                 return True
         return False
     
-    def calculate_angle(self, target_pos) -> float:
-        dir = target_pos - self.pose[:2]
+    def calculate_angle(self, target) -> float:
+        dir = target - self.pose[:2]
         dst = np.linalg.norm(dir)
         angle = np.arccos(np.dot(dir / dst, np.array([0.0, -1.0])))
         if dir[0] < 0:
