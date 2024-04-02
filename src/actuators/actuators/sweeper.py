@@ -52,10 +52,12 @@ class Sweeper(Node):
         Returns:
             status: whether the move was executed
         """
-        speed_inwards = 50
-        self.mc.move_motor(self.motor_id_left, speed_inwards)
-        self.mc.move_motor(self.motor_id_right, speed_inwards)
+        speed_inwards_left = -35
+        speed_inwards_right = -50
+        self.mc.move_motor(self.motor_id_left, speed_inwards_left)
+        self.mc.move_motor(self.motor_id_right, speed_inwards_right)
         time.sleep(5)
+        return self.stop()
         return True
         # Encoder board can be fragile - always use a try/except loop
 
@@ -66,13 +68,12 @@ class Sweeper(Node):
         Returns:
             status: whether the move was executed
         """
-        speed_outwards_left = -35
-        speed_outwards_right = -50
+        speed_outwards = 50
         # Speed for left and right motors need to be different for rotating outwards to avoid blocking each other
-        self.mc.move_motor(self.motor_id_left, speed_outwards_left)
-        self.mc.move_motor(self.motor_id_right, speed_outwards_right)
+        self.mc.move_motor(self.motor_id_left, speed_outwards)
+        self.mc.move_motor(self.motor_id_right, speed_outwards)
         time.sleep(5)
-        return True
+        return self.stop()
 
     def stop(self):
         self.mc.stop_motors()

@@ -277,9 +277,7 @@ class Controller(Node):
         self.get_logger().info(f'Following path: {route}')
         if self.navigate(route):
             toy_position = np.array(self.pose[:2]) + np.array([1, -1])
-            angle = self.calculate_angle(toy_position)
-            self.get_logger().info(f'Rotate: {self.pose[2]} to {angle}')
-            if self.rotate(angle):
+            if self.rotate(toy_position):
                 self.get_logger().info(f'Following path: {route}Retreiving toy')
                 return self.retrieve_request()
         return False
@@ -317,7 +315,7 @@ class Controller(Node):
             while self.pose is None:
                 self.localise_request()
             if abs(self.pose[2] - angle) < 0.05:
-                return True
+                return Truetarget
         return False
     
     def calculate_angle(self, target) -> float:
