@@ -279,7 +279,7 @@ class Controller(Node):
         if self.navigate(route):
             toy_position = np.array(self.pose[:2]) + np.array([1, -1])
             if self.rotate(toy_position):
-                self.get_logger().info(f'Following path: {route}Retreiving toy')
+                self.get_logger().info(f'Retreiving toy')
                 return self.retrieve_request()
         return False
 
