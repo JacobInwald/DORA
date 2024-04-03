@@ -68,8 +68,8 @@ def crop_new(arr, threshold=0.5, deviation=0.05):
     mask1 = arr <= (threshold - deviation)
     mask2 = arr >= (threshold + deviation)
     mask = np.logical_or(mask1, mask2)
-    rows = np.flatnonzero(mask.sum(axis=1))
-    cols = np.flatnonzero(mask.sum(axis=0))
+    rows = np.flatnonzero((mask).sum(axis=1))
+    cols = np.flatnonzero((mask).sum(axis=0))
     return arr[rows.min():rows.max() + 1, cols.min():cols.max() + 1]
 
 
