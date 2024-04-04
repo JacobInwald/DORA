@@ -8,6 +8,7 @@ PyYAML
 roboflow
 roslibpy
 setuptools
+smbus
 ultralytics
 timm==0.6.12
 torch==2.0.1

@@ -1,5 +1,4 @@
 import numpy as np
-import cv2
 from dora_msgs.msg import Map
 from .point_cloud import PointCloud
 from .utils import *
@@ -15,10 +14,10 @@ class OccupancyMap:
         resolution (float): The resolution of the occupancy map.
 
     Methods:
-        __init__: Initialize the OccupancyMap object.
+        __init__: Initialise the OccupancyMap object.
         generate: Generates an occupancy map based on the point clouds.
         merge_cloud_into_map: Merges a point cloud into the occupancy map.
-        localise_cloud: Localizes a point cloud within the occupancy map.
+        localise_cloud: Localises a point cloud within the occupancy map.
         sample_coord: Samples the occupancy map at a given coordinate.
         translate: Translates a coordinate to a grid index.
         change_res: Changes the resolution of the occupancy map.
@@ -29,7 +28,7 @@ class OccupancyMap:
     def __init__(
         self,
         offset: np.ndarray,
-        pointclouds: list["PointCloud"],
+        pointclouds: list[PointCloud],
         resolution: float = 0.05,
     ):
         """
@@ -53,12 +52,12 @@ class OccupancyMap:
 
     # Generation
 
-    def generate(self) -> "OccupancyMap":
+    def generate(self) -> np.ndarray:
         """
         Generates an occupancy map based on the point clouds.
 
         Returns:
-            OccupancyMap: The generated occupancy map.
+            numpy.ndarray: The generated occupancy map.
         """
         pad_size = int(self.pointclouds[0].maxScanDist / self.resolution) * 2
         self.map = np.ones((int(pad_size), int(pad_size))) * 0.5
@@ -71,7 +70,8 @@ class OccupancyMap:
 
         return self.map
 
-    def merge_cloud_into_map(self, cloud: "PointCloud", overwrite: bool = False, set_map: bool = True) -> "OccupancyMap":
+    def merge_cloud_into_map(self, cloud: PointCloud, overwrite: bool = False, set_map: bool = True) \
+            -> np.ndarray:
         """
         Merges a point cloud into the occupancy map.
 
@@ -81,7 +81,7 @@ class OccupancyMap:
             set_map (bool, optional): Whether to update the map with the merged result. Defaults to True.
 
         Returns:
-            OccupancyMap: The merged occupancy map.
+            numpy.ndarray: The merged occupancy map.
         """
 
         # Init Vars
@@ -136,10 +136,10 @@ class OccupancyMap:
 
         return img
 
-    def fuzz_map(self, n: int = 3) -> np.ndarray:
+    def fuzz_map(self, n: int = 3) -> None:
         self.map = cv2.blur(self.map, (n, n))
 
-    def localise_cloud(self, cloud: "PointCloud") -> "PointCloud":
+    def localise_cloud(self, cloud: PointCloud) -> (np.ndarray, np.ndarray):
         """
         Localizes the given point cloud within the occupancy map.
 
@@ -329,7 +329,7 @@ class OccupancyMap:
 
     # ROS Support
 
-    def to_msg(self) -> "Map":
+    def to_msg(self) -> Map:
         """
         Converts the OccupancyMap to a ROS message.
 
@@ -344,7 +344,7 @@ class OccupancyMap:
         return msg
 
     @staticmethod
-    def from_msg(msg: "Map") -> "OccupancyMap":
+    def from_msg(msg: Map) -> "OccupancyMap":
         """
         Converts a ROS message to an OccupancyMap.
 

@@ -93,6 +93,7 @@ class Router:
 
         # Reduce points in path
         cur_ = path[0]
+        last = path[0]
         path_ = []
         for pt_ in path[1:]:
             mask = np.zeros(occ.map.shape)

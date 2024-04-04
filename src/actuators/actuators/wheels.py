@@ -1,9 +1,9 @@
-from enum import Enum
+import serial
+import numpy as np
 import rclpy
 from rclpy.node import Node
 from dora_srvs.srv import WheelsCmd
-import serial
-import numpy as np
+from enum import Enum
 from time import sleep
 
 
@@ -37,11 +37,11 @@ class Wheels(Node):
         type_ = msg.type
         magnitude = msg.magnitude
         self.get_logger().info(
-            f'Received cmd of type {type_} with magnitude {magnitude}')
+            f'Received cmd {WheelsMove(type_).name} with magnitude {magnitude}')
 
-        if type_ == 0:
+        if type_ == WheelsMove.FORWARD.value:
             self.forward(magnitude)
-        elif type_ == 1:
+        elif type_ == WheelsMove.TURN.value:
             self.turn(magnitude)
         self.get_logger().info('End move')
         resp.status = True
@@ -51,7 +51,7 @@ class Wheels(Node):
         forward = dist > 0
         time = self.convert_dist_to_time(abs(dist))
         self.get_logger().info(
-            f'Start turn, forward: {forward}, time: {time}, dist: {dist}')
+            f'Start move, forward: {forward}, time: {time}, dist: {dist}')
         self.arduino.write(
             f"{'forward' if forward else 'backward'}.{time}-".encode())
         sleep((time/1000) + 0.5)
@@ -60,7 +60,7 @@ class Wheels(Node):
         right = angle > 0
         time = self.convert_angle_to_time(abs(angle))
         self.get_logger().info(
-            f'Start turn, right: {right}, time: {time}, angle: {angle}')
+            f'Start move, right: {right}, time: {time}, angle: {angle}')
         self.arduino.write(
             f"{'right' if right else 'left'}.{time}-".encode())
         sleep((time/1000) + 0.5)

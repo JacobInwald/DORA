@@ -1,4 +1,3 @@
-import numpy as np
 from dora_msgs.msg import Cloud
 from .utils import *
 
@@ -45,16 +44,13 @@ class PointCloud:
         self.objectCloud = np.array([])
         self.initClouds()
 
-    def initClouds(self, lidar=None, pose=None) -> np.ndarray:
+    def initClouds(self, lidar=None, pose=None) -> None:
         """
-        Initializes the object cloud and empty cloud based on the lidar data.
+        Initialises the object cloud and empty cloud based on the lidar data.
 
         Args:
             lidar (np.ndarray, optional): Lidar data. Defaults to None.
             pose (list, optional): Pose information. Defaults to None.
-
-        Returns:
-            np.ndarray: The initialized object cloud.
 
         Raises:
             None
@@ -79,7 +75,7 @@ class PointCloud:
         except Exception:
             pass
 
-        # Initialize the empty cloud
+        # Initialise the empty cloud
         try:
             ex = (self.maxScanDist - 0.2) * np.cos((eScan[:, 0] + rot))
             ey = (self.maxScanDist - 0.2) * np.sin((eScan[:, 0] + rot))
@@ -87,7 +83,7 @@ class PointCloud:
         except Exception:
             pass
 
-    def generate(self, rot=None, res=None, fuzz=True) -> None:
+    def generate(self, rot=None, res=None, fuzz=True) -> np.ndarray:
         """
         Generate a point cloud image.
 
@@ -123,10 +119,10 @@ class PointCloud:
             p = ((p + (width / 2)) / res).astype(int)
             cv2.circle(img, (p[1], p[0]), wall_thickness//2, 1, -1)
 
-        if True:
+        # Apply Fuzzy Filter
+        if fuzz:
             img = cv2.blur(img, (3, 3))
 
-        # Apply Fuzzy Filter
         return img
 
     # Quality of Life
@@ -199,7 +195,8 @@ class PointCloud:
         msg.scan.ranges = [float(reading[1]) for reading in self.lidar]
         return msg
 
-    def from_msg(msg: Cloud):
+    @staticmethod
+    def from_msg(msg: Cloud) -> "PointCloud":
         offset = np.array([msg.pose.x, msg.pose.y])
         rot = msg.pose.rot
         maxScanDist = msg.max_range
