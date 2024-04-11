@@ -1,0 +1,26 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: DORA
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Jacob Inwald
+  - given-names: Ardith Ho
+  - given-names: David Beechey
+  - given-names: Joshua Yeates
+  - given-names: Keming Lin
+  - given-names: Wanting Zhang
+  - given-names: Evmorfia Dmitria
+  - given-names: Wilfredo D
+repository-code: 'https://github.com/JacobInwald/DORA'
+abstract: >
+  Daycare Organising Robotic Assistant (DORA) is an
+  autonomous daycare tidying robot, capable of navigating a
+  daycare play area to identify and pick up toys, and sort
+  them into piles. It aims to reduce load on daycare workers
+  by removing the stressful and tiring task of tidying play
+  areas after play sessions in the daycare. 
